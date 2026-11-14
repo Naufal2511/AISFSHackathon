@@ -46,13 +46,15 @@ def main():
     step("identity by agreement", [PY, "scripts/resolve_identities.py", "--records", a.records,
                                    "--out", os.path.join(a.out, "identity"), "--video-root", a.video_root,
                                    "--pen-size", a.pen_size], log)
+    step("world state", [PY, "scripts/build_world_state.py", "--records", resolved,
+                          "--out", os.path.join(a.out, "state")], log)
     step("behavior", [PY, "classify_behavior.py", "--records", resolved, "--out", os.path.join(a.out, "behavior"),
                       "--video-root", a.video_root, "--probe-rumination"], log)
     if not a.skip_agent:
         cmd = [PY, "run_agent.py", "--records", resolved,
                "--behavior", os.path.join(a.out, "behavior", "behavior_timeline_1s.csv"),
                "--out", os.path.join(a.out, "agent"), "--video-root", a.video_root,
-               "--backend", a.backend, "--rebuild-behavior"]
+               "--backend", a.backend, "--rebuild-behavior", "--state", os.path.join(a.out, "state")]
         if a.max_flags:
             cmd += ["--max-flags", a.max_flags]
         with open(os.path.join(a.out, "agent", "agent_log.txt"), "w"):

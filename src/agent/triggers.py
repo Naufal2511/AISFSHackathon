@@ -23,7 +23,7 @@ from typing import Dict, List, Optional
 import numpy as np
 import pandas as pd
 
-SEVERITY = {"extra_cow": 5, "new_cow_id": 5, "duplicate_id": 5, "id_jump": 4, "cow_missing": 4,
+SEVERITY = {"extra_cow": 5, "new_cow_id": 5, "duplicate_id": 5, "id_jump": 4, "cow_missing": 4, "camera_conflict": 4,
             "id_audit": 3, "weak_id": 2, "behavior_check": 1}
 
 DEFAULTS = dict(
@@ -72,7 +72,7 @@ def _ts(t: float) -> str:
 
 def find_flags(rec: pd.DataFrame, t0: float, t1: float, known_ids: List[str], cfg: Dict = None,
                timeline: Optional[pd.DataFrame] = None, last_seen: Optional[Dict[str, float]] = None,
-               audit_times: Optional[List[float]] = None) -> List[Flag]:
+               audit_times: Optional[List[float]] = None, world=None) -> List[Flag]:
     """rec: records with wall-clock column 't' (see behavior.features.load_records)."""
     c = {**DEFAULTS, **(cfg or {})}
     w = rec[(rec.t >= t0) & (rec.t < t1) & rec.global_cow_id.notna()]
@@ -167,6 +167,31 @@ def find_flags(rec: pd.DataFrame, t0: float, t1: float, known_ids: List[str], cf
                                       detail=f"{cid} {beh} for {len(b)} s, mean confidence {conf:.2f}"
                                              + (" (hard class)" if hard else ""),
                                       data={"behavior": beh, "confidence": round(conf, 3)}))
+
+    # ---- world-state physics: jumps and real cross-camera conflicts (camera offsets are calibration, skipped)
+    if world is not None and len(world.anomalies):
+        an = world.anomalies
+        an = an[(an.t0 >= t0) & (an.t0 < t1)]
+        vis = world.visibility
+        for r in an.itertuples():
+            if r.type in ("camera_conflict", "camera_offset") and r.seconds < c.get("min_conflict_s", 8):
+                continue
+            if r.type == "camera_offset":
+                odd = str(r.detail).split(" ")[0]
+                try:
+                    gap = float(str(r.detail).split("places it ")[1].split(" m")[0])
+                except Exception:
+                    gap = 99.0
+                if odd == "cam3" and gap < 3.5:  # cam3's known far-range calibration error, not identity
+                    continue
+            if r.type not in ("jump", "camera_conflict", "camera_offset", "speed", "outside_pen"):
+                continue
+            v = vis[(vis.cow_id == r.cow_id) & (vis.sec == r.t0) & vis.track.notna()]
+            tracks = {x.camera: int(x.track) for x in v.itertuples()}
+            cam, tid = (next(iter(tracks.items())) if tracks else (None, None))
+            flags.append(Flag("camera_conflict" if r.type in ("camera_conflict", "camera_offset") else "id_jump", float(r.t0), float(r.t1),
+                              [r.cow_id], cam, tid, f"{r.type}: {r.detail}" + (f" ({r.seconds} s)" if r.seconds > 1 else ""),
+                              data={"tracks": tracks}))
 
     # ---- scheduled audit
     for ta in audit_times or []:

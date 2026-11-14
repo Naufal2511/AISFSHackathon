@@ -25,7 +25,7 @@ pre{background:var(--chip);padding:8px;border-radius:6px;white-space:pre-wrap;fo
 .rp-top input[type=range]{flex:1;min-width:200px}
 #rp-time{font:600 18px ui-monospace,Menlo,monospace;min-width:92px}
 .flagtrack{position:relative;height:14px;margin:4px 0 0}.flagtrack i{position:absolute;top:0;width:3px;height:14px;border-radius:2px;cursor:pointer}
-.rp-grid{display:grid;grid-template-columns:minmax(0,1fr) 230px;gap:12px;margin-top:10px}
+.rp-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:12px;margin-top:10px}
 .cams{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:8px}
 .cam{position:relative;background:#000;border-radius:8px;overflow:hidden}.cam img{display:block;width:100%}
 .cam .cap{position:absolute;left:0;top:0;background:#000a;color:#fff;font-size:11px;padding:2px 6px;border-bottom-right-radius:6px}
@@ -59,7 +59,8 @@ const COWC=["#e6194b","#3cb44b","#ffb000","#4363d8","#f58231","#911eb4","#42d4f4
 const TABS=["Replay","Activity","Agent traces","Identity","Memory cards","ID checks","Corrections","Log"];
 const ls=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}};
 const IDC={agree:"#2ca25f",single:"#f0b43c",disagree:"#e6194b"};const IDFLAGS=["id_jump","weak_id","new_cow_id","duplicate_id","id_audit","extra_cow","cow_missing"];
-let mode=ls("mode")||"id",IDS=null;
+let mode=ls("mode")||"id",IDS=null,HEAT=null,TRAILS={},mapZoom=(ls("mapZoom")||"cows");
+const VIS={visible:"●",partial:"◐",occluded:"✕",out_of_view:"○",not_detected:"?"};
 let tab=ls("tab")||"Replay",S=null,M=null,STRIP=null,AT=null,cur=null,playing=false,speed=+(ls("speed")||1),hl=null,actView="after",openEv=new Set();
 const f=p=>"/file?p="+encodeURIComponent(p);const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const hms=t=>new Date(t*1000).toISOString().slice(11,19);
@@ -95,7 +96,7 @@ function replayShell(){
   <div class="panel strip" style="margin-top:10px"><h2>${mode=="id"?"Identity over the slot":"Behavior over the slot"} <span class="muted small">(click to jump)</span></h2><canvas id="rp-strip" height="10"></canvas>
   <div class="legend" style="margin-top:6px">${mode=="id"?`<span><i style="background:${IDC.agree}"></i>2-3 cameras agree (&lt;3 m)</span><span><i style="background:${IDC.single}"></i>one camera only</span><span><i style="background:${IDC.disagree}"></i>cameras disagree (&gt;3 m)</span><span><i style="background:#888"></i>gap = not seen</span><span>bottom row = unidentified boxes</span>`:Object.entries(BEH).map(([k,v])=>`<span><i style="background:${v}"></i>${k}</span>`).join("")}</div></div>
   <div class="panel"><h2>Agent around this moment <span class="muted small">(±60 s)</span></h2><div id="rp-events" class="muted">-</div></div></div>
- <div class="side"><div class="panel"><h2>Pen map</h2><svg id="rp-map" viewBox="-3.2 -1.6 16.4 33.2" style="width:100%;max-height:520px"></svg></div>
+ <div class="side"><div class="panel"><h2>Pen map <span style="float:right"><button class="btn small ${mapZoom=="cows"?"on":""}" onclick="mapZoom='cows';ls('mapZoom','cows');render(true)">cows</button> <button class="btn small ${mapZoom=="pen"?"on":""}" onclick="mapZoom='pen';ls('mapZoom','pen');render(true)">whole pen</button></span></h2><svg id="rp-map" viewBox="-3.2 -1.6 16.4 33.2" style="width:100%;max-height:560px"></svg></div>
   <div class="panel"><h2>${mode=="id"?"Identities now":"Cows now"}</h2><div id="rp-cows"></div></div></div></div>`}
 function metricsHTML(){if(!IDS||!IDS.metrics)return "";const m=IDS.metrics,pc=m.per_camera||{},pct=v=>Math.round((v||0)*100)+"%";
  return `<div class="mx" style="margin-top:10px">
@@ -116,7 +117,7 @@ function mapStatic(){
 async function seek(t,fromRange){if(!M||!M.ready)return;cur=Math.max(M.t_min,Math.min(M.t_max,Math.round(t)));ls("cur",cur);
  const r=document.getElementById("rp-range");if(r&&!fromRange)r.value=cur;document.getElementById("rp-time").textContent=hms(cur);
  const loads=M.cameras.map(c=>new Promise(res=>{const im=document.getElementById("img-"+c);if(!im)return res();im.onload=im.onerror=()=>res();im.src=`/api/frame?cam=${c}&t=${cur}`}));
- const at=await (await fetch("/api/at?t="+cur)).json();AT=at;drawAt();await Promise.all(loads);drawStripCursor()}
+ const at=await (await fetch("/api/at?t="+cur)).json();AT=at;if(mode=="id"){try{TRAILS=await (await fetch("/api/trails?t="+cur)).json()}catch(e){TRAILS={}}}drawAt();await Promise.all(loads);drawStripCursor()}
 function drawAt(){if(!AT)return;
  for(const c of M.cameras){const ov=document.getElementById("ov-"+c);if(!ov)continue;
   ov.innerHTML=AT.boxes.filter(b=>b.cam==c).map(b=>{const col=cowColor(b.cow),be=mode=="id"?"":((AT.behavior[b.cow]||{}).behavior||"");
@@ -124,7 +125,16 @@ function drawAt(){if(!AT)return;
    const lab=mode=="id"?(b.cow?b.cow.replace("COW_","#")+" t"+b.track+(b.idc!=null?" "+b.idc:""):"? t"+b.track):(b.cow?b.cow.replace("COW_","#"):"t"+b.track)+(be?" · "+be.split(" ")[0]:"");
    return `<div class="box ${b.cow?"":"unk"} ${bad?"bad":""} ${hl&&b.cow==hl?"hl":""}" style="left:${b.x1*100}%;top:${b.y1*100}%;width:${(b.x2-b.x1)*100}%;height:${(b.y2-b.y1)*100}%;border-color:${col}" title="${esc((b.cow||"no ID")+" · track "+b.track+" · det "+b.det+(b.idc!=null?" · id conf "+b.idc:"")+(be?" · "+be:""))}" onclick="hl=${b.cow?`'${b.cow}'`:"null"};drawAt()"><span style="background:${col}">${esc(lab)}</span></div>`}).join("")}
  const map=document.getElementById("rp-map");
- if(map){map.innerHTML=mapStatic()+Object.entries(AT.cows).map(([cid,p])=>{const col=cowColor(cid),be=(AT.behavior[cid]||{}).behavior||"";
+ if(map){let pre="";if(mode=="id"&&HEAT&&HEAT.grid){const c=HEAT.cell;HEAT.grid.forEach((col,i)=>col.forEach((v,j)=>{if(v>0.02)pre+=`<rect x="${i*c}" y="${30-(j+1)*c}" width="${c}" height="${c}" fill="#f58518" opacity="${Math.min(.55,v*.7)}"/>`}));
+   for(const [cid,pts] of Object.entries(TRAILS||{}))if(pts.length>1)pre+=`<polyline points="${pts.map(p=>p[0]+","+(30-p[1])).join(" ")}" fill="none" stroke="${cowColor(cid)}" stroke-width="0.18" opacity="0.8"/>`;
+   for(const [cid,st] of Object.entries(AT.state||{})){const col=cowColor(cid);pre+=`<g><title>${esc(cid+" fused ("+st.x+", "+st.y+") ±"+st.sd+" m · "+st.speed+" m/s"+(st.obs?"":" · PREDICTED (no camera sees it)"))}</title><circle cx="${st.x}" cy="${30-st.y}" r="${Math.max(0.3,st.sd)}" fill="${col}" opacity="0.15" stroke="${col}" stroke-width="0.06" ${st.obs?"":'stroke-dasharray=".25 .2"'}/>`;
+    if(st.heading!=null&&st.speed>0.15){const a=st.heading*Math.PI/180;pre+=`<line x1="${st.x}" y1="${30-st.y}" x2="${st.x+1.4*Math.cos(a)}" y2="${30-st.y-1.4*Math.sin(a)}" stroke="${col}" stroke-width="0.2"/>`}
+    if(!st.obs)pre+=`<text x="${st.x}" y="${30-st.y+0.3}" font-size="0.7" text-anchor="middle" fill="${col}">${cid.slice(4)}?</text>`;pre+="</g>"}}
+  if(mapZoom=="cows"){const P=[...Object.values(AT.state||{}).map(s=>[s.x,s.y]),...Object.values(AT.cows).map(p=>[p.x,p.y])];
+    if(P.length){let x0=Math.min(...P.map(p=>p[0]))-2.5,x1=Math.max(...P.map(p=>p[0]))+2.5,y0=Math.min(...P.map(p=>p[1]))-2.5,y1=Math.max(...P.map(p=>p[1]))+2.5;
+     let w=Math.max(8,x1-x0),h=Math.max(8,y1-y0);const cx=(x0+x1)/2,cy=(y0+y1)/2;if(h<w*1.1)h=w*1.1;map.setAttribute("viewBox",`${cx-w/2} ${30-cy-h/2} ${w} ${h}`)}}
+  else map.setAttribute("viewBox","-3.2 -1.6 16.4 33.2");
+  map.innerHTML=mapStatic()+pre+Object.entries(AT.cows).map(([cid,p])=>{const col=cowColor(cid),be=(AT.behavior[cid]||{}).behavior||"";
   if(mode=="id"){const v=p.views||[],col2=p.spread>=3?"#e6194b":col;let g=`<g style="cursor:pointer" onclick="hl='${cid}';drawAt()"><title>${esc(cid+": "+v.map(q=>q[2]+" ("+q[0]+", "+q[1]+")").join(" · ")+(v.length>1?" · spread "+p.spread+" m":" · one camera"))}</title>`;
    for(let i=0;i<v.length;i++)for(let j=i+1;j<v.length;j++)g+=`<line x1="${v[i][0]}" y1="${30-v[i][1]}" x2="${v[j][0]}" y2="${30-v[j][1]}" stroke="${col2}" stroke-width="${p.spread>=3?0.25:0.15}"/>`;
    v.forEach(q=>{const x=q[0],y=30-q[1],r=hl==cid?0.65:0.45;g+=q[2]=="cam1"?`<circle cx="${x}" cy="${y}" r="${r}" fill="${col}"/>`:q[2]=="cam2"?`<rect x="${x-r}" y="${y-r}" width="${2*r}" height="${2*r}" fill="${col}"/>`:`<polygon points="${x},${y-r*1.2} ${x-r},${y+r*.8} ${x+r},${y+r*.8}" fill="${col}"/>`});
@@ -132,9 +142,10 @@ function drawAt(){if(!AT)return;
   return `<g style="cursor:pointer" onclick="hl='${cid}';drawAt()"><title>${esc(cid+" ("+p.x+", "+p.y+") m · "+be+" · seen by "+p.cams.join(", ")+(p.spread?" · cameras agree within "+p.spread+" m":""))}</title><circle cx="${p.x}" cy="${30-p.y}" r="${hl==cid?0.85:0.6}" fill="${col}" stroke="${BEH[be]||"#fff"}" stroke-width="0.3"/><text x="${p.x}" y="${30-p.y+0.3}" font-size="0.7" text-anchor="middle" fill="#fff">${cid.slice(4)}</text></g>`}).join("")}
  const cw=document.getElementById("rp-cows");
  if(cw){const ids=[...new Set([...(M.cows||[]),...Object.keys(AT.behavior)])].sort();
-  if(mode=="id"){cw.innerHTML=`<table><tr><th>cow</th><th>cams</th><th>spread</th><th>tracks</th></tr>${ids.map(cid=>{const p=AT.cows[cid];
-    return `<tr class="cowrow" style="${hl==cid?"font-weight:700":""}" onclick="hl='${cid}';drawAt()"><td><span class="sw" style="background:${cowColor(cid)}"></span>${cid}</td><td class="small">${p?p.cams.map(x=>x.replace("cam","")).join(","):"<span class='muted'>—</span>"}</td><td style="color:${p&&p.spread>=3?"var(--bad)":"inherit"}">${p&&p.cams.length>1?p.spread+" m":""}</td><td class="small">${p?Object.entries(p.tracks||{}).map(([c,t])=>c.replace("cam","")+":"+t.join("/")).join(" "):""}</td></tr>`}).join("")}</table>
-   <div class="small muted" style="margin-top:6px">map: ● cam1 ■ cam2 ▲ cam3 position of the same ID; a long red line = cameras disagree</div>`}
+  if(mode=="id"){cw.innerHTML=`<table><tr><th>cow</th><th>1 2 3</th><th>spread</th><th>tracks</th></tr>${ids.map(cid=>{const p=AT.cows[cid],vv=(AT.vis||{})[cid]||{};
+    const vcell=["cam1","cam2","cam3"].map(c=>{const v=vv[c];if(!v)return "<span class='muted'>·</span>";const tip=c+": "+v.s.replace("_"," ")+(v.by?" by "+v.by:"")+(v.f&&v.f!="unknown"?", facing "+v.f:"");return `<span title="${esc(tip)}" style="color:${v.s=="visible"?"var(--ok)":v.s=="partial"?"var(--warn)":v.s=="occluded"?"var(--bad)":"var(--muted)"}">${VIS[v.s]||"?"}</span>`}).join(" ");
+    return `<tr class="cowrow" style="${hl==cid?"font-weight:700":""}" onclick="hl='${cid}';drawAt()"><td><span class="sw" style="background:${cowColor(cid)}"></span>${cid}</td><td>${vcell}</td><td style="color:${p&&p.spread>=3?"var(--bad)":"inherit"}">${p&&p.cams.length>1?p.spread+" m":""}</td><td class="small">${p?Object.entries(p.tracks||{}).map(([c,t])=>c.replace("cam","")+":"+t.join("/")).join(" "):""}</td></tr>`}).join("")}</table>
+   <div class="small muted" style="margin-top:6px">visibility per camera: ● visible ◐ partial ✕ occluded (hover: by whom) ○ out of view ? missed · map: ● cam1 ■ cam2 ▲ cam3 position of the same ID (red line = disagree), faded circle = fused position ± uncertainty, tail = last 30 s, "?" = predicted, orange = where cows spent time</div>`}
   else cw.innerHTML=`<table><tr><th>cow</th><th>behavior</th><th>conf</th><th>seen by</th></tr>${ids.map(cid=>{const b=AT.behavior[cid]||{},p=AT.cows[cid];
    return `<tr class="cowrow" style="${hl==cid?"font-weight:700":""}" onclick="hl='${cid}';drawAt()"><td><span class="sw" style="background:${cowColor(cid)}"></span>${cid}</td><td><span class="sw" style="background:${BEH[b.behavior]||"transparent"}"></span>${esc(b.behavior||"—")}</td><td>${b.conf??""}</td><td class="small">${p?p.cams.map(x=>x.replace("cam","")).join(","):"<span class='muted'>not seen</span>"}</td></tr>`}).join("")}</table>`}
  const ev=document.getElementById("rp-events");
@@ -149,6 +160,7 @@ function drawStrip(){const cv=document.getElementById("rp-strip");const src=mode
  const nrow=cows.length+(mode=="id"?1:0);cv.width=W;cv.height=nrow*rh+16;const g=cv.getContext("2d");g.clearRect(0,0,W,cv.height);g.font="10px sans-serif";
  cows.forEach((cid,i)=>{(src.rows[cid]||[]).forEach(([a,b,be])=>{g.fillStyle=mode=="id"?(IDC[be]||"#999"):(BEH[be]||"#999");g.fillRect(60+(W-60)*(a-M.t_min)/span,i*rh,Math.max(1,(W-60)*(b-a+1)/span),rh-2)});
   g.fillStyle=cowColor(cid);g.fillRect(0,i*rh,8,rh-2);g.fillStyle=getComputedStyle(document.body).color;g.fillText(cid,12,i*rh+9)});
+ if(mode=="id"&&HEAT&&HEAT.anomalies)HEAT.anomalies.forEach(a=>{const i=cows.indexOf(a.cow_id);if(i<0)return;g.fillStyle=a.type=="jump"?"#000":"rgba(0,0,0,0.35)";g.fillRect(60+(W-60)*(a.t0-M.t_min)/span,i*rh+rh/2-2,Math.max(2,(W-60)*a.seconds/span),3)});
  if(mode=="id"){const i=cows.length;(src.rows.unidentified||[]).forEach(([a,b,n])=>{g.fillStyle=`rgba(140,140,140,${Math.min(1,0.25+n*0.25)})`;g.fillRect(60+(W-60)*(a-M.t_min)/span,i*rh,Math.max(1,(W-60)/span),rh-2)});
   g.fillStyle=getComputedStyle(document.body).color;g.fillText("no ID",12,i*rh+9)}
  M.flags.filter(x=>mode!="id"||IDFLAGS.includes(x.kind)).forEach(x=>{g.fillStyle=x.severity>=4?"#d64545":x.severity>=3?"#c47f00":"#2f6fde";g.fillRect(60+(W-60)*(x.t0-M.t_min)/span,nrow*rh+4,3,10)});
@@ -197,7 +209,7 @@ async function tick(){try{
  const ms=await (await fetch("/api/meta")).text();const ss=await (await fetch("/api/state")).text();
  document.getElementById("live").style.background="var(--ok)";
  const mChanged=ms!==lastM,sChanged=ss!==lastS;lastM=ms;lastS=ss;M=JSON.parse(ms);S=JSON.parse(ss);
- if(mChanged&&M.ready){STRIP=await (await fetch("/api/strip")).json();IDS=await (await fetch("/api/idstrip")).json();if(cur==null||cur<M.t_min||cur>M.t_max)cur=+ls("cur")||M.t_min}
+ if(mChanged&&M.ready){STRIP=await (await fetch("/api/strip")).json();IDS=await (await fetch("/api/idstrip")).json();try{HEAT=await (await fetch("/api/heat")).json()}catch(e){HEAT=null}if(cur==null||cur<M.t_min||cur>M.t_max)cur=+ls("cur")||M.t_min}
  if(tab=="Replay"){if(built!=="Replay"||mChanged)render(true);else if(sChanged){header();nav();drawAt()}}
  else if(sChanged||mChanged)render(true);
 }catch(e){document.getElementById("live").style.background="var(--bad)"}}

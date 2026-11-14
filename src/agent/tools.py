@@ -33,10 +33,12 @@ class Tool:
 
 class Toolbox:
     def __init__(self, rec: pd.DataFrame, frames: FrameStore, memory: Memory,
-                 timeline: Optional[pd.DataFrame] = None, embedder=None, video_index=None):
+                 timeline: Optional[pd.DataFrame] = None, embedder=None, video_index=None, world=None,
+                 cam_pos=None):
         self.rec = rec[rec.global_cow_id.notna() | rec.local_track_id.notna()]
         self.frames, self.memory, self.timeline = frames, memory, timeline
         self.embedder = embedder
+        self.world, self.cam_pos = world, cam_pos or {}
         self.video_index = video_index or {}
         self.day = pd.Timestamp(rec.t.min(), unit="s").normalize() if len(rec) else pd.Timestamp("1970-01-01")
         self.tools: Dict[str, Tool] = {t.name: t for t in [
@@ -69,6 +71,21 @@ class Toolbox:
             Tool("behavior", self.t_behavior, '{"cow_id": "COW_03", "t0": "HH:MM:SS", "t1": "HH:MM:SS"}',
                  "Behavior classifier output for the cow: per-second labels, confidences, speed, posture cue.",
                  "classifier"),
+            Tool("cow_state", self.t_cow_state, '{"cow_id": "COW_03", "time": "HH:MM:SS"}',
+                 "Top-view state: fused pen position (all cameras, predicted if unseen) with uncertainty, speed, "
+                 "heading, and for EACH camera whether the cow is visible / partial / occluded (by which cow) / "
+                 "out of view and whether it faces toward / away / side-on. Use it first to decide which camera to look at.",
+                 "trajectory"),
+            Tool("visibility", self.t_visibility, '{"cow_id": "COW_03", "t0": "HH:MM:SS", "t1": "HH:MM:SS"}',
+                 "Per-camera visibility intervals of the cow (visible, partial, occluded by X, out of view).", "trajectory"),
+            Tool("best_view", self.t_best_view, '{"cow_id": "COW_03", "time": "HH:MM:SS", "purpose": "identity|head|behavior"}',
+                 "Picks the most useful camera and moment (+-5 s): unoccluded, large, side-on for identity, head toward "
+                 "the camera for head/clinical checks, and returns that crop.", "visual"),
+            Tool("trajectory_map", self.t_trajectory_map, '{"cow_ids": ["COW_03"], "t0": "HH:MM:SS", "t1": "HH:MM:SS"}',
+                 "Top-view map of the pen with the cows' paths, occupancy heat and anomaly marks (x).", "trajectory"),
+            Tool("anomalies", self.t_anomalies, '{"cow_id": "COW_03" (optional), "t0": "HH:MM:SS", "t1": "HH:MM:SS"}',
+                 "Physics checks: jumps (seen far from where it should be), cameras placing it in different spots "
+                 "(conflict) or one camera offset, impossible speed, outside the pen.", "trajectory"),
             Tool("chew_motion", self.t_chew, '{"cow_id": "COW_03", "time": "HH:MM:SS"}',
                  "Jaw-motion frequency test over ~12 s of video (rumination = periodic chewing 0.75-1.6 Hz). "
                  "Use this for rumination; chewing is not visible in still frames.", "chew_motion"),
@@ -259,6 +276,97 @@ class Toolbox:
         if "behavior_2" in g.columns:
             lines.append("second classifier: " + ", ".join(f"{k} {v} s" for k, v in g.behavior_2.value_counts().items()))
         return ToolResult(f"{cow_id} {self.hms(a)}-{self.hms(b)}:\n" + "\n".join(lines))
+
+    # ------------------------------------------------------------------ world-state tools
+    def _need_world(self):
+        return None if self.world is not None else ToolResult("no world state loaded (run scripts/build_world_state.py)")
+
+    def t_cow_state(self, cow_id: str, time):
+        if self._need_world():
+            return self._need_world()
+        t = int(round(self.t(time)))
+        st = self.world.state
+        g = st[(st.cow_id == cow_id) & (st.sec == t)]
+        if g.empty:
+            return ToolResult(f"{cow_id} has no state at {self.hms(t)}")
+        s = g.iloc[0]
+        v = self.world.visibility
+        vis = v[(v.cow_id == cow_id) & (v.sec == t)]
+        lines = [f"{cow_id} at {self.hms(t)}: position ({s.x:.1f}, {s.y:.1f}) m +-{s.pos_sd_m:.1f} "
+                 f"({'observed by ' + str(int(s.n_cams)) + ' camera(s)' if s.observed else 'PREDICTED, no camera sees it'}), "
+                 f"speed {s.speed:.2f} m/s" + (f", heading {s.heading_deg:.0f} deg" if pd.notna(s.heading_deg) else ", heading unknown")]
+        for r in vis.itertuples():
+            extra = f" by {r.occluder}" if isinstance(r.occluder, str) else ""
+            lines.append(f"  {r.camera}: {r.status}{extra}" + (f", track {int(r.track)}" if pd.notna(r.track) else "")
+                         + (f", facing {r.facing}" if r.facing != "unknown" else ""))
+        for purpose in ("identity", "head"):
+            b = self.world.best_view(cow_id, t, purpose)
+            if b:
+                lines.append(f"best view for {purpose}: {b['camera']} at {self.hms(b['sec'])} ({b['status']}, facing {b['facing']})")
+        return ToolResult("\n".join(lines))
+
+    def t_visibility(self, cow_id: str, t0, t1):
+        if self._need_world():
+            return self._need_world()
+        a, b = self.t(t0), self.t(t1)
+        iv = self.world.intervals
+        g = iv[(iv.cow_id == cow_id) & (iv.t1 >= a) & (iv.t0 <= b)].sort_values(["camera", "t0"])
+        if g.empty:
+            return ToolResult(f"no visibility data for {cow_id}")
+        return ToolResult("\n".join(f"{r.camera} {self.hms(r.t0)}-{self.hms(r.t1)} ({r.seconds}s): {r.status}"
+                                    + (f" by {r.occluder}" if isinstance(r.occluder, str) else "")
+                                    + (f", facing {r.facing}" if r.facing != "unknown" else "") for r in g.itertuples()))
+
+    def t_best_view(self, cow_id: str, time, purpose: str = "identity"):
+        if self._need_world():
+            return self._need_world()
+        t = int(round(self.t(time)))
+        b = self.world.best_view(cow_id, t, purpose)
+        if not b:
+            return ToolResult(f"no camera sees {cow_id} clearly within 5 s of {self.hms(t)}")
+        rows = self.rec[(self.rec.camera_id == b["camera"]) & (self.rec.global_cow_id == cow_id)]
+        r = self._nearest(rows, b["sec"], tol=1.5)
+        fr = self.frames.frame(b["camera"], float(r.t)) if r is not None else None
+        if fr is None:
+            return ToolResult(f"best view is {b['camera']} at {self.hms(b['sec'])} but no frame available")
+        img = label(crop(fr, (r.bbox_x1, r.bbox_y1, r.bbox_x2, r.bbox_y2), pad=0.2, size=448),
+                    f"{cow_id} {b['camera']} {self.hms(b['sec'])} {b['facing']}")
+        return ToolResult(f"best {purpose} view of {cow_id}: {b['camera']} at {self.hms(b['sec'])}, {b['status']}, "
+                          f"facing {b['facing']}, box {100 * (b['box_area'] or 0):.1f}% of frame", [img])
+
+    def t_trajectory_map(self, cow_ids, t0, t1):
+        if self._need_world():
+            return self._need_world()
+        from ..state.world_state import render_top_view
+        cow_ids = [cow_ids] if isinstance(cow_ids, str) else list(cow_ids)
+        a, b = int(self.t(t0)), int(self.t(t1))
+        st = self.world.state
+        heat = sum(self.world.heat[c] for c in cow_ids if c in self.world.heat) if self.world.heat else None
+        img = render_top_view(st, cow_ids, a, b, heat if isinstance(heat, np.ndarray) else None,
+                              self.world.anomalies, self.cam_pos)
+        lines = []
+        for c in cow_ids:
+            g = st[(st.cow_id == c) & st.sec.between(a, b)].sort_values("sec")
+            if g.empty:
+                continue
+            g5 = g[(g.sec - g.sec.iloc[0]) % 5 == 0]  # 5 s steps: camera jitter is not walking
+            dist = float(np.hypot(np.diff(g5.x), np.diff(g5.y)).sum())
+            lines.append(f"{c}: from ({g.x.iloc[0]:.1f},{g.y.iloc[0]:.1f}) to ({g.x.iloc[-1]:.1f},{g.y.iloc[-1]:.1f}) m, "
+                         f"path {dist:.1f} m, max speed {g.speed.max():.2f} m/s, observed {g.observed.mean():.0%} of the time")
+        return ToolResult("top view (front/bunk at the bottom, chute side left):\n" + "\n".join(lines), [img])
+
+    def t_anomalies(self, t0, t1, cow_id: Optional[str] = None):
+        if self._need_world():
+            return self._need_world()
+        a, b = self.t(t0), self.t(t1)
+        an = self.world.anomalies
+        g = an[(an.t1 >= a) & (an.t0 <= b)]
+        if cow_id:
+            g = g[g.cow_id == cow_id]
+        if g.empty:
+            return ToolResult("no anomalies in that interval")
+        return ToolResult("\n".join(f"{r.cow_id} {r.type} {self.hms(r.t0)}-{self.hms(r.t1)} ({r.seconds}s): {r.detail}"
+                                    for r in g.head(15).itertuples()))
 
     def t_chew(self, cow_id: str, time):
         from ..behavior.rumination import chew_score, resolve_video

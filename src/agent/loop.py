@@ -39,11 +39,18 @@ def playbook(f: Flag, hms) -> str:
     t0, t1, mid = hms(f.t0), hms(f.t1), hms((f.t0 + f.t1) / 2)
     cam, tid = f.camera, f.track_id
     if f.kind in ("id_jump", "weak_id", "new_cow_id") and tid is not None:
-        return (f"1) all_views {{\"time\": \"{t1}\", \"cow_id\": \"{cid}\"}}  2) compare_to_cards "
+        return (f"0) cow_state {{\"cow_id\": \"{cid}\", \"time\": \"{t1}\"}} (where it should be, who blocks it)  "
+                f"1) all_views {{\"time\": \"{t1}\", \"cow_id\": \"{cid}\"}}  2) compare_to_cards "
                 f"{{\"camera\": \"{cam}\", \"track_id\": {tid}, \"time\": \"{t1}\"}}  3) trajectory "
                 f"{{\"cow_id\": \"{cid}\", \"t0\": \"{hms(f.t0 - 60)}\", \"t1\": \"{hms(f.t1 + 10)}\"}}. "
                 f"Then: confirm if track {tid} really is {cid}; relabel (camera {cam}, track_id {tid}) only if the "
                 "appearance score AND the views/trajectory point to the same other cow; otherwise uncertain.")
+    if f.kind == "camera_conflict":
+        tracks = (f.data or {}).get("tracks", {})
+        cmp = "  ".join(f"compare_to_cards {{\"camera\": \"{c}\", \"track_id\": {t}, \"time\": \"{t0}\"}}" for c, t in tracks.items())
+        return (f"Cameras place {cid} in different spots, so one camera's box is probably another cow. "
+                f"1) cow_state {{\"cow_id\": \"{cid}\", \"time\": \"{t0}\"}}  2) all_views {{\"time\": \"{t0}\", \"cow_id\": \"{cid}\"}}  "
+                f"3) {cmp}. Then relabel the camera/track that is NOT {cid} (or mark it uncertain).")
     if f.kind == "duplicate_id":
         return (f"1) scene {{\"camera\": \"{cam}\", \"time\": \"{t0}\"}}  2) compare_to_cards for each track listed "
                 "in the flag. Then relabel the wrong track or mark it uncertain.")
@@ -274,7 +281,8 @@ class Agent:
         handled, n = set(), 0
         for w0 in np.arange(t_lo, t_hi, window_sec):
             w1 = min(w0 + window_sec, t_hi)
-            flags = find_flags(rec, w0, w1, self.memory.known_ids(), trigger_cfg, tl, last_seen, audits)
+            flags = find_flags(rec, w0, w1, self.memory.known_ids(), trigger_cfg, tl, last_seen, audits,
+                               world=getattr(self.tb, "world", None))
             flags = [f for f in flags if f.key not in handled]
             log(f"[AGENT] window {self.tb.hms(w0)}-{self.tb.hms(w1)}: {len(flags)} flags "
                 + ", ".join(f"{f.kind}({','.join(f.cow_ids[:2])})" for f in flags))

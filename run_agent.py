@@ -39,6 +39,8 @@ def main():
     ap.add_argument("--records", nargs="+", required=True, help="tracking_records.csv path(s) or globs")
     ap.add_argument("--behavior", help="behavior_timeline_1s.csv from classify_behavior.py (enables behavior checks)")
     ap.add_argument("--video-root", default="input")
+    ap.add_argument("--state", help="world-state folder from scripts/build_world_state.py (enables cow_state, "
+                                    "visibility, best_view, trajectory_map, anomalies tools and physics triggers)")
     ap.add_argument("--out", default="outputs/agent")
     ap.add_argument("--config", default="configs/agent.yaml")
     ap.add_argument("--backend", help="ollama | tamu | vllm | rules (overrides the config)")
@@ -79,7 +81,14 @@ def main():
         n = memory.describe_traits(backend)
         if n:
             print(f"[AGENT] VLM wrote distinguishing traits on {n} memory cards")
-    tb = Toolbox(rec, frames, memory, tl, embedder, index_videos(a.video_root))
+    world, cam_pos = None, {}
+    if a.state and os.path.exists(os.path.join(a.state, "cow_state.csv")):
+        from src.state.world_state import WorldState
+        world = WorldState.load(a.state)
+        cam_pos = {k: v.get("mount_position_estimated") for k, v in
+                   yaml.safe_load(open("configs/cameras.yaml"))["cameras"].items()}
+        print(f"[AGENT] world state: {len(world.state)} cow-seconds, {len(world.anomalies)} anomaly events")
+    tb = Toolbox(rec, frames, memory, tl, embedder, index_videos(a.video_root), world=world, cam_pos=cam_pos)
     ac = cfg.get("agent", {})
     trig = {**cfg.get("triggers", {}), "max_flags_per_window": ac.get("max_flags_per_window", 8),
             "audit_every_min": ac.get("audit_every_min", 30)}

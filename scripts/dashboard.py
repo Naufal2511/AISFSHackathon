@@ -81,7 +81,8 @@ class Data:
         import numpy as np
         import pandas as pd
         rp, tp = self.records_path(), self.timeline_path()
-        sig = tuple((p, os.path.getmtime(p)) for p in (rp, tp) if p)
+        sp = os.path.join(self.run_dir, "state", "cow_state.csv")
+        sig = tuple((p, os.path.getmtime(p)) for p in (rp, tp, sp) if p and os.path.exists(p))
         if sig == self.sig:
             return
         with self.lock:
@@ -95,6 +96,12 @@ class Data:
                     self.frames.close()
                 self.frames = FrameStore(self.rec, self.video_root)
                 self.jpeg.clear()
+            self.ws = None
+            if os.path.exists(sp):
+                from src.state.world_state import WorldState
+                self.ws = WorldState.load(os.path.join(self.run_dir, "state"))
+                self.st_by_sec = {s: g for s, g in self.ws.state.groupby("sec")}
+                self.vis_by_sec = {s: g for s, g in self.ws.visibility.groupby("sec")}
             self.tl = None
             if tp:
                 tl = pd.read_csv(tp)
@@ -160,7 +167,37 @@ class Data:
                                    for c, vs in sorted(views.items())],
                          "tracks": {c: sorted({int(b["track"]) for b in boxes if b["cam"] == c and b["cow"] == cid}) for c in views},
                          "spread": round(float(np.max(np.linalg.norm(a[:, None] - a[None], axis=2))), 2) if len(a) > 1 else 0.0}
-        return {"sec": sec, "boxes": boxes, "cows": cows, "behavior": beh}
+        state, vis = {}, {}
+        if getattr(self, "ws", None) is not None:
+            g2 = self.st_by_sec.get(sec)
+            if g2 is not None:
+                for r in g2.itertuples():
+                    state[r.cow_id] = {"x": r.x, "y": r.y, "sd": r.pos_sd_m, "speed": r.speed, "obs": bool(r.observed),
+                                       "heading": None if not np.isfinite(r.heading_deg) else r.heading_deg}
+            g3 = self.vis_by_sec.get(sec)
+            if g3 is not None:
+                for r in g3.itertuples():
+                    vis.setdefault(r.cow_id, {})[r.camera] = {"s": r.status, "by": r.occluder if isinstance(r.occluder, str) else None,
+                                                              "f": r.facing}
+        return {"sec": sec, "boxes": boxes, "cows": cows, "behavior": beh, "state": state, "vis": vis}
+
+    def trails(self, sec, w=30):
+        self.refresh()
+        if getattr(self, "ws", None) is None:
+            return {}
+        st = self.ws.state
+        g = st[st.sec.between(sec - w, sec)]
+        return {c: [[r.x, r.y] for r in h.sort_values("sec").itertuples()][::2] for c, h in g.groupby("cow_id")}
+
+    def heat(self):
+        import numpy as np
+        self.refresh()
+        if getattr(self, "ws", None) is None or not self.ws.heat:
+            return {}
+        tot = sum(self.ws.heat.values())
+        an = self.ws.anomalies
+        return {"grid": np.round(tot / max(tot.max(), 1), 3).tolist(), "cell": 0.5,
+                "anomalies": an.to_dict("records") if len(an) else []}
 
     def strip(self):
         self.refresh()
@@ -318,6 +355,10 @@ class H(BaseHTTPRequestHandler):
                 return self._json(self.data.at(int(float(q["t"][0]))))
             if u.path == "/api/strip":
                 return self._json(self.data.strip())
+            if u.path == "/api/trails":
+                return self._json(self.data.trails(int(float(q["t"][0]))))
+            if u.path == "/api/heat":
+                return self._json(self.data.heat())
             if u.path == "/api/idstrip":
                 return self._json(self.data.idstrip())
             if u.path == "/api/frame":
