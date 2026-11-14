@@ -151,8 +151,14 @@ class Data:
         cows = {}
         for cid, ps in pos.items():
             a = np.array([(x, y) for x, y, _ in ps])
+            views = {}
+            for x, y, c in ps:
+                views.setdefault(c, []).append((x, y))
             cows[cid] = {"x": round(float(a[:, 0].mean()), 2), "y": round(float(a[:, 1].mean()), 2),
                          "cams": sorted({c for *_, c in ps}),
+                         "views": [[round(float(np.mean([v[0] for v in vs])), 2), round(float(np.mean([v[1] for v in vs])), 2), c]
+                                   for c, vs in sorted(views.items())],
+                         "tracks": {c: sorted({int(b["track"]) for b in boxes if b["cam"] == c and b["cow"] == cid}) for c in views},
                          "spread": round(float(np.max(np.linalg.norm(a[:, None] - a[None], axis=2))), 2) if len(a) > 1 else 0.0}
         return {"sec": sec, "boxes": boxes, "cows": cows, "behavior": beh}
 
@@ -174,6 +180,65 @@ class Data:
                 seg.append(cur)
             rows[cid] = seg
         return {"rows": rows}
+
+    def idstrip(self, tol=3.0):
+        """Per cow per second: seen by >=2 cameras and agreeing (agree), seen by 1 (single),
+        cameras disagree by > tol m (disagree). Plus tracking metrics for the header panel."""
+        import numpy as np
+        self.refresh()
+        if self.rec is None:
+            return {"rows": {}, "metrics": {}}
+        r = self.rec
+        idr = r[r.global_cow_id.notna()]
+        g = idr.groupby(["global_cow_id", "sec", "camera_id"])[["world_x", "world_y"]].mean().reset_index()
+        status = {}
+        for (cid, sec), h in g.groupby(["global_cow_id", "sec"]):
+            P = h[["world_x", "world_y"]].to_numpy(float)
+            P = P[np.isfinite(P).all(1)]
+            if len(h) >= 2 and len(P) >= 2:
+                spread = float(np.max(np.linalg.norm(P[:, None] - P[None], axis=2)))
+                status[(cid, sec)] = "agree" if spread < tol else "disagree"
+            else:
+                status[(cid, sec)] = "single"
+        rows = {}
+        cows = sorted(idr.global_cow_id.unique())
+        for cid in cows:
+            seg, cur = [], None
+            for sec in sorted(s for c, s in status if c == cid):
+                st = status[(cid, sec)]
+                if cur and cur[2] == st and sec - cur[1] <= 1:
+                    cur[1] = sec
+                else:
+                    if cur:
+                        seg.append(cur)
+                    cur = [int(sec), int(sec), st]
+            if cur:
+                seg.append(cur)
+            rows[cid] = seg
+        un = r[r.global_cow_id.isna()].groupby("sec").size()
+        rows["unidentified"] = [[int(s), int(s), int(n)] for s, n in un.items()]
+        span = int(r.sec.max() - r.sec.min() + 1)
+        vals = list(status.values())
+        multi = [v for v in vals if v != "single"]
+        dup = int((idr.groupby(["camera_id", "sec", "global_cow_id"]).local_track_id.nunique() > 1).sum())
+        handoffs = {}
+        for (cid, cam), h in idr.sort_values("sec").groupby(["global_cow_id", "camera_id"]):
+            handoffs[(cid, cam)] = int((h.local_track_id != h.local_track_id.shift()).sum() - 1)
+        per_cam_boxes = r.groupby("camera_id").size()
+        per_cam_id = idr.groupby("camera_id").size()
+        metrics = {
+            "cows": len(cows), "span_s": span,
+            "coverage": round(len(vals) / max(1, len(cows) * span), 3),
+            "multi_view_share": round(len(multi) / max(1, len(vals)), 3),
+            "agreement": round(sum(v == "agree" for v in multi) / max(1, len(multi)), 3),
+            "identified_boxes": round(len(idr) / max(1, len(r)), 3),
+            "duplicates": dup,
+            "track_pieces_per_cow_cam": round(idr.groupby(["global_cow_id", "camera_id"]).local_track_id.nunique().mean(), 1),
+            "id_handoffs_per_cow_per_10min": round(sum(handoffs.values()) / max(1, len(cows)) * 600 / span, 1),
+            "per_camera": {c: {"boxes_per_s": round(per_cam_boxes[c] / span, 1),
+                               "identified": round(per_cam_id.get(c, 0) / per_cam_boxes[c], 3)} for c in per_cam_boxes.index},
+        }
+        return {"rows": rows, "metrics": metrics}
 
     def frame_jpeg(self, cam, sec, width=960):
         import cv2
@@ -253,6 +318,8 @@ class H(BaseHTTPRequestHandler):
                 return self._json(self.data.at(int(float(q["t"][0]))))
             if u.path == "/api/strip":
                 return self._json(self.data.strip())
+            if u.path == "/api/idstrip":
+                return self._json(self.data.idstrip())
             if u.path == "/api/frame":
                 b = self.data.frame_jpeg(q["cam"][0], int(float(q["t"][0])), int(q.get("w", ["960"])[0]))
                 return self._send(200, b, "image/jpeg", cache=True) if b else self._send(404, b"no frame", "text/plain")

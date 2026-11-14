@@ -31,7 +31,8 @@ pre{background:var(--chip);padding:8px;border-radius:6px;white-space:pre-wrap;fo
 .cam .cap{position:absolute;left:0;top:0;background:#000a;color:#fff;font-size:11px;padding:2px 6px;border-bottom-right-radius:6px}
 .box{position:absolute;border:2px solid;border-radius:2px;pointer-events:auto}
 .box span{position:absolute;left:-2px;top:-17px;font-size:10px;line-height:15px;padding:0 3px;color:#fff;white-space:nowrap;border-radius:3px 3px 0 0}
-.box.unk{border-style:dashed}.box.hl{border-width:4px;box-shadow:0 0 0 2px #fff}
+.box.unk{border-style:dashed}.box.bad{outline:3px solid #e6194b;outline-offset:1px}
+.mx{display:flex;gap:16px;flex-wrap:wrap}.mx div{display:flex;flex-direction:column}.mx b{font-size:17px}.mx span{font-size:11px;color:var(--muted)}.box.hl{border-width:4px;box-shadow:0 0 0 2px #fff}
 .side{display:flex;flex-direction:column;gap:8px}
 .cowrow{cursor:pointer}.cowrow:hover{background:var(--chip)}.sw{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
 .ev{border:1px solid var(--line);border-radius:8px;padding:6px;margin-bottom:6px}.ev summary{cursor:pointer;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
@@ -57,6 +58,8 @@ const BEH={"lying":"#4c78a8","standing":"#9ecae9","walking":"#f58518","feeding":
 const COWC=["#e6194b","#3cb44b","#ffb000","#4363d8","#f58231","#911eb4","#42d4f4","#f032e6","#9a6324","#469990","#800000","#808000"];
 const TABS=["Replay","Activity","Agent traces","Identity","Memory cards","ID checks","Corrections","Log"];
 const ls=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}};
+const IDC={agree:"#2ca25f",single:"#f0b43c",disagree:"#e6194b"};const IDFLAGS=["id_jump","weak_id","new_cow_id","duplicate_id","id_audit","extra_cow","cow_missing"];
+let mode=ls("mode")||"id",IDS=null;
 let tab=ls("tab")||"Replay",S=null,M=null,STRIP=null,AT=null,cur=null,playing=false,speed=+(ls("speed")||1),hl=null,actView="after",openEv=new Set();
 const f=p=>"/file?p="+encodeURIComponent(p);const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const hms=t=>new Date(t*1000).toISOString().slice(11,19);
@@ -83,15 +86,24 @@ function replayShell(){
   <select class="btn" onchange="speed=+this.value;ls('speed',speed)">${[1,2,5,10,30].map(v=>`<option value="${v}" ${v==speed?"selected":""}>${v} s / step</option>`).join("")}</select>
   <span id="rp-time">--:--:--</span>
   <input type="range" id="rp-range" min="${M.t_min}" max="${M.t_max}" value="${cur}" oninput="seek(+this.value,true)">
-  <button class="btn" onclick="jumpFlag(1)" title="next agent investigation">next flag ⏭</button></div>
+  <button class="btn" onclick="jumpFlag(1)" title="next agent investigation">next flag ⏭</button>
+  <span style="margin-left:auto"></span><button class="btn ${mode=="id"?"on":""}" onclick="mode='id';ls('mode','id');render(true)">ID &amp; tracking</button><button class="btn ${mode=="beh"?"on":""}" onclick="mode='beh';ls('mode','beh');render(true)">Behavior</button></div>
   <div class="flagtrack">${flags}</div>
-  <div class="small muted">markers = agent investigations (red drastic, amber audit, blue low-confidence) · click a box or cow to highlight it everywhere</div></div>
+  <div class="small muted">markers = agent investigations (red drastic, amber audit, blue low-confidence) · click a box or cow to highlight it everywhere</div>
+  ${mode=="id"?metricsHTML():""}</div>
  <div class="rp-grid"><div><div class="cams" id="rp-cams">${M.cameras.map(c=>`<div class="cam" id="cam-${c}"><img id="img-${c}" alt="${c}"><div class="cap">${esc((M.cam_names||{})[c]||c)}</div><div class="ov" id="ov-${c}"></div></div>`).join("")}</div>
-  <div class="panel strip" style="margin-top:10px"><h2>Behavior over the slot <span class="muted small">(click to jump)</span></h2><canvas id="rp-strip" height="10"></canvas>
-  <div class="legend" style="margin-top:6px">${Object.entries(BEH).map(([k,v])=>`<span><i style="background:${v}"></i>${k}</span>`).join("")}</div></div>
+  <div class="panel strip" style="margin-top:10px"><h2>${mode=="id"?"Identity over the slot":"Behavior over the slot"} <span class="muted small">(click to jump)</span></h2><canvas id="rp-strip" height="10"></canvas>
+  <div class="legend" style="margin-top:6px">${mode=="id"?`<span><i style="background:${IDC.agree}"></i>2-3 cameras agree (&lt;3 m)</span><span><i style="background:${IDC.single}"></i>one camera only</span><span><i style="background:${IDC.disagree}"></i>cameras disagree (&gt;3 m)</span><span><i style="background:#888"></i>gap = not seen</span><span>bottom row = unidentified boxes</span>`:Object.entries(BEH).map(([k,v])=>`<span><i style="background:${v}"></i>${k}</span>`).join("")}</div></div>
   <div class="panel"><h2>Agent around this moment <span class="muted small">(±60 s)</span></h2><div id="rp-events" class="muted">-</div></div></div>
  <div class="side"><div class="panel"><h2>Pen map</h2><svg id="rp-map" viewBox="-3.2 -1.6 16.4 33.2" style="width:100%;max-height:520px"></svg></div>
-  <div class="panel"><h2>Cows now</h2><div id="rp-cows"></div></div></div></div>`}
+  <div class="panel"><h2>${mode=="id"?"Identities now":"Cows now"}</h2><div id="rp-cows"></div></div></div></div>`}
+function metricsHTML(){if(!IDS||!IDS.metrics)return "";const m=IDS.metrics,pc=m.per_camera||{},pct=v=>Math.round((v||0)*100)+"%";
+ return `<div class="mx" style="margin-top:10px">
+ <div><b>${pct(m.coverage)}</b><span>cow-seconds seen</span></div><div><b>${pct(m.multi_view_share)}</b><span>seen by 2+ cameras</span></div>
+ <div><b>${pct(m.agreement)}</b><span>cameras agree &lt;3 m</span></div><div><b>${pct(m.identified_boxes)}</b><span>boxes identified</span></div>
+ <div><b>${m.duplicates}</b><span>duplicate IDs in a frame</span></div><div><b>${m.track_pieces_per_cow_cam}</b><span>track pieces / cow / camera</span></div>
+ <div><b>${m.id_handoffs_per_cow_per_10min}</b><span>ID hand-offs / cow / 10 min</span></div>
+ ${Object.entries(pc).map(([c,v])=>`<div><b>${v.boxes_per_s} · ${pct(v.identified)}</b><span>${c}: boxes/s · identified</span></div>`).join("")}</div>`}
 function mapStatic(){
  let s=`<rect x="0" y="0" width="12" height="30" fill="var(--map)" stroke="var(--muted)" stroke-width="0.12"/>`+
   `<rect x="-2.6" y="0" width="2.4" height="30" fill="none" stroke="var(--muted)" stroke-width="0.08" stroke-dasharray=".3 .3"/><text x="-1.4" y="16" font-size="0.9" fill="var(--muted)" text-anchor="middle" transform="rotate(-90 -1.4 16)">chute</text>`+
@@ -107,28 +119,39 @@ async function seek(t,fromRange){if(!M||!M.ready)return;cur=Math.max(M.t_min,Mat
  const at=await (await fetch("/api/at?t="+cur)).json();AT=at;drawAt();await Promise.all(loads);drawStripCursor()}
 function drawAt(){if(!AT)return;
  for(const c of M.cameras){const ov=document.getElementById("ov-"+c);if(!ov)continue;
-  ov.innerHTML=AT.boxes.filter(b=>b.cam==c).map(b=>{const col=cowColor(b.cow),be=(AT.behavior[b.cow]||{}).behavior||"";
-   return `<div class="box ${b.cow?"":"unk"} ${hl&&b.cow==hl?"hl":""}" style="left:${b.x1*100}%;top:${b.y1*100}%;width:${(b.x2-b.x1)*100}%;height:${(b.y2-b.y1)*100}%;border-color:${col}" title="${esc((b.cow||"no ID")+" · track "+b.track+" · det "+b.det+(b.idc!=null?" · id conf "+b.idc:"")+(be?" · "+be:""))}" onclick="hl=${b.cow?`'${b.cow}'`:"null"};drawAt()"><span style="background:${col}">${esc(b.cow?b.cow.replace("COW_","#"):"t"+b.track)}${be?" · "+esc(be.split(" ")[0]):""}</span></div>`}).join("")}
+  ov.innerHTML=AT.boxes.filter(b=>b.cam==c).map(b=>{const col=cowColor(b.cow),be=mode=="id"?"":((AT.behavior[b.cow]||{}).behavior||"");
+   const bad=mode=="id"&&b.cow&&AT.cows[b.cow]&&AT.cows[b.cow].spread>=3;
+   const lab=mode=="id"?(b.cow?b.cow.replace("COW_","#")+" t"+b.track+(b.idc!=null?" "+b.idc:""):"? t"+b.track):(b.cow?b.cow.replace("COW_","#"):"t"+b.track)+(be?" · "+be.split(" ")[0]:"");
+   return `<div class="box ${b.cow?"":"unk"} ${bad?"bad":""} ${hl&&b.cow==hl?"hl":""}" style="left:${b.x1*100}%;top:${b.y1*100}%;width:${(b.x2-b.x1)*100}%;height:${(b.y2-b.y1)*100}%;border-color:${col}" title="${esc((b.cow||"no ID")+" · track "+b.track+" · det "+b.det+(b.idc!=null?" · id conf "+b.idc:"")+(be?" · "+be:""))}" onclick="hl=${b.cow?`'${b.cow}'`:"null"};drawAt()"><span style="background:${col}">${esc(lab)}</span></div>`}).join("")}
  const map=document.getElementById("rp-map");
  if(map){map.innerHTML=mapStatic()+Object.entries(AT.cows).map(([cid,p])=>{const col=cowColor(cid),be=(AT.behavior[cid]||{}).behavior||"";
+  if(mode=="id"){const v=p.views||[],col2=p.spread>=3?"#e6194b":col;let g=`<g style="cursor:pointer" onclick="hl='${cid}';drawAt()"><title>${esc(cid+": "+v.map(q=>q[2]+" ("+q[0]+", "+q[1]+")").join(" · ")+(v.length>1?" · spread "+p.spread+" m":" · one camera"))}</title>`;
+   for(let i=0;i<v.length;i++)for(let j=i+1;j<v.length;j++)g+=`<line x1="${v[i][0]}" y1="${30-v[i][1]}" x2="${v[j][0]}" y2="${30-v[j][1]}" stroke="${col2}" stroke-width="${p.spread>=3?0.25:0.15}"/>`;
+   v.forEach(q=>{const x=q[0],y=30-q[1],r=hl==cid?0.65:0.45;g+=q[2]=="cam1"?`<circle cx="${x}" cy="${y}" r="${r}" fill="${col}"/>`:q[2]=="cam2"?`<rect x="${x-r}" y="${y-r}" width="${2*r}" height="${2*r}" fill="${col}"/>`:`<polygon points="${x},${y-r*1.2} ${x-r},${y+r*.8} ${x+r},${y+r*.8}" fill="${col}"/>`});
+   return g+`<text x="${p.x+0.7}" y="${30-p.y+0.3}" font-size="0.75" fill="${col2}">${cid.slice(4)}</text></g>`}
   return `<g style="cursor:pointer" onclick="hl='${cid}';drawAt()"><title>${esc(cid+" ("+p.x+", "+p.y+") m · "+be+" · seen by "+p.cams.join(", ")+(p.spread?" · cameras agree within "+p.spread+" m":""))}</title><circle cx="${p.x}" cy="${30-p.y}" r="${hl==cid?0.85:0.6}" fill="${col}" stroke="${BEH[be]||"#fff"}" stroke-width="0.3"/><text x="${p.x}" y="${30-p.y+0.3}" font-size="0.7" text-anchor="middle" fill="#fff">${cid.slice(4)}</text></g>`}).join("")}
  const cw=document.getElementById("rp-cows");
  if(cw){const ids=[...new Set([...(M.cows||[]),...Object.keys(AT.behavior)])].sort();
-  cw.innerHTML=`<table><tr><th>cow</th><th>behavior</th><th>conf</th><th>seen by</th></tr>${ids.map(cid=>{const b=AT.behavior[cid]||{},p=AT.cows[cid];
+  if(mode=="id"){cw.innerHTML=`<table><tr><th>cow</th><th>cams</th><th>spread</th><th>tracks</th></tr>${ids.map(cid=>{const p=AT.cows[cid];
+    return `<tr class="cowrow" style="${hl==cid?"font-weight:700":""}" onclick="hl='${cid}';drawAt()"><td><span class="sw" style="background:${cowColor(cid)}"></span>${cid}</td><td class="small">${p?p.cams.map(x=>x.replace("cam","")).join(","):"<span class='muted'>—</span>"}</td><td style="color:${p&&p.spread>=3?"var(--bad)":"inherit"}">${p&&p.cams.length>1?p.spread+" m":""}</td><td class="small">${p?Object.entries(p.tracks||{}).map(([c,t])=>c.replace("cam","")+":"+t.join("/")).join(" "):""}</td></tr>`}).join("")}</table>
+   <div class="small muted" style="margin-top:6px">map: ● cam1 ■ cam2 ▲ cam3 position of the same ID; a long red line = cameras disagree</div>`}
+  else cw.innerHTML=`<table><tr><th>cow</th><th>behavior</th><th>conf</th><th>seen by</th></tr>${ids.map(cid=>{const b=AT.behavior[cid]||{},p=AT.cows[cid];
    return `<tr class="cowrow" style="${hl==cid?"font-weight:700":""}" onclick="hl='${cid}';drawAt()"><td><span class="sw" style="background:${cowColor(cid)}"></span>${cid}</td><td><span class="sw" style="background:${BEH[b.behavior]||"transparent"}"></span>${esc(b.behavior||"—")}</td><td>${b.conf??""}</td><td class="small">${p?p.cams.map(x=>x.replace("cam","")).join(","):"<span class='muted'>not seen</span>"}</td></tr>`}).join("")}</table>`}
  const ev=document.getElementById("rp-events");
- if(ev&&S){const near=S.traces.filter(t=>t.flag.t0-60<=cur&&cur<=t.flag.t1+60).sort((a,b)=>a.flag.t0-b.flag.t0);
+ if(ev&&S){const near=S.traces.filter(t=>t.flag.t0-60<=cur&&cur<=t.flag.t1+60&&(mode!="id"||IDFLAGS.includes(t.flag.kind))).sort((a,b)=>a.flag.t0-b.flag.t0);
   ev.innerHTML=near.length?near.map(traceHTML).join(""):`<span class="muted">No investigations within ±60 s — the pipeline was confident here.</span>`}}
 function traceHTML(t){const fl=t.flag,fi=t.final||{},id=t._file||(fl.kind+fl.t0);
  const steps=(t.steps||[]).map(s=>s.tool?`<div class="step"><b>Thought:</b> ${esc(s.thought)}<br><b>Tool</b> <code>${esc(s.tool)}</code> <span class="muted small">${esc(JSON.stringify(s.args))} · ${esc(s.evidence_kind)}</span><pre>${esc(s.result)}</pre>${(s.images||[]).map(p=>`<img src="${f(p)}" onclick="zoom(this.src)">`).join("")}</div>`
   :`<div class="step final"><b>Decision:</b> ${esc(s.thought)}<pre>${esc(JSON.stringify(s.final,null,1))}</pre><b>Self-check:</b> ${s.verified?'<span style="color:var(--ok)">passed</span>':'<span style="color:var(--bad)">failed: '+esc((s.check||[]).join("; "))+"</span>"}</div>`).join("");
  return `<details class="ev" ${openEv.has(id)?"open":""} ontoggle="this.open?openEv.add('${esc(id)}'):openEv.delete('${esc(id)}')"><summary><b>${esc(fl.kind)}</b><span class="small">${hms(fl.t0)}</span><span class="chip">${esc((fl.cow_ids||[]).slice(0,3).join(", "))}</span>${fl.camera?`<span class="chip">${fl.camera}${fl.track_id!=null?" t"+fl.track_id:""}</span>`:""}<span class="pill b-${fi.decision}">${esc(fi.decision)}</span><span class="muted small">${t.seconds}s · ${(t.steps||[]).length} steps</span><a class="small" onclick="event.preventDefault();seek(${Math.round(fl.t0)})" href="#">jump</a></summary>
  <div class="small muted" style="margin:4px 0">${esc(fl.detail)} · ${esc(fi.summary||"")}</div>${steps}</details>`}
-function drawStrip(){const cv=document.getElementById("rp-strip");if(!cv||!STRIP||!M)return;const cows=M.cows,rh=12,W=1200,span=Math.max(1,M.t_max-M.t_min);
- cv.width=W;cv.height=cows.length*rh+16;const g=cv.getContext("2d");g.clearRect(0,0,W,cv.height);g.font="10px sans-serif";
- cows.forEach((cid,i)=>{(STRIP.rows[cid]||[]).forEach(([a,b,be])=>{g.fillStyle=BEH[be]||"#999";g.fillRect(60+(W-60)*(a-M.t_min)/span,i*rh,Math.max(1,(W-60)*(b-a+1)/span),rh-2)});
+function drawStrip(){const cv=document.getElementById("rp-strip");const src=mode=="id"?IDS:STRIP;if(!cv||!src||!M)return;const cows=M.cows,rh=12,W=1200,span=Math.max(1,M.t_max-M.t_min);
+ const nrow=cows.length+(mode=="id"?1:0);cv.width=W;cv.height=nrow*rh+16;const g=cv.getContext("2d");g.clearRect(0,0,W,cv.height);g.font="10px sans-serif";
+ cows.forEach((cid,i)=>{(src.rows[cid]||[]).forEach(([a,b,be])=>{g.fillStyle=mode=="id"?(IDC[be]||"#999"):(BEH[be]||"#999");g.fillRect(60+(W-60)*(a-M.t_min)/span,i*rh,Math.max(1,(W-60)*(b-a+1)/span),rh-2)});
   g.fillStyle=cowColor(cid);g.fillRect(0,i*rh,8,rh-2);g.fillStyle=getComputedStyle(document.body).color;g.fillText(cid,12,i*rh+9)});
- M.flags.forEach(x=>{g.fillStyle=x.severity>=4?"#d64545":x.severity>=3?"#c47f00":"#2f6fde";g.fillRect(60+(W-60)*(x.t0-M.t_min)/span,cows.length*rh+4,3,10)});
+ if(mode=="id"){const i=cows.length;(src.rows.unidentified||[]).forEach(([a,b,n])=>{g.fillStyle=`rgba(140,140,140,${Math.min(1,0.25+n*0.25)})`;g.fillRect(60+(W-60)*(a-M.t_min)/span,i*rh,Math.max(1,(W-60)/span),rh-2)});
+  g.fillStyle=getComputedStyle(document.body).color;g.fillText("no ID",12,i*rh+9)}
+ M.flags.filter(x=>mode!="id"||IDFLAGS.includes(x.kind)).forEach(x=>{g.fillStyle=x.severity>=4?"#d64545":x.severity>=3?"#c47f00":"#2f6fde";g.fillRect(60+(W-60)*(x.t0-M.t_min)/span,nrow*rh+4,3,10)});
  cv.onclick=e=>{const r=cv.getBoundingClientRect(),x=(e.clientX-r.left)*W/r.width;if(x>60)seek(M.t_min+(x-60)/(W-60)*span)};
  if(cur!=null){const x=60+(W-60)*(cur-M.t_min)/span;g.fillStyle="#000";g.fillRect(x-1,0,3,cv.height);g.fillStyle="#fff";g.fillRect(x,0,1,cv.height)}}
 function drawStripCursor(){drawStrip()}
@@ -174,7 +197,7 @@ async function tick(){try{
  const ms=await (await fetch("/api/meta")).text();const ss=await (await fetch("/api/state")).text();
  document.getElementById("live").style.background="var(--ok)";
  const mChanged=ms!==lastM,sChanged=ss!==lastS;lastM=ms;lastS=ss;M=JSON.parse(ms);S=JSON.parse(ss);
- if(mChanged&&M.ready){STRIP=await (await fetch("/api/strip")).json();if(cur==null||cur<M.t_min||cur>M.t_max)cur=+ls("cur")||M.t_min}
+ if(mChanged&&M.ready){STRIP=await (await fetch("/api/strip")).json();IDS=await (await fetch("/api/idstrip")).json();if(cur==null||cur<M.t_min||cur>M.t_max)cur=+ls("cur")||M.t_min}
  if(tab=="Replay"){if(built!=="Replay"||mChanged)render(true);else if(sChanged){header();nav();drawAt()}}
  else if(sChanged||mChanged)render(true);
 }catch(e){document.getElementById("live").style.background="var(--bad)"}}
