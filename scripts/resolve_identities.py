@@ -77,7 +77,10 @@ def main():
 
     out = raw.copy()
     out["global_cow_id"] = [mapping.get((c, int(t))) for c, t in zip(raw.camera_id, raw.local_track_id)]
-    out["identity_confidence"] = np.where(out.global_cow_id.notna(), 0.9, np.nan)
+    out["identity_confidence"] = [res.confidence.get((c, int(t))) for c, t in zip(raw.camera_id, raw.local_track_id)]
+    # positions from the current calibration of every camera (cam2/cam3 were refitted from cows)
+    assert len(rec) == len(out) and (rec.local_track_id.to_numpy() == out.local_track_id.to_numpy()).all()
+    out["world_x"], out["world_y"] = rec.gx.round(3).to_numpy(), rec.gy.round(3).to_numpy()
     out.to_csv(os.path.join(a.out, "tracking_records_resolved.csv"), index=False)
 
     # identity sheet: per cow, up to 3 crops per camera

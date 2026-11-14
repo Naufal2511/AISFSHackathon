@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pen 6 Monitor</title>
+<style>
+:root{--bg:#f5f6f8;--panel:#fff;--ink:#1d2330;--muted:#667085;--line:#e3e6ec;--accent:#2f6fde;--ok:#1f9d55;--warn:#c47f00;--bad:#d64545;--chip:#eef2f8;--map:#f3efe6}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1217;--panel:#181c24;--ink:#e6e9ef;--muted:#98a2b3;--line:#2a303b;--accent:#6c9cff;--ok:#3ccf7c;--warn:#f0b43c;--bad:#ff6b6b;--chip:#232a36;--map:#1f232b}}
+:root[data-theme="dark"]{--bg:#0f1217;--panel:#181c24;--ink:#e6e9ef;--muted:#98a2b3;--line:#2a303b;--accent:#6c9cff;--ok:#3ccf7c;--warn:#f0b43c;--bad:#ff6b6b;--chip:#232a36;--map:#1f232b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif}
+header{position:sticky;top:0;z-index:5;background:var(--panel);border-bottom:1px solid var(--line);padding:8px 16px;display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+h1{font-size:15px;margin:0}h2{font-size:13px;margin:0 0 8px;font-weight:600}
+.stat{display:flex;flex-direction:column}.stat b{font-size:16px}.stat span{color:var(--muted);font-size:11px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--ok);display:inline-block;margin-right:6px;animation:p 2s infinite}@keyframes p{50%{opacity:.3}}
+nav{display:flex;gap:4px;padding:8px 16px;flex-wrap:wrap}nav button,.btn{border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:5px 11px;border-radius:8px;cursor:pointer;font:inherit}
+nav button.on,.btn.on{background:var(--accent);border-color:var(--accent);color:#fff}
+main{padding:0 16px 32px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:12px;overflow:auto}
+.muted{color:var(--muted)}.small{font-size:11px}.chip{display:inline-block;background:var(--chip);border-radius:999px;padding:1px 8px;font-size:11px;margin:1px 3px 1px 0}
+table{border-collapse:collapse;width:100%}th,td{border-bottom:1px solid var(--line);padding:3px 6px;text-align:left;font-size:12px;white-space:nowrap}
+pre{background:var(--chip);padding:8px;border-radius:6px;white-space:pre-wrap;font-size:11px;margin:4px 0;max-height:240px;overflow:auto}
+.pill{border-radius:6px;padding:1px 6px;font-size:11px;font-weight:600}
+.b-relabel{background:#2f6fde22;color:var(--accent)}.b-uncertain{background:#c47f0022;color:var(--warn)}.b-confirm{background:#1f9d5522;color:var(--ok)}
+.b-set_behavior{background:#7a4cd922;color:#8b5cf6}.b-escalate{background:#d6454522;color:var(--bad)}.b-note{background:var(--chip)}
+#zoom{position:fixed;inset:0;background:#000c;display:none;align-items:center;justify-content:center;z-index:9;cursor:zoom-out}#zoom img{max-width:96vw;max-height:94vh}
+/* replay */
+.rp-top{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.rp-top input[type=range]{flex:1;min-width:200px}
+#rp-time{font:600 18px ui-monospace,Menlo,monospace;min-width:92px}
+.flagtrack{position:relative;height:14px;margin:4px 0 0}.flagtrack i{position:absolute;top:0;width:3px;height:14px;border-radius:2px;cursor:pointer}
+.rp-grid{display:grid;grid-template-columns:minmax(0,1fr) 230px;gap:12px;margin-top:10px}
+.cams{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:8px}
+.cam{position:relative;background:#000;border-radius:8px;overflow:hidden}.cam img{display:block;width:100%}
+.cam .cap{position:absolute;left:0;top:0;background:#000a;color:#fff;font-size:11px;padding:2px 6px;border-bottom-right-radius:6px}
+.box{position:absolute;border:2px solid;border-radius:2px;pointer-events:auto}
+.box span{position:absolute;left:-2px;top:-17px;font-size:10px;line-height:15px;padding:0 3px;color:#fff;white-space:nowrap;border-radius:3px 3px 0 0}
+.box.unk{border-style:dashed}.box.hl{border-width:4px;box-shadow:0 0 0 2px #fff}
+.side{display:flex;flex-direction:column;gap:8px}
+.cowrow{cursor:pointer}.cowrow:hover{background:var(--chip)}.sw{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.ev{border:1px solid var(--line);border-radius:8px;padding:6px;margin-bottom:6px}.ev summary{cursor:pointer;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.step{border-left:3px solid var(--line);padding:3px 8px;margin:6px 0}.step.final{border-color:var(--accent)}.step img{max-width:100%;border-radius:6px;cursor:zoom-in}
+.strip canvas{width:100%;height:auto;display:block;cursor:pointer;border-radius:6px}
+.legend span{display:inline-flex;align-items:center;margin-right:10px;font-size:11px}.legend i{width:11px;height:11px;border-radius:3px;margin-right:4px;display:inline-block}
+.heat td.c{width:26px;height:20px;padding:0;border:1px solid var(--bg)}.heat th{font-weight:500;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}.card{border:1px solid var(--line);border-radius:10px;padding:8px}
+.thumbs{display:flex;gap:4px;overflow-x:auto;margin:6px 0}.thumbs img{height:78px;border-radius:6px;cursor:zoom-in}
+.log{font:11px ui-monospace,Menlo,monospace;white-space:pre-wrap}
+@media (max-width:900px){.rp-grid{grid-template-columns:1fr}}
+</style></head><body>
+<header><h1><span class="dot" id="live"></span>Pen 6 monitor</h1>
+<div class="stat"><b id="s-span">-</b><span>time slot processed</span></div>
+<div class="stat"><b id="s-boxes">-</b><span>boxes · cows</span></div>
+<div class="stat"><b id="s-id">-</b><span>cross-camera ID agreement</span></div>
+<div class="stat"><b id="s-inv">-</b><span>agent investigations</span></div>
+<div class="stat"><b id="s-dec">-</b><span>decisions</span></div>
+<div class="stat"><b id="s-be">-</b><span>reasoning model</span></div></header>
+<nav id="tabs"></nav><main id="main"></main><div id="zoom" onclick="this.style.display='none'"><img></div>
+<script>
+const BEH={"lying":"#4c78a8","standing":"#9ecae9","walking":"#f58518","feeding":"#54a24b","drinking":"#2bb3c9","ruminating (lying)":"#7b4fbd","ruminating (standing)":"#b279a2","grooming":"#e45756","social interaction":"#eeca3b","other / not visible":"#bab0ac"};
+const COWC=["#e6194b","#3cb44b","#ffb000","#4363d8","#f58231","#911eb4","#42d4f4","#f032e6","#9a6324","#469990","#800000","#808000"];
+const TABS=["Replay","Activity","Agent traces","Identity","Memory cards","ID checks","Corrections","Log"];
+const ls=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}};
+let tab=ls("tab")||"Replay",S=null,M=null,STRIP=null,AT=null,cur=null,playing=false,speed=+(ls("speed")||1),hl=null,actView="after",openEv=new Set();
+const f=p=>"/file?p="+encodeURIComponent(p);const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const hms=t=>new Date(t*1000).toISOString().slice(11,19);
+const cowColor=c=>{if(!c)return "#9aa0a6";const i=M&&M.cows?M.cows.indexOf(c):-1;return COWC[(i>=0?i:parseInt(c.split("_")[1]||0))%COWC.length]};
+function zoom(src){const z=document.getElementById("zoom");z.querySelector("img").src=src;z.style.display="flex"}
+function nav(){document.getElementById("tabs").innerHTML=TABS.map(t=>`<button class="${t==tab?"on":""}" onclick="setTab('${t}')">${t}${t=="Agent traces"&&S?` (${S.traces.length})`:""}</button>`).join("")}
+function setTab(t){tab=t;ls("tab",t);render(true)}
+function header(){
+ if(M&&M.ready)document.getElementById("s-span").textContent=`${hms(M.t_min)}–${hms(M.t_max)} (${Math.round((M.t_max-M.t_min)/60)} min)`;
+ if(S){const id=S.identity;if(id){const a=id.consistency_after||{},b=id.consistency_before||{};document.getElementById("s-id").textContent=`${Math.round((a.share_within_3m||0)*100)}% within 3 m (was ${Math.round((b.share_within_3m||0)*100)}%)`;
+  document.getElementById("s-boxes").textContent=`${Math.round((id.assigned_box_share||0)*100)}% IDed · ${Object.keys(id.identities||{}).length} cows`}
+  const dec={};S.traces.forEach(t=>{const d=(t.final||{}).decision;dec[d]=(dec[d]||0)+1});
+  document.getElementById("s-inv").textContent=S.traces.length;document.getElementById("s-dec").textContent=Object.entries(dec).map(([k,v])=>`${v} ${k}`).join(" · ")||"-";
+  document.getElementById("s-be").textContent=((S.traces[0]||{}).backend||"-").split(" @")[0]}}
+
+/* ---------------- Replay ---------------- */
+function replayShell(){
+ if(!M||!M.ready)return `<div class="panel muted">Waiting for tracking records…</div>`;
+ const flags=M.flags.map((x,i)=>{const l=100*(x.t0-M.t_min)/Math.max(1,M.t_max-M.t_min);const col=x.severity>=4?"var(--bad)":x.severity>=3?"var(--warn)":"var(--accent)";
+  return `<i style="left:${l}%;background:${col}" title="${esc(hms(x.t0)+" "+x.kind+" "+x.cows.join(",")+" → "+(x.decision||"…"))}" onclick="seek(${Math.round(x.t0)})"></i>`}).join("");
+ return `<div class="panel"><div class="rp-top">
+  <button class="btn" id="rp-play" onclick="togglePlay()">▶ Play</button>
+  <button class="btn" onclick="seek(cur-1)">‹ 1s</button><button class="btn" onclick="seek(cur+1)">1s ›</button>
+  <select class="btn" onchange="speed=+this.value;ls('speed',speed)">${[1,2,5,10,30].map(v=>`<option value="${v}" ${v==speed?"selected":""}>${v} s / step</option>`).join("")}</select>
+  <span id="rp-time">--:--:--</span>
+  <input type="range" id="rp-range" min="${M.t_min}" max="${M.t_max}" value="${cur}" oninput="seek(+this.value,true)">
+  <button class="btn" onclick="jumpFlag(1)" title="next agent investigation">next flag ⏭</button></div>
+  <div class="flagtrack">${flags}</div>
+  <div class="small muted">markers = agent investigations (red drastic, amber audit, blue low-confidence) · click a box or cow to highlight it everywhere</div></div>
+ <div class="rp-grid"><div><div class="cams" id="rp-cams">${M.cameras.map(c=>`<div class="cam" id="cam-${c}"><img id="img-${c}" alt="${c}"><div class="cap">${esc((M.cam_names||{})[c]||c)}</div><div class="ov" id="ov-${c}"></div></div>`).join("")}</div>
+  <div class="panel strip" style="margin-top:10px"><h2>Behavior over the slot <span class="muted small">(click to jump)</span></h2><canvas id="rp-strip" height="10"></canvas>
+  <div class="legend" style="margin-top:6px">${Object.entries(BEH).map(([k,v])=>`<span><i style="background:${v}"></i>${k}</span>`).join("")}</div></div>
+  <div class="panel"><h2>Agent around this moment <span class="muted small">(±60 s)</span></h2><div id="rp-events" class="muted">-</div></div></div>
+ <div class="side"><div class="panel"><h2>Pen map</h2><svg id="rp-map" viewBox="-3.2 -1.6 16.4 33.2" style="width:100%;max-height:520px"></svg></div>
+  <div class="panel"><h2>Cows now</h2><div id="rp-cows"></div></div></div></div>`}
+function mapStatic(){
+ let s=`<rect x="0" y="0" width="12" height="30" fill="var(--map)" stroke="var(--muted)" stroke-width="0.12"/>`+
+  `<rect x="-2.6" y="0" width="2.4" height="30" fill="none" stroke="var(--muted)" stroke-width="0.08" stroke-dasharray=".3 .3"/><text x="-1.4" y="16" font-size="0.9" fill="var(--muted)" text-anchor="middle" transform="rotate(-90 -1.4 16)">chute</text>`+
+  `<rect x="0" y="30" width="12" height="1" fill="#c8a165"/><text x="6" y="30.8" font-size="0.75" text-anchor="middle" fill="#3b2a10">feed bunk (front)</text>`;
+ const Z=M.zones||{},zc={drinking_zone:"#2bb3c955",feeding_zone:"#54a24b33",resting_zone:"#4c78a822"};
+ for(const [k,poly] of Object.entries(Z)){if(!zc[k])continue;s+=`<polygon points="${poly.map(p=>`${p[0]},${30-p[1]}`).join(" ")}" fill="${zc[k]}" stroke="none"/>`}
+ for(const [c,p] of Object.entries(M.cam_pos||{})){if(!p)continue;s+=`<g><circle cx="${p[0]}" cy="${30-p[1]}" r="0.45" fill="var(--accent)"/><text x="${p[0]+0.6}" y="${30-p[1]+0.3}" font-size="0.8" fill="var(--accent)">${c}</text></g>`}
+ for(let y=0;y<=30;y+=5)s+=`<text x="12.3" y="${30-y+0.3}" font-size="0.7" fill="var(--muted)">${y}</text>`;
+ return s}
+async function seek(t,fromRange){if(!M||!M.ready)return;cur=Math.max(M.t_min,Math.min(M.t_max,Math.round(t)));ls("cur",cur);
+ const r=document.getElementById("rp-range");if(r&&!fromRange)r.value=cur;document.getElementById("rp-time").textContent=hms(cur);
+ const loads=M.cameras.map(c=>new Promise(res=>{const im=document.getElementById("img-"+c);if(!im)return res();im.onload=im.onerror=()=>res();im.src=`/api/frame?cam=${c}&t=${cur}`}));
+ const at=await (await fetch("/api/at?t="+cur)).json();AT=at;drawAt();await Promise.all(loads);drawStripCursor()}
+function drawAt(){if(!AT)return;
+ for(const c of M.cameras){const ov=document.getElementById("ov-"+c);if(!ov)continue;
+  ov.innerHTML=AT.boxes.filter(b=>b.cam==c).map(b=>{const col=cowColor(b.cow),be=(AT.behavior[b.cow]||{}).behavior||"";
+   return `<div class="box ${b.cow?"":"unk"} ${hl&&b.cow==hl?"hl":""}" style="left:${b.x1*100}%;top:${b.y1*100}%;width:${(b.x2-b.x1)*100}%;height:${(b.y2-b.y1)*100}%;border-color:${col}" title="${esc((b.cow||"no ID")+" · track "+b.track+" · det "+b.det+(b.idc!=null?" · id conf "+b.idc:"")+(be?" · "+be:""))}" onclick="hl=${b.cow?`'${b.cow}'`:"null"};drawAt()"><span style="background:${col}">${esc(b.cow?b.cow.replace("COW_","#"):"t"+b.track)}${be?" · "+esc(be.split(" ")[0]):""}</span></div>`}).join("")}
+ const map=document.getElementById("rp-map");
+ if(map){map.innerHTML=mapStatic()+Object.entries(AT.cows).map(([cid,p])=>{const col=cowColor(cid),be=(AT.behavior[cid]||{}).behavior||"";
+  return `<g style="cursor:pointer" onclick="hl='${cid}';drawAt()"><title>${esc(cid+" ("+p.x+", "+p.y+") m · "+be+" · seen by "+p.cams.join(", ")+(p.spread?" · cameras agree within "+p.spread+" m":""))}</title><circle cx="${p.x}" cy="${30-p.y}" r="${hl==cid?0.85:0.6}" fill="${col}" stroke="${BEH[be]||"#fff"}" stroke-width="0.3"/><text x="${p.x}" y="${30-p.y+0.3}" font-size="0.7" text-anchor="middle" fill="#fff">${cid.slice(4)}</text></g>`}).join("")}
+ const cw=document.getElementById("rp-cows");
+ if(cw){const ids=[...new Set([...(M.cows||[]),...Object.keys(AT.behavior)])].sort();
+  cw.innerHTML=`<table><tr><th>cow</th><th>behavior</th><th>conf</th><th>seen by</th></tr>${ids.map(cid=>{const b=AT.behavior[cid]||{},p=AT.cows[cid];
+   return `<tr class="cowrow" style="${hl==cid?"font-weight:700":""}" onclick="hl='${cid}';drawAt()"><td><span class="sw" style="background:${cowColor(cid)}"></span>${cid}</td><td><span class="sw" style="background:${BEH[b.behavior]||"transparent"}"></span>${esc(b.behavior||"—")}</td><td>${b.conf??""}</td><td class="small">${p?p.cams.map(x=>x.replace("cam","")).join(","):"<span class='muted'>not seen</span>"}</td></tr>`}).join("")}</table>`}
+ const ev=document.getElementById("rp-events");
+ if(ev&&S){const near=S.traces.filter(t=>t.flag.t0-60<=cur&&cur<=t.flag.t1+60).sort((a,b)=>a.flag.t0-b.flag.t0);
+  ev.innerHTML=near.length?near.map(traceHTML).join(""):`<span class="muted">No investigations within ±60 s — the pipeline was confident here.</span>`}}
+function traceHTML(t){const fl=t.flag,fi=t.final||{},id=t._file||(fl.kind+fl.t0);
+ const steps=(t.steps||[]).map(s=>s.tool?`<div class="step"><b>Thought:</b> ${esc(s.thought)}<br><b>Tool</b> <code>${esc(s.tool)}</code> <span class="muted small">${esc(JSON.stringify(s.args))} · ${esc(s.evidence_kind)}</span><pre>${esc(s.result)}</pre>${(s.images||[]).map(p=>`<img src="${f(p)}" onclick="zoom(this.src)">`).join("")}</div>`
+  :`<div class="step final"><b>Decision:</b> ${esc(s.thought)}<pre>${esc(JSON.stringify(s.final,null,1))}</pre><b>Self-check:</b> ${s.verified?'<span style="color:var(--ok)">passed</span>':'<span style="color:var(--bad)">failed: '+esc((s.check||[]).join("; "))+"</span>"}</div>`).join("");
+ return `<details class="ev" ${openEv.has(id)?"open":""} ontoggle="this.open?openEv.add('${esc(id)}'):openEv.delete('${esc(id)}')"><summary><b>${esc(fl.kind)}</b><span class="small">${hms(fl.t0)}</span><span class="chip">${esc((fl.cow_ids||[]).slice(0,3).join(", "))}</span>${fl.camera?`<span class="chip">${fl.camera}${fl.track_id!=null?" t"+fl.track_id:""}</span>`:""}<span class="pill b-${fi.decision}">${esc(fi.decision)}</span><span class="muted small">${t.seconds}s · ${(t.steps||[]).length} steps</span><a class="small" onclick="event.preventDefault();seek(${Math.round(fl.t0)})" href="#">jump</a></summary>
+ <div class="small muted" style="margin:4px 0">${esc(fl.detail)} · ${esc(fi.summary||"")}</div>${steps}</details>`}
+function drawStrip(){const cv=document.getElementById("rp-strip");if(!cv||!STRIP||!M)return;const cows=M.cows,rh=12,W=1200,span=Math.max(1,M.t_max-M.t_min);
+ cv.width=W;cv.height=cows.length*rh+16;const g=cv.getContext("2d");g.clearRect(0,0,W,cv.height);g.font="10px sans-serif";
+ cows.forEach((cid,i)=>{(STRIP.rows[cid]||[]).forEach(([a,b,be])=>{g.fillStyle=BEH[be]||"#999";g.fillRect(60+(W-60)*(a-M.t_min)/span,i*rh,Math.max(1,(W-60)*(b-a+1)/span),rh-2)});
+  g.fillStyle=cowColor(cid);g.fillRect(0,i*rh,8,rh-2);g.fillStyle=getComputedStyle(document.body).color;g.fillText(cid,12,i*rh+9)});
+ M.flags.forEach(x=>{g.fillStyle=x.severity>=4?"#d64545":x.severity>=3?"#c47f00":"#2f6fde";g.fillRect(60+(W-60)*(x.t0-M.t_min)/span,cows.length*rh+4,3,10)});
+ cv.onclick=e=>{const r=cv.getBoundingClientRect(),x=(e.clientX-r.left)*W/r.width;if(x>60)seek(M.t_min+(x-60)/(W-60)*span)};
+ if(cur!=null){const x=60+(W-60)*(cur-M.t_min)/span;g.fillStyle="#000";g.fillRect(x-1,0,3,cv.height);g.fillStyle="#fff";g.fillRect(x,0,1,cv.height)}}
+function drawStripCursor(){drawStrip()}
+function togglePlay(){playing=!playing;document.getElementById("rp-play").textContent=playing?"❚❚ Pause":"▶ Play";if(playing)loop()}
+async function loop(){while(playing&&tab=="Replay"){if(cur>=M.t_max){playing=false;break}await seek(cur+speed);await new Promise(r=>setTimeout(r,250))}
+ const b=document.getElementById("rp-play");if(b)b.textContent="▶ Play"}
+function jumpFlag(d){const n=M.flags.find(x=>x.t0>cur+1);if(n)seek(Math.round(n.t0))}
+
+/* ---------------- other tabs ---------------- */
+function activity(){const rows=actView=="after"&&S.activity_after.length?S.activity_after:S.activity_before;
+ if(!rows.length)return `<div class="panel muted">No activity.csv yet.</div>`;
+ const mins=[...new Set(rows.map(r=>r.minute_start))].sort(),cows=[...new Set(rows.map(r=>r.cow_id))].sort();const m={};rows.forEach(r=>m[r.cow_id+"|"+r.minute_start]=r);
+ let h=`<div class="panel"><h2>Behavior per cow per minute (activity.csv)</h2><div style="margin-bottom:8px"><button class="btn ${actView=="before"?"on":""}" onclick="actView='before';render(true)">pipeline</button> <button class="btn ${actView=="after"?"on":""}" onclick="actView='after';render(true)" ${S.activity_after.length?"":"disabled"}>after agent</button> <span class="muted small">hover = share / confidence / evidence · click = open in Replay</span></div><table class="heat"><tr><th></th>${mins.map(x=>`<th>${x.slice(11,16)}</th>`).join("")}</tr>`;
+ cows.forEach(c=>{h+=`<tr><th><span class="sw" style="background:${cowColor(c)}"></span>${c}</th>`+mins.map(x=>{const r=m[c+"|"+x];if(!r)return `<td class="c"></td>`;const est=(r.evidence||"").startsWith("estimated")||r.evidence=="not_visible";
+  const t=Date.parse(x.replace(" ","T")+"Z")/1000;
+  return `<td class="c" onclick="hl='${c}';cur=${t+30};setTab('Replay')" title="${c} ${x.slice(11,16)}\n${r.behavior} ${(+r.share*100).toFixed(0)}% of minute\nconfidence ${(+r.confidence).toFixed(2)}\nevidence ${r.evidence}\nseen ${r.seconds_observed}s on ${r.cameras}" style="cursor:pointer;background:${BEH[r.behavior]||"#999"};opacity:${Math.max(.35,Math.min(1,+r.confidence||0))};${est?"background-image:repeating-linear-gradient(45deg,#fff5 0 3px,transparent 3px 6px)":""}"></td>`}).join("")+"</tr>"});
+ h+=`</table><div class="legend" style="margin-top:6px">${Object.entries(BEH).map(([k,v])=>`<span><i style="background:${v}"></i>${k}</span>`).join("")}</div></div>`;
+ if(S.budgets.length){const keys=Object.keys(S.budgets[0]).slice(0,12);h+=`<div class="panel"><h2>Time budgets</h2><table><tr>${keys.map(k=>`<th>${esc(k)}</th>`).join("")}</tr>${S.budgets.map(r=>`<tr>${keys.map(k=>`<td>${esc(r[k])}</td>`).join("")}</tr>`).join("")}</table></div>`}return h}
+function traces(){if(!S.traces.length)return `<div class="panel muted">No investigations yet.</div>`;return `<div class="panel">${S.traces.map(traceHTML).join("")}</div>`}
+function identity(){const id=S.identity;if(!id)return `<div class="panel muted">No identity report yet.</div>`;const a=id.consistency_after||{},b=id.consistency_before||{};
+ return `<div class="panel"><h2>Identity by agreement</h2><table><tr><th></th><th>median spread between cameras</th><th>within 3 m</th></tr><tr><td>tracker IDs</td><td>${b.median_spread_m} m</td><td>${Math.round((b.share_within_3m||0)*100)}%</td></tr><tr><td><b>agreement resolver</b></td><td><b>${a.median_spread_m} m</b></td><td><b>${Math.round((a.share_within_3m||0)*100)}%</b></td></tr></table>
+ <p class="small">${id.tracklets} track pieces · ${id.mutual_agreements} cross-camera agreements · ${id.cannot_links} cannot-links · merges: ${id.agreement_merges} agreement, ${id.continuity_merges} continuity, ${id.appearance_merges} appearance, ${id.attached_leftovers} attached · ${Math.round(id.assigned_box_share*100)}% of boxes identified</p>
+ <table><tr><th>cow</th><th>seconds</th><th>track pieces</th><th>cameras</th></tr>${Object.entries(id.identities||{}).sort().map(([k,v])=>`<tr><td><span class="sw" style="background:${cowColor(k)}"></span>${k}</td><td>${v.seconds}</td><td>${v.tracklets}</td><td>${v.cameras.join(", ")}</td></tr>`).join("")}</table></div>
+ ${S.identity_sheet?`<div class="panel"><h2>Identity sheet (crops per cow per camera)</h2><img src="${f(S.identity_sheet)}" style="max-width:100%;cursor:zoom-in" onclick="zoom(this.src)"></div>`:""}`}
+function memory(){if(!S.cards.length)return `<div class="panel muted">No memory cards yet.</div>`;
+ return `<div class="grid">`+S.cards.filter(c=>!c.same_as).map(c=>`<div class="card"><b><span class="sw" style="background:${cowColor(c.cow_id)}"></span>${c.cow_id}</b> <span class="small muted">${c.confirmed?"✓ confirmed":"auto-enrolled"}</span>
+ <div class="thumbs">${(c.references||[]).map(p=>`<img src="${f(p)}" onclick="zoom(this.src)">`).join("")}</div>${c.ear_tag?`<span class="chip">tag ${esc(c.ear_tag)}</span>`:""}${((c.stats||{}).cameras||[]).map(x=>`<span class="chip">${x}</span>`).join("")}
+ <div class="small">${esc(c.traits)||'<span class="muted">no traits</span>'}</div><div class="small muted">last seen ${esc((c.last_seen||{}).time||"-")} ${esc((c.last_seen||{}).camera||"")}</div>
+ ${(c.notes||[]).slice(-4).map(n=>`<div class="small">• <span class="muted">${esc(n.time)}</span> ${esc(n.text)}</div>`).join("")}</div>`).join("")+`</div>`}
+function idchecks(){if(!S.id_checks.length)return `<div class="panel muted">No ID-check sheets yet.</div>`;return S.id_checks.slice().reverse().map(p=>`<div class="panel"><h2>${esc(p.split("/").pop())}</h2><img src="${f(p)}" style="max-width:100%;cursor:zoom-in" onclick="zoom(this.src)"></div>`).join("")}
+function corrections(){if(!S.corrections.length)return `<div class="panel muted">No corrections yet.</div>`;const keys=["flag","flag_time","decision","camera","track_id","cow_id","new_cow_id","behavior","t0","t1","confidence","summary"];
+ return `<div class="panel"><table><tr>${keys.map(k=>`<th>${k}</th>`).join("")}</tr>${S.corrections.map(r=>`<tr>${keys.map(k=>`<td>${k=="decision"?`<span class="pill b-${r[k]}">${esc(r[k])}</span>`:esc(r[k])}</td>`).join("")}</tr>`).join("")}</table></div>`}
+function log(){return `<div class="panel"><h2>Chain</h2><div class="log">${esc((S.chain_log||[]).join("\n"))||"(empty)"}</div></div><div class="panel"><h2>Agent log</h2><div class="log">${esc(S.log.join("\n"))||"(empty)"}</div></div>`}
+
+/* ---------------- render / polling ---------------- */
+let built=null;
+async function render(force){nav();header();
+ if(tab=="Replay"){if(built!=="Replay"||force){document.getElementById("main").innerHTML=replayShell();built="Replay";if(M&&M.ready){drawStrip();seek(cur??(+ls("cur")||M.t_min))}}else drawAt();return}
+ built=tab;const y=window.scrollY;
+ document.getElementById("main").innerHTML={"Activity":activity,"Agent traces":traces,"Identity":identity,"Memory cards":memory,"ID checks":idchecks,"Corrections":corrections,"Log":log}[tab]();window.scrollTo(0,y)}
+let lastS="",lastM="";
+async function tick(){try{
+ const ms=await (await fetch("/api/meta")).text();const ss=await (await fetch("/api/state")).text();
+ document.getElementById("live").style.background="var(--ok)";
+ const mChanged=ms!==lastM,sChanged=ss!==lastS;lastM=ms;lastS=ss;M=JSON.parse(ms);S=JSON.parse(ss);
+ if(mChanged&&M.ready){STRIP=await (await fetch("/api/strip")).json();if(cur==null||cur<M.t_min||cur>M.t_max)cur=+ls("cur")||M.t_min}
+ if(tab=="Replay"){if(built!=="Replay"||mChanged)render(true);else if(sChanged){header();nav();drawAt()}}
+ else if(sChanged||mChanged)render(true);
+}catch(e){document.getElementById("live").style.background="var(--bad)"}}
+tick();setInterval(tick,5000);
+</script></body></html>

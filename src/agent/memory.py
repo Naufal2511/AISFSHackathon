@@ -201,7 +201,8 @@ class Memory:
                 continue
             tr = out.get("traits") or {k: out[k] for k in ("face", "white_marks", "build") if out.get(k)}
             if out.get("ear_tag_colour") and out.get("ear_tag_colour") not in ("none visible", "unclear"):
-                out["ear_tag"] = out["ear_tag_colour"] + (f" #{out['ear_tag_number']}" if out.get("ear_tag_number") else "")
+                # colour only: a 7B local model invents tag numbers (e.g. "#1234" on every cow)
+                out["ear_tag"] = out["ear_tag_colour"]
             if isinstance(tr, dict):
                 tr = "; ".join(f"{k.replace('_', ' ')}: {v}" for k, v in tr.items())
             elif isinstance(tr, list):

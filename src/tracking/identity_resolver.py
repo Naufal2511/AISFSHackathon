@@ -189,7 +189,11 @@ class IdentityResolver:
                     return True
             return any((m, n) in cannot for m in X.members for n in Y.members)
 
-        def merge(x: int, y: int):
+        how: Dict[Tuple[str, int], str] = {}
+
+        def merge(x: int, y: int, kind: str = ""):
+            for m in cl[y].members + (cl[x].members if len(cl[x].members) == 1 else []):
+                how.setdefault(m, kind)
             X, Y = cl[x], cl.pop(y)
             X.members += Y.members
             for cam, secs in Y.occ.items():
@@ -208,7 +212,7 @@ class IdentityResolver:
                 if conflict(x, y):
                     stats["blocked"] += 1
                     continue
-                merge(x, y)
+                merge(x, y, kind)
                 stats[kind] += 1
 
         # --- appearance merges (same camera only), until the pen count is reached
@@ -239,7 +243,7 @@ class IdentityResolver:
             if not cand:
                 break
             s, x, y = max(cand)
-            merge(x, y)
+            merge(x, y, "appearance_merges")
             stats["appearance_merges"] += 1
 
         # --- identities = the largest clusters; attach leftovers when compatible
@@ -269,7 +273,7 @@ class IdentityResolver:
             if opts:
                 opts.sort(reverse=True)
                 if len(opts) == 1 or opts[0][0] - opts[1][0] > 0.05:  # unambiguous only
-                    merge(opts[0][1], x)
+                    merge(opts[0][1], x, "attached")
                     attached += 1
 
         # --- chute rule: out-and-back-in keeps the identity
@@ -289,6 +293,12 @@ class IdentityResolver:
                                                  "seconds": int(len(set().union(*cl[x].occ.values())))}
                                       for x in core if x in cl},
                        "chute_events": chute}
+        # how sure each track's identity is, by the strongest evidence that put it there
+        agreed = {m for _, a, b in mutual for m in (a, b)}
+        conf_of = {"continuity_merges": 0.85, "appearance_merges": 0.7, "attached": 0.55, "": 0.8}
+        self.confidence = {k: (None if mapping[k] is None else
+                               0.95 if k in agreed else conf_of.get(how.get(k, ""), 0.8)) for k in keys}
+        self.how = how
         self.clusters, self.names, self.T = cl, names, T
         return mapping
 
