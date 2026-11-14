@@ -52,7 +52,12 @@ Decision fields: relabel -> camera, track_id, new_cow_id, t0, t1 ; uncertain -> 
 (camera, track_id), t0, t1 ; set_behavior -> cow_id, behavior, t0, t1 ; note -> cow_id, text ;
 escalate -> reason (a human must look); confirm -> nothing extra (the pipeline was right).
 For a scheduled ID audit you may add "mismatches": ["COW_xx", ...] to the final object.
-Times are HH:MM:SS."""
+Times are HH:MM:SS.
+Example of a final reply:
+{"thought": "Appearance ranks COW_07 first by 0.08 and the trajectory shows COW_04 was 9 m away 5 s earlier",
+ "final": {"decision": "relabel", "camera": "cam1", "track_id": 16, "new_cow_id": "COW_07", "t0": "16:02:10",
+ "t1": "16:05:30", "evidence": ["appearance best COW_07 (+0.08)", "COW_04 elsewhere at 16:02:05"],
+ "confidence": 0.7, "summary": "track 16 is COW_07, not COW_04"}}"""
 
 
 def parse_json(text: str) -> Optional[Dict]:

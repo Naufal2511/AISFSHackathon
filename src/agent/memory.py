@@ -162,7 +162,8 @@ class Memory:
                 card.stats["n_observations"] = int(len(g))
                 card.stats["cameras"] = sorted(g.camera_id.unique().tolist())
                 made.append(cid)
-        self.update_last_seen(r)
+        # last_seen is NOT set here (enrollment looks at the whole span; the run loop fills it
+        # window by window so the agent never sees the future)
         self.save()
         self.enrollment_sheet()
         return made
@@ -181,18 +182,26 @@ class Memory:
             msgs = [{"role": "system", "content": "You describe individual cattle for re-identification."},
                     {"role": "user", "content": [
                         {"type": "text", "text": (
-                            f"These crops are meant to show the same Black Angus steer ({cid}) from different "
-                            "cameras. List only features that would tell it apart from other black steers: ear tag "
-                            "colour/number and which ear, white face or white patches, size/build, coat tint, "
-                            "horns/scars. Say if the crops seem to show more than one animal. Reply JSON only: "
-                            '{"traits": "<short>", "ear_tag": "<colour and number or null>", "mixed_animals": true/false}')},
+                            f"Crops of one steer ({cid}) from different cameras. Look at THESE crops only and "
+                            "fill each field with what you actually see. Use \"unclear\" when you cannot see it. "
+                            "Most of these steers are all black, so only report white areas you can clearly see.\n"
+                            "face: all black | white face | white blaze/star | unclear\n"
+                            "ear_tag_colour: yellow | blue | red | green | white | orange | none visible | unclear\n"
+                            "ear_tag_number: digits if readable, else null\n"
+                            "white_marks: where (e.g. belly, legs, tail) or none\n"
+                            "build: small | medium | large | unclear\n"
+                            "mixed_animals: true if the crops clearly show different animals\n"
+                            'Reply JSON only, e.g. {"face": "all black", "ear_tag_colour": "blue", '
+                            '"ear_tag_number": null, "white_marks": "none", "build": "large", "mixed_animals": false}')},
                         {"type": "image_url", "image_url": {"url": "data:image/jpeg;base64," + to_jpeg_b64(img, 1024)}}]}]
             try:
                 out = parse_json(backend.complete(msgs)) or {}
             except Exception as e:
                 print(f"[MEMORY] traits for {cid} failed: {e}")
                 continue
-            tr = out.get("traits", "")
+            tr = out.get("traits") or {k: out[k] for k in ("face", "white_marks", "build") if out.get(k)}
+            if out.get("ear_tag_colour") and out.get("ear_tag_colour") not in ("none visible", "unclear"):
+                out["ear_tag"] = out["ear_tag_colour"] + (f" #{out['ear_tag_number']}" if out.get("ear_tag_number") else "")
             if isinstance(tr, dict):
                 tr = "; ".join(f"{k.replace('_', ' ')}: {v}" for k, v in tr.items())
             elif isinstance(tr, list):

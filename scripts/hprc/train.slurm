@@ -66,6 +66,24 @@ run_bg() {  # run_bg LOGFILE cmd...: background + wait, so the USR1 trap can fir
   return $rc
 }
 
+# Array tasks share data/annotation/labels/*.cache. Ultralytics deletes and rewrites a stale
+# cache, so concurrent tasks race (FileNotFoundError on val.cache). Build the caches once under
+# a lock; every task (and the later val run) then just loads them.
+echo "== $(date) label caches (locked)"
+(
+  flock -w 1800 9 || { echo "ERROR: timed out waiting for label-cache lock"; exit 1; }
+  python - "$DATA" <<'EOF'
+import sys
+from ultralytics.data.utils import check_det_dataset
+from ultralytics.data.dataset import YOLODataset
+d = check_det_dataset(sys.argv[1])
+for split in ("train", "val", "test"):
+    if d.get(split):
+        ds = YOLODataset(img_path=d[split], data=d, task="detect", augment=False)
+        print(f"   {split}: {len(ds.labels)} images cached")
+EOF
+) 9>"$ROOT/data/annotation/.label_cache.lock" || { echo "ERROR: label cache build failed"; exit 1; }
+
 if [ -f "$RUN/TRAIN_DONE" ]; then
   echo "training already finished -> evaluation only"
 elif [ -f "$RUN/weights/last.pt" ]; then

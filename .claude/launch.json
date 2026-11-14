@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "agent-dashboard",
+      "runtimeExecutable": ".venv/bin/python",
+      "runtimeArgs": ["scripts/dashboard.py", "--run", "outputs/run_d1_1600", "--agent", "outputs/agent_d1_1600", "--port", "8765"],
+      "port": 8765
+    }
+  ]
+}

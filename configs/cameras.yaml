@@ -3,7 +3,7 @@
 
 cameras:
   cam1:
-    name: "Front Camera"
+    name: "Front Camera 1"
     role: "front_overview"
     mount_position_estimated: [3.0, 0.0, 4.0] # [X, Y, Z] in meters
     orientation_description: "Mounted on front shelter beam above the feed bunk, looking along pen length toward back fence"
@@ -24,37 +24,45 @@ cameras:
         world: [0.0, 0.0]                        # left-fence ground line with the bunk ground line (undistorted)
 
   cam2:
-    name: "Top / Feed Bunk Camera"
-    role: "top_bunk_monitoring"
-    mount_position_estimated: [6.0, 1.0, 3.8] # [X, Y, Z] in meters
-    orientation_description: "Mounted overhead angled downward, monitoring feed bunk trough and apron"
-    reference_resolution: [2592, 1944]  # actual cam2 video resolution (4:3)
+    name: "Front Camera 2 (bunk)"
+    role: "front_bunk"
+    mount_position_estimated: [7.5, 0.0, 3.5]  # from the official Pen 6 map
+    orientation_description: "On the front fence at ~62% of the width, looking down over the trough into the pen"
+    # Fitted from cows: cam1 positions vs cam2 box centres + front-right corner (bunk meets right fence).
+    # Fit: 97% of boxes land on a cam1 cow, median error 0.24 m
+    # (scripts/calibrate_from_tracks.py on outputs/run_d1_1600/tracking_records.csv).
+    reference_resolution: [2592, 1944]
+    distortion_k1: -0.3684
     expected_fps: 15.0
     time_offset_seconds: 0.0
     calibration_points:
-      - image: [0.1488, 0.9371] # Trough bottom-left
-        world: [0.0, -0.8]
-      - image: [0.8664, 0.7255] # Trough bottom-right
-        world: [12.0, -0.8]
-      - image: [0.8433, 0.0907] # Apron top-right
-        world: [12.0, 3.5]
-      - image: [0.1157, 0.0907] # Apron top-left
-        world: [0.0, 3.5]
+      - image_undistorted_px: [-2856.7, 1514.5]
+        world: [0.0, 0.0]
+      - image_undistorted_px: [2514.4, 773.1]
+        world: [12.0, 0.0]
+      - image_undistorted_px: [1047.0, -1275.3]
+        world: [12.0, 30.0]
+      - image_undistorted_px: [12.6, -1087.2]
+        world: [0.0, 30.0]
 
   cam3:
     name: "Back Camera"
     role: "back_overview"
-    mount_position_estimated: [0.5, 30.0, 4.5] # [X, Y, Z] in meters
-    orientation_description: "Mounted at back-left fence corner looking forward toward front shelter"
-    reference_resolution: [2084, 1164]
+    mount_position_estimated: [0.7, 29.4, 4.0]  # from the official Pen 6 map
+    orientation_description: "Back-left corner on the chute fence, looking diagonally toward the front-right"
+    # Fitted from cows + fence lines (chute fence X=0, right fence X=12, bunk corners), same lens as cam1.
+    # Fit: 64% of boxes land on a cam1 cow, median error 0.54 m
+    # (scripts/calibrate_from_tracks.py on outputs/run_d1_0730_c13/tracking_records.csv).
+    reference_resolution: [4000, 3000]
+    distortion_k1: -0.2812
     expected_fps: 15.0
     time_offset_seconds: 0.0
     calibration_points:
-      - image: [0.7600, 0.9800] # Back-left corner (near camera, chute side)
-        world: [0.0, 28.0]
-      - image: [0.0200, 0.9800] # Back-right corner
-        world: [12.0, 28.0]
-      - image: [0.2200, 0.4700] # Front-right shelter base
-        world: [12.0, 0.0]
-      - image: [0.6800, 0.4500] # Front-left shelter base
+      - image_undistorted_px: [3382.5, 1845.8]
         world: [0.0, 0.0]
+      - image_undistorted_px: [2195.3, 1605.8]
+        world: [12.0, 0.0]
+      - image_undistorted_px: [-17305.4, 4647.3]
+        world: [12.0, 30.0]
+      - image_undistorted_px: [1975.0, 7672.6]
+        world: [0.0, 30.0]

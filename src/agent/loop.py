@@ -32,6 +32,38 @@ CORRECTING = ("relabel", "set_behavior")
 DECISIONS = ("confirm", "relabel", "uncertain", "set_behavior", "note", "escalate")
 
 
+def playbook(f: Flag, hms) -> str:
+    """Suggested plan per flag type, with the arguments filled in. The model may deviate,
+    but small local VLMs follow a concrete plan far more reliably than an open toolbox."""
+    cid = (f.cow_ids or ["COW_01"])[0]
+    t0, t1, mid = hms(f.t0), hms(f.t1), hms((f.t0 + f.t1) / 2)
+    cam, tid = f.camera, f.track_id
+    if f.kind in ("id_jump", "weak_id", "new_cow_id") and tid is not None:
+        return (f"1) all_views {{\"time\": \"{t1}\", \"cow_id\": \"{cid}\"}}  2) compare_to_cards "
+                f"{{\"camera\": \"{cam}\", \"track_id\": {tid}, \"time\": \"{t1}\"}}  3) trajectory "
+                f"{{\"cow_id\": \"{cid}\", \"t0\": \"{hms(f.t0 - 60)}\", \"t1\": \"{hms(f.t1 + 10)}\"}}. "
+                f"Then: confirm if track {tid} really is {cid}; relabel (camera {cam}, track_id {tid}) only if the "
+                "appearance score AND the views/trajectory point to the same other cow; otherwise uncertain.")
+    if f.kind == "duplicate_id":
+        return (f"1) scene {{\"camera\": \"{cam}\", \"time\": \"{t0}\"}}  2) compare_to_cards for each track listed "
+                "in the flag. Then relabel the wrong track or mark it uncertain.")
+    if f.kind in ("extra_cow", "cow_missing"):
+        return (f"1) all_views {{\"time\": \"{t1}\"}}  2) who_is_near for the camera that matters  3) trajectory "
+                f"{{\"cow_id\": \"{cid}\", \"t0\": \"{hms(f.t0 - 120)}\", \"t1\": \"{t1}\"}}. Then note / escalate / confirm.")
+    if f.kind == "behavior_check":
+        beh = (f.data or {}).get("behavior", "")
+        chew = (f"  3) chew_motion {{\"cow_id\": \"{cid}\", \"time\": \"{mid}\"}} (chewing at the feed bunk is "
+                "EATING, not rumination)") if "rumin" in beh else ""
+        return (f"1) behavior {{\"cow_id\": \"{cid}\", \"t0\": \"{t0}\", \"t1\": \"{t1}\"}}  2) cow_strip "
+                f"{{\"cow_id\": \"{cid}\", \"time\": \"{mid}\", \"before\": 6, \"after\": 6}}{chew}. "
+                f"Then confirm, or set_behavior (cow_id {cid}, t0 {t0}, t1 {t1}) if the evidence shows another class.")
+    if f.kind == "id_audit":
+        return ("Look at the attached audit sheet: rows whose labels are red or whose sim-to-own is low are suspects. "
+                "Use compare_to_cards on at most 2 suspects, then give a final confirm with a 'mismatches' list "
+                "(empty if all rows look right).")
+    return "Gather two kinds of evidence, then decide."
+
+
 class Agent:
     def __init__(self, toolbox: Toolbox, memory: Memory, backend, out_dir: str = "outputs/agent",
                  max_steps: int = 6, cfg: Optional[Dict] = None):
@@ -54,7 +86,9 @@ class Agent:
                  + "\n".join(self.memory.describe(c) for c in flag.cow_ids[:10])
                  + (f"\n{intro_text}" if intro_text else "")
                  + f"\nKnown cows: {', '.join(self.memory.known_ids())}\n"
-                 f"Tools (max {self.max_steps} calls):\n{self.tb.describe()}")
+                 f"Tools (max {self.max_steps} calls):\n{self.tb.describe()}\n"
+                 f"SUGGESTED PLAN: {playbook(flag, hms)}\n"
+                 "Decisions are NOT tools: to decide, reply with a \"final\" object.")
         state = {"flag": fd, "steps": [], "hms": hms,
                  "turns": [{"role": "user", "text": intro, "images": intro_images or []}]}
         trace = {"flag": fd, "backend": getattr(self.backend, "label", self.backend.name), "steps": [],
@@ -84,13 +118,39 @@ class Agent:
                                        + ". Gather the missing evidence with a tool, or change the decision."})
                 continue
             name, args = act.get("tool"), act.get("args") or {}
+            if name == "final" and isinstance(args, dict) and args.get("decision") in DECISIONS:
+                name, args = args["decision"], {k: v for k, v in args.items() if k != "decision"}
+            if name in DECISIONS:  # small models sometimes "call" the decision
+                act["final"] = {"decision": name, **args, "evidence": args.get("evidence", []),
+                                "summary": args.get("summary", thought[:200])}
+                state["turns"].pop()
+                state["turns"].append({"role": "assistant", "text": json.dumps({"thought": thought, "final": act["final"]})})
+                final = act["final"]
+                ok, reasons = self.verify(final, state)
+                trace["steps"].append({"thought": thought, "final": final, "verified": ok, "check": reasons})
+                if ok or revisions >= 1:
+                    if not ok:
+                        final = self._downgrade(final, flag, reasons)
+                    break
+                revisions += 1
+                state["turns"].append({"role": "user", "text": "SELF-CHECK FAILED: " + "; ".join(reasons)
+                                       + ". Gather the missing evidence with a tool, or change the decision."})
+                continue
+            if any(s["tool"] == name and s["args"] == args for s in state["steps"]):
+                state["turns"].append({"role": "user", "text": f"You already called {name} with these arguments "
+                                       "(result above). Call a DIFFERENT tool or give your final decision."})
+                state["steps"].append({"tool": name, "args": args, "kind": "none", "text": "repeat", "data": {}})
+                continue
             res = self.tb.call(name, args)
             kind = self.tb.tools[name].evidence if name in self.tb.tools else "none"
             state["steps"].append({"tool": name, "args": args, "kind": kind, "text": res.text, "data": res.data})
             img_paths = self._save_images(res.images, flag, len(trace["steps"]))
             trace["steps"].append({"thought": thought, "tool": name, "args": args, "evidence_kind": kind,
                                    "result": res.text, "images": img_paths})
-            state["turns"].append({"role": "user", "text": f"Result of {name}:\n{res.text}", "images": res.images})
+            left = self.max_steps - len(state["steps"])
+            nudge = ("\nYou have used all tool calls: reply now with your FINAL decision." if left <= 0 else
+                     f"\n({left} tool call{'s' if left > 1 else ''} left.)")
+            state["turns"].append({"role": "user", "text": f"Result of {name}:\n{res.text}{nudge}", "images": res.images})
         if final is None:
             final = self._downgrade({"decision": "none", "evidence": []}, flag, ["no decision within the step budget"])
         trace["final"] = final
