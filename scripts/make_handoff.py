@@ -26,6 +26,7 @@ import shutil
 import sqlite3
 import subprocess
 import sys
+import time
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 from labelstudio_bridge import LABEL_CONFIG  # noqa: E402
@@ -53,10 +54,17 @@ def finished_from_db(db, project_title):
     return out
 
 
+def _stable(path, age=60):
+    """Exists and was not written in the last `age` s (a background job may still be writing it)."""
+    return os.path.exists(path) and time.time() - os.path.getmtime(path) > age
+
+
 def detection_tasks(repo, done):
     import cv2
     tasks, n_done = [], 0
     for img in sorted(glob.glob(os.path.join(repo, "data/annotation/images/*/*.jpg"))):
+        if not _stable(img):
+            continue
         rel = os.path.relpath(img, repo)
         url = f"/data/local-files/?d={rel}"
         split = rel.split("/")[-2]
@@ -84,9 +92,12 @@ def detection_tasks(repo, done):
 
 def behavior_tasks(repo, done):
     tasks, seen, n_done = [], set(), 0
-    for f in sorted(glob.glob(os.path.join(repo, "data/behavior_annotation/labelstudio_tasks_seed*.json"))):
+    for f in sorted(glob.glob(os.path.join(repo, "data/behavior_annotation/labelstudio_tasks_*.json"))):
         for t in json.load(open(f)):
             if t["data"]["task_id"] in seen:
+                continue
+            files = [os.path.join(repo, t["data"][k].split("?d=", 1)[1]) for k in ("video", "context")]
+            if not all(_stable(x) for x in files):
                 continue
             seen.add(t["data"]["task_id"])
             if t["data"]["video"] in done:
@@ -127,14 +138,30 @@ exec "$LS" start --port 8080 "$@"
 """
 
 
+START_BAT = """@echo off
+rem Windows: start a LOCAL Label Studio whose local-files root is THIS folder.
+set "HERE=%~dp0"
+set "HERE=%HERE:~0,-1%"
+set LABEL_STUDIO_LOCAL_FILES_SERVING_ENABLED=true
+set "LABEL_STUDIO_LOCAL_FILES_DOCUMENT_ROOT=%HERE%"
+if exist "%HERE%\\.venv\\Scripts\\label-studio.exe" (
+  "%HERE%\\.venv\\Scripts\\label-studio.exe" start --port 8080
+) else (
+  label-studio start --port 8080
+)
+"""
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--repo", default=".")
     ap.add_argument("--out", default="handoff/pen6_annotation")
     ap.add_argument("--ls-db", default=DEFAULT_DB, help="Label Studio sqlite DB with your finished work")
     ap.add_argument("--detection-project", default="pen6 bb data")
-    ap.add_argument("--behavior-project", default="Pen6 behavior")
+    ap.add_argument("--behavior-project", default="pen 6 behavior")
     ap.add_argument("--zip", action="store_true")
+    ap.add_argument("--topup-of", default=None, help="previous package folder: ship only tasks it lacks")
+    ap.add_argument("--guide", default="docs/HANDOFF_TEAMMATE.md")
     a = ap.parse_args()
     repo, out = os.path.abspath(a.repo), os.path.abspath(a.out)
     if os.path.exists(out):
@@ -143,6 +170,15 @@ def main():
 
     det, det_done = detection_tasks(repo, finished_from_db(a.ls_db, a.detection_project))
     beh, beh_done = behavior_tasks(repo, finished_from_db(a.ls_db, a.behavior_project))
+    beh.sort(key=lambda t: t["data"].get("priority", 1))  # high-quality batch first in the queue
+    if a.topup_of:  # only tasks the teammate does not have yet -> importing can never touch their labels
+        prev = os.path.abspath(a.topup_of)
+        old_det = {t["data"]["image"] for t in json.load(open(os.path.join(prev, "detection_tasks.json")))}
+        old_beh = {t["data"]["task_id"] for t in json.load(open(os.path.join(prev, "behavior_tasks.json")))}
+        det = [t for t in det if t["data"]["image"] not in old_det]
+        beh = [t for t in beh if t["data"]["task_id"] not in old_beh]
+        det_done = sum("annotations" in t for t in det)
+        beh_done = sum("annotations" in t for t in beh)
     json.dump(det, open(os.path.join(out, "detection_tasks.json"), "w"))
     json.dump(beh, open(os.path.join(out, "behavior_tasks.json"), "w"))
     open(os.path.join(out, "detection_config.xml"), "w").write(LABEL_CONFIG)
@@ -150,14 +186,26 @@ def main():
     if os.path.exists(bcfg):
         shutil.copy2(bcfg, os.path.join(out, "behavior_config.xml"))
 
-    n1 = copy_tree(os.path.join(repo, "data/annotation"), os.path.join(out, "data/annotation"),
-                   ["images/**/*.jpg", "labels/**/*.txt", "manifest.csv", "classes.txt", "reviewed.txt"])
-    n2 = copy_tree(os.path.join(repo, "data/behavior_annotation"), os.path.join(out, "data/behavior_annotation"),
-                   ["clips/*.mp4", "context/*.jpg", "crops/**/*.jpg", "manifest.csv"])
+    n1 = 0
+    for t in det:
+        rel = t["data"]["image"].split("?d=", 1)[1]
+        stem = os.path.splitext(rel.replace("/images/", "/labels/"))[0] + ".txt"
+        n1 += copy_tree(repo, out, [rel, stem])
+    n1 += copy_tree(os.path.join(repo, "data/annotation"), os.path.join(out, "data/annotation"),
+                    ["manifest.csv", "classes.txt"])
+    n2 = 0
+    for t in beh:
+        tid = t["data"]["task_id"]
+        n2 += copy_tree(os.path.join(repo, "data/behavior_annotation"), os.path.join(out, "data/behavior_annotation"),
+                        [f"clips/{tid}.mp4", f"context/{tid}.jpg", f"crops/{tid}/*"])
+    n2 += copy_tree(os.path.join(repo, "data/behavior_annotation"), os.path.join(out, "data/behavior_annotation"),
+                    ["manifest.csv"])
     with open(os.path.join(out, "start_labelstudio.sh"), "w") as f:
         f.write(START_SH)
+    with open(os.path.join(out, "start_labelstudio.bat"), "w", newline="\r\n") as f:
+        f.write(START_BAT)
     os.chmod(os.path.join(out, "start_labelstudio.sh"), 0o755)
-    guide = os.path.join(repo, "docs/HANDOFF_TEAMMATE.md")
+    guide = os.path.join(repo, a.guide)
     if os.path.exists(guide):
         shutil.copy2(guide, os.path.join(out, "HANDOFF.md"))
 

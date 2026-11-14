@@ -19,8 +19,18 @@ python3 -m venv .venv && .venv/bin/pip install label-studio
 ./start_labelstudio.sh          # opens http://localhost:8080
 ```
 
-Always start it with this script from this folder: it tells Label Studio where the images and
-videos are. Sign up in the browser (the account only exists on your machine).
+Windows (PowerShell / cmd), from this folder:
+
+```
+py -m venv .venv
+.venv\Scripts\pip install label-studio
+start_labelstudio.bat
+```
+
+Unzip it anywhere: every task points to files *relative to this folder*, and the start script
+makes this folder the file root. Always start Label Studio with the script, from wherever the
+folder now lives, or images and clips will not load. Sign up in the browser (the account only
+exists on your machine).
 
 ## 2. Create the two projects (once, ~3 min each)
 

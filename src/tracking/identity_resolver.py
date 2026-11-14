@@ -50,6 +50,16 @@ DEFAULTS = dict(
     part_area_frac=0.0,     # touching-part rule OFF (it absorbed whole cows standing behind others);
                             # unsupported pieces like a head box simply stay unassigned
     part_max_obs=150,       # ... on a short track -> part of that neighbour
+    split_jump_frac=0.08,       # candidate switch: the box jumps this share of the frame ...
+    split_shape_change=0.9,     # ... AND its shape changes a lot (|log h|+|log w|), e.g. lying -> standing
+    split_big_jump_frac=0.15,   # ... or jumps this far on its own
+    split_jump_mps=4.0,         # ... or the ground position moves faster than a steer can
+    split_confirm_s=5,          # confirmed only if the 5 s before and after differ ...
+    split_confirm_m=1.5,        # ... by this many metres (median ground position)
+    split_confirm_h=2.0,        # ... or by this factor in box height (lying vs standing)
+    conflict_min_s=5,           # two boxes in one camera prove two animals only if seen together > 5 s
+    sequential_gap_s=30,        # identity A ends, B starts within this gap (overlap <= conflict_min_s) ...
+    walk_mps=1.6,               # ... and a steer can walk between them -> the same animal
     animal_min_s_two_cams=30,   # to COUNT as an animal: >= 30 s in each of two cameras ...
     animal_min_s_one_cam=150,   # ... or >= 150 s in one camera
     max_gap=15.0,           # seconds for a same-camera continuation
@@ -60,6 +70,7 @@ DEFAULTS = dict(
     forced_merges=False,    # never push a cluster onto an animal just because it is the only one left
     attach_needs_colocation=True,  # leftovers join a cow only on positive position agreement ...
     attach_min_overlap=10,  # ... over at least this many shared seconds
+    attach_min_obs=8,       # pieces shorter than this stay unassigned (often a head / limb box)
     chute_x_max=1.5,        # metres from the chute fence (X=0)
     ground_center_cameras=("cam2",),
 )
@@ -113,16 +124,59 @@ class IdentityResolver:
         self.report: Dict = {}
 
     # ------------------------------------------------------------------ building blocks
+    def _split_points(self, g: pd.DataFrame) -> np.ndarray:
+        """Segment index per row: the tracker sometimes slides from one cow onto a neighbour
+        (box jumps and changes shape, e.g. a lying cow's track continues on a standing one)."""
+        c = self.c
+        if len(g) < 2:
+            return np.zeros(len(g), int)
+        W, H = g.frame_width.to_numpy(float), g.frame_height.to_numpy(float)
+        cx, cy = ((g.bbox_x1 + g.bbox_x2) / 2).to_numpy() / W, ((g.bbox_y1 + g.bbox_y2) / 2).to_numpy() / H
+        w = ((g.bbox_x2 - g.bbox_x1).to_numpy() / W).clip(1e-4)
+        h = ((g.bbox_y2 - g.bbox_y1).to_numpy() / H).clip(1e-4)
+        jump = np.hypot(np.diff(cx), np.diff(cy))
+        shape = np.abs(np.diff(np.log(h))) + np.abs(np.diff(np.log(w)))
+        dt = np.maximum(np.diff(g.sec.to_numpy()), 1)
+        gx, gy = g.gx.to_numpy(float), g.gy.to_numpy(float)
+        speed = np.hypot(np.diff(gx), np.diff(gy)) / dt
+        cand = ((jump > c["split_jump_frac"]) & (shape > c["split_shape_change"])) | (jump > c["split_big_jump_frac"]) \
+            | (np.nan_to_num(speed) > c["split_jump_mps"])
+        n, k = len(g), c["split_confirm_s"]
+        cut = np.zeros(n - 1, bool)
+        for i in np.flatnonzero(cand):
+            a, b = slice(max(0, i - k + 1), i + 1), slice(i + 1, min(n, i + 1 + k))
+            if (b.stop - b.start) < 3 or (a.stop - a.start) < 3:
+                continue
+            pa = np.nanmedian(np.c_[gx[a], gy[a]], 0)
+            pb = np.nanmedian(np.c_[gx[b], gy[b]], 0)
+            moved = np.all(np.isfinite([*pa, *pb])) and np.hypot(*(pa - pb)) > c["split_confirm_m"]
+            hr = np.median(h[b]) / np.median(h[a])
+            if moved or hr > c["split_confirm_h"] or hr < 1 / c["split_confirm_h"]:
+                cut[i] = True
+        return np.r_[0, np.cumsum(cut)]
+
     def tracklets(self, rec: pd.DataFrame) -> Dict[Tuple[str, int], Tracklet]:
         rec = rec.assign(sec=np.round(rec.t).astype(np.int64))
         out = {}
-        for key, g in rec.groupby(["camera_id", "local_track_id"]):
-            g = g.sort_values("sec").drop_duplicates("sec")
-            if len(g) < self.c["min_track_obs"]:
-                continue
-            out[(key[0], int(key[1]))] = Tracklet((key[0], int(key[1])), g.sec.to_numpy(),
+        row_key = pd.Series(index=rec.index, dtype=object)
+        self.splits = 0
+        for key, g0 in rec.groupby(["camera_id", "local_track_id"]):
+            g0 = g0.sort_values("sec")
+            g1 = g0.drop_duplicates("sec")
+            seg = pd.Series(self._split_points(g1), index=g1.index)
+            seg_by_sec = dict(zip(g1.sec, seg))
+            self.splits += int(seg.max()) if len(seg) else 0
+            for si in sorted(set(seg)):
+                k = (key[0], int(key[1]) + 10000 * int(si))   # piece si of tracker track key[1]
+                rows = g0[g0.sec.map(seg_by_sec) == si]
+                row_key.loc[rows.index] = [k] * len(rows)
+                g = g1[seg == si]
+                if len(g) < self.c["min_track_obs"]:
+                    continue
+                out[k] = Tracklet(k, g.sec.to_numpy(),
                                                   g[["gx", "gy"]].to_numpy(float), len(g),
                                                   g[["bbox_x1", "bbox_y1", "bbox_x2", "bbox_y2"]].to_numpy(float))
+        self.row_key = row_key
         return out
 
     def fragments(self, T) -> Dict[Tuple[str, int], Optional[Tuple[str, int]]]:
@@ -217,7 +271,8 @@ class IdentityResolver:
                 if A.t1 < B.t0 or B.t1 < A.t0:
                     continue
                 if A.cam == B.cam:
-                    if len(np.intersect1d(A.secs, B.secs)) > 1:
+                    if len(np.intersect1d(A.secs, B.secs)) > c["conflict_min_s"]:  # proof of 2 animals
+                        # (merges are still blocked by ANY overlap via the per-camera occupancy check)
                         cannot.add((a, b)); cannot.add((b, a))
                     continue
                 n, agree, med, far = self.pair_stats(A, B, with_far=True)
@@ -245,6 +300,8 @@ class IdentityResolver:
                     gap = B.t0 - A.t1
                     if a == b or not (0 < gap <= c["max_gap"]):
                         continue
+                    if min(A.n, B.n) < c["attach_min_obs"]:   # a few-second piece cannot carry identity on
+                        continue
                     pa, pb = A.xy[-1], B.xy[0]
                     dist = float(np.linalg.norm(pa - pb)) if np.all(np.isfinite([*pa, *pb])) else np.nan
                     if np.isfinite(dist) and dist > c["reach_mps"] * gap + 1.0:
@@ -260,10 +317,12 @@ class IdentityResolver:
             cl[i] = Cluster([k], defaultdict(set, {k[0]: set(T[k].secs.tolist())}), T[k].n)
             of[k] = i
 
-        def conflict(x: int, y: int) -> bool:
+        def conflict(x: int, y: int, min_s: int = 1) -> bool:
+            """Merging: any real overlap (> 1 s) in one camera forbids it (one ID = one box per frame).
+            Counting animals uses a stricter proof (min_s = conflict_min_s)."""
             X, Y = cl[x], cl[y]
             for cam, secs in X.occ.items():
-                if len(secs & Y.occ.get(cam, set())) > 1:
+                if len(secs & Y.occ.get(cam, set())) > min_s:
                     return True
             return any((m, n) in cannot for m in X.members for n in Y.members)
 
@@ -333,13 +392,13 @@ class IdentityResolver:
             return (sum(v >= c["animal_min_s_two_cams"] for v in secs.values()) >= 2
                     or max(secs.values(), default=0) >= c["animal_min_s_one_cam"])
         bigs = [x for x in order if cl[x].n >= c["min_identity_obs"] and supported(x)]
-        adj = {x: {y for y in bigs if y != x and conflict(x, y)} for x in bigs}
+        adj = {x: {y for y in bigs if y != x and conflict(x, y, c["conflict_min_s"])} for x in bigs}
         clique = max_clique(adj)
         core = sorted(clique, key=lambda x: -cl[x].n)[: c["pen_size"]]
         names = {x: f"COW_{i + 1:02d}" for i, x in enumerate(sorted(core, key=lambda x: min(T[m].t0 for m in cl[x].members)))}
         attached, forced = 0, 0
         for x in [x for x in order if x not in core]:
-            if x not in cl:
+            if x not in cl or cl[x].n < c["attach_min_obs"]:   # a few-second piece must not take a cow's ID
                 continue
             compatible = [y for y in core if not conflict(x, y)]
 
@@ -378,9 +437,59 @@ class IdentityResolver:
                     merge(opts[0][1], x, "attached")
                     attached += 1
 
+        # --- sequential identities: A ends where/when B could start -> one animal walking
+        seq = 0
+        def span(x):
+            ts = sorted(set().union(*cl[x].occ.values()))
+            return ts[0], ts[-1]
+        def end_pos(x, first=False):
+            best = None
+            for m in cl[x].members:
+                t = T[m]
+                ok = np.isfinite(t.xy).all(1)
+                if not ok.any():
+                    continue
+                i = np.flatnonzero(ok)[0 if first else -1]
+                cand = (t.secs[i], t.xy[i])
+                if best is None or (cand[0] < best[0] if first else cand[0] > best[0]):
+                    best = cand
+            return best
+        changed = True
+        while changed:
+            changed = False
+            live = [x for x in core if x in cl]
+            for x in sorted(live, key=lambda x: span(x)[1]):
+                ex = end_pos(x)
+                if ex is None:
+                    continue
+                opts = []
+                for y in live:
+                    if y == x or conflict(x, y):
+                        continue
+                    sy = end_pos(y, first=True)
+                    if sy is None:
+                        continue
+                    gap = sy[0] - ex[0]
+                    if not (-c["conflict_min_s"] <= gap <= c["sequential_gap_s"]):
+                        continue
+                    if span(y)[0] < span(x)[1] - c["conflict_min_s"]:   # y must really start after x ends
+                        continue
+                    dist = float(np.hypot(*(ex[1] - sy[1])))
+                    if dist <= c["walk_mps"] * max(gap, 1) + 3.0:
+                        opts.append((dist, y))
+                if len(opts) == 1:      # unambiguous only
+                    y = opts[0][1]
+                    merge(x, y, "sequential")
+                    core = [z for z in core if z != y]
+                    seq += 1
+                    changed = True
+                    break
+
         # --- chute rule: out-and-back-in keeps the identity
         chute = self._chute_events(cl, T, core, names)
 
+        names = {x: f"COW_{i + 1:02d}" for i, x in enumerate(sorted([x for x in core if x in cl],
+                                                                      key=lambda x: min(T[m].t0 for m in cl[x].members)))}
         mapping = {k: None for k in keys}
         for x in core:
             if x in cl:
@@ -400,6 +509,7 @@ class IdentityResolver:
         self.report = {**stats, "tracklets": len(keys), "mutual_agreements": len(mutual),
                        "cannot_links": len(cannot) // 2, "continuity_candidates": len(cont),
                        "attached_leftovers": attached, "forced_by_constraints": forced,
+                       "track_switches_split": self.splits, "sequential_merges": seq,
                        "animals_required_by_evidence": len(clique), "pen_size_cap": c["pen_size"],
                        "fragments": {"part_of_another_cow": sum(1 for v in frag.values() if v is not None),
                                      "slivers": sum(1 for v in frag.values() if v is None)}, "assigned_box_share": round(n_assigned / max(n_boxes, 1), 3),

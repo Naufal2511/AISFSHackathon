@@ -47,7 +47,7 @@ def main():
 
     def embed(key):
         cam, tid = key
-        g = rec[(rec.camera_id == cam) & (rec.local_track_id == tid)]
+        g = rec[res.row_key.reindex(rec.index).map(lambda k: k == key).astype(bool)]  # rows of this track piece
         area = (g.bbox_x2 - g.bbox_x1) * (g.bbox_y2 - g.bbox_y1)
         g = g.assign(q=g.detection_confidence * np.sqrt(area)).sort_values("q", ascending=False)
         picks = g.iloc[np.linspace(0, min(len(g), 30) - 1, min(a.crops_per_track, len(g))).astype(int)]
@@ -67,7 +67,7 @@ def main():
     res = IdentityResolver({"pen_size": a.pen_size, "cam_pos": cam_pos})
     mapping = res.resolve(rec, None if emb is None else embed)
 
-    key = list(zip(rec.camera_id, rec.local_track_id.astype(int)))
+    key = list(res.row_key.reindex(rec.index))   # (camera, track piece) per row: tracks split at ID switches
     rec["resolved_id"] = [mapping.get(k) for k in key]
     # head / leg / sliver boxes carry the cow's ID but not a position (a head in the trough is not where the cow stands)
     is_part = np.array([k in res.fragment_keys for k in key])
@@ -81,8 +81,9 @@ def main():
         print(f"  {cid}: {info['seconds']:4d} s, {info['tracklets']:2d} tracks, cameras {info['cameras']}")
 
     out = raw.copy()
-    out["global_cow_id"] = [mapping.get((c, int(t))) for c, t in zip(raw.camera_id, raw.local_track_id)]
-    out["identity_confidence"] = [res.confidence.get((c, int(t))) for c, t in zip(raw.camera_id, raw.local_track_id)]
+    out["global_cow_id"] = [mapping.get(k) for k in key]
+    out["identity_confidence"] = [res.confidence.get(k) for k in key]
+    out["track_piece"] = [k[1] // 10000 if isinstance(k, tuple) else 0 for k in key]
     # positions from the current calibration of every camera (cam2/cam3 were refitted from cows)
     assert len(rec) == len(out) and (rec.local_track_id.to_numpy() == out.local_track_id.to_numpy()).all()
     out["world_x"], out["world_y"] = rec.gx.round(3).to_numpy(), rec.gy.round(3).to_numpy()
