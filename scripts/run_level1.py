@@ -36,7 +36,7 @@ def main():
     ap.add_argument("--out", required=True)
     ap.add_argument("--video-root", default="input")
     ap.add_argument("--backend", default="ollama")
-    ap.add_argument("--pen-size", default="10")
+    ap.add_argument("--pen-size", default="8", help="herd size cap (anchor estimate: scripts/herd_size.py)")
     ap.add_argument("--max-flags", default=None)
     ap.add_argument("--skip-agent", action="store_true")
     a = ap.parse_args()
@@ -48,8 +48,10 @@ def main():
                                    "--pen-size", a.pen_size], log)
     step("world state", [PY, "scripts/build_world_state.py", "--records", resolved,
                           "--out", os.path.join(a.out, "state")], log)
+    step("anchors", [PY, "scripts/find_anchors.py", "--run", a.out], log)
     step("behavior", [PY, "classify_behavior.py", "--records", resolved, "--out", os.path.join(a.out, "behavior"),
                       "--video-root", a.video_root, "--probe-rumination"], log)
+    step("contract export", [PY, "scripts/export_contract.py", "--run", a.out], log)
     if not a.skip_agent:
         cmd = [PY, "run_agent.py", "--records", resolved,
                "--behavior", os.path.join(a.out, "behavior", "behavior_timeline_1s.csv"),

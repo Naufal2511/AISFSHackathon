@@ -26,7 +26,8 @@ def main():
         k = max([k for k in range(1, int(df.clear.max()) + 1) if (df.clear >= k).sum() >= a.min_s], default=0)
         print(f"{r}: {int((df.clear >= k).sum())} s with >= {k} cows simultaneously clear (max ever {int(df.clear.max())})")
         best = max(best, k)
-    print(f"HERD_SIZE={best}")
+    print(f"HERD_SIZE_LOWER_BOUND={best}  (cows touching each other never count as clear, so this is a lower bound;"
+          f" confirm with long unbroken tracks of a close camera and the resolver's evidence count)")
 
 
 if __name__ == "__main__":
