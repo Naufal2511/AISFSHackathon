@@ -30,9 +30,14 @@ LABEL_CONFIG = """<View>
 
 def make_tasks(a):
     root = os.path.abspath(a.doc_root)
+    already = set()
+    for prev in a.exclude or []:  # task files already imported into Label Studio
+        already |= {t["data"]["image"] for t in json.load(open(prev))}
     tasks = []
     for img in sorted(glob.glob(os.path.join(a.data, "images", "*", "*.jpg"))):
         rel = os.path.relpath(os.path.abspath(img), root)
+        if f"/data/local-files/?d={rel}" in already:
+            continue
         split = os.path.basename(os.path.dirname(img))
         lbl = os.path.join(a.data, "labels", split, os.path.splitext(os.path.basename(img))[0] + ".txt")
         h, w = cv2.imread(img).shape[:2]
@@ -52,7 +57,7 @@ def make_tasks(a):
         tasks.append({"data": {"image": f"/data/local-files/?d={rel}", "split": split,
                                "file": os.path.basename(img)},
                       "predictions": [{"model_version": "prelabel_yolo26_ensemble", "score": 0.5, "result": result}]})
-    out = os.path.join(a.data, "labelstudio_tasks.json")
+    out = os.path.join(a.data, a.tasks_name)
     with open(out, "w") as f:
         json.dump(tasks, f)
     with open(os.path.join(a.data, "labelstudio_config.xml"), "w") as f:
@@ -126,6 +131,8 @@ def main():
     m = sub.add_parser("make-tasks")
     m.add_argument("--data", default="data/annotation")
     m.add_argument("--doc-root", default=".", help="LABEL_STUDIO_LOCAL_FILES_DOCUMENT_ROOT (project root)")
+    m.add_argument("--exclude", nargs="*", help="task JSON(s) already imported; their images are skipped")
+    m.add_argument("--tasks-name", default="labelstudio_tasks.json", help="output file name inside --data")
     t = sub.add_parser("to-yolo")
     t.add_argument("--export", required=True, help="Label Studio JSON export")
     t.add_argument("--data", default="data/annotation")

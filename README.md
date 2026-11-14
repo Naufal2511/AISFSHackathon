@@ -246,7 +246,7 @@ without chewing evidence or the learned expert, so lying/standing time includes 
 ```bash
 # 1. tracking (per clip / overlapping clip set) -> tracking_records.csv
 python main.py --front "input/Day 1/Cam 01/Event20261107071945006.Avi" \
-  --back "input/Day 1/Cam 03/Cam 03/Event20261107071935003.Avi" --top /nonexistent \
+  --back "input/Day 1/Cam 03/Event20261107071935003.Avi" --top /nonexistent \
   --model runs/segment/runs/angus_train/angus_yolo26m-seg-4/weights/best.pt \
   --fps 1 --no-video --output-dir outputs/run_d1_0719
 

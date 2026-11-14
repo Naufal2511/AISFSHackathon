@@ -198,10 +198,24 @@ def find_flags(rec: pd.DataFrame, t0: float, t1: float, known_ids: List[str], cf
         if t0 <= ta < t1:
             flags.append(Flag("id_audit", ta, ta, known_ids or ids, detail=f"scheduled ID check at {_ts(ta)}"))
 
-    # one flag per (kind, cow, camera, track); most severe first, then budget
-    uniq = {}
-    for f in flags:
-        uniq.setdefault(f.key, f)
+    # one investigation per (kind, cow) per window: merge repeated events of the same problem
+    merged: Dict[tuple, Flag] = {}
+    for f in sorted(flags, key=lambda f: f.t0):
+        if f.kind in ("id_audit", "extra_cow"):
+            merged[(f.kind, f.t0)] = f
+            continue
+        k = (f.kind, tuple(f.cow_ids[:1]))
+        if k in merged:
+            m = merged[k]
+            m.t1 = max(m.t1, f.t1)
+            n = m.data.setdefault("merged", 1) + 1
+            m.data["merged"] = n
+            m.data.setdefault("tracks", {}).update(f.data.get("tracks", {}))
+            if n <= 3:
+                m.detail += f" | also {_ts(f.t0)}: {f.detail[:120]}"
+        else:
+            merged[k] = f
+    uniq = {f.key: f for f in merged.values()}
     out = sorted(uniq.values(), key=lambda f: (-f.severity, f.t0))
     keep = [f for f in out if f.severity >= 3] + [f for f in out if f.severity < 3]
     return keep[: max(c["max_flags_per_window"], sum(f.severity >= 3 for f in out))]

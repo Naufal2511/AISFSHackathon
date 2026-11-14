@@ -62,7 +62,9 @@ def main():
         v = np.mean(vs, 0)
         return v / (np.linalg.norm(v) + 1e-9)
 
-    res = IdentityResolver({"pen_size": a.pen_size})
+    import yaml
+    cam_pos = {k: v.get("mount_position_estimated") for k, v in yaml.safe_load(open("configs/cameras.yaml"))["cameras"].items()}
+    res = IdentityResolver({"pen_size": a.pen_size, "cam_pos": cam_pos})
     mapping = res.resolve(rec, None if emb is None else embed)
 
     key = list(zip(rec.camera_id, rec.local_track_id.astype(int)))

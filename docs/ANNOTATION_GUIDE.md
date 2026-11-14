@@ -86,7 +86,7 @@ python main.py ... --model runs/detect/angus_handlabeled/weights/best.pt --imgsz
 ```bash
 python scripts/draw_zones.py --camera cam1 --video "input/Day 1/Cam 01/Event20261107071945006.Avi" --t 30
 python scripts/draw_zones.py --camera cam2 --video "input/Day 1/Cam 02/Event20261107181537017.Avi" --t 30
-python scripts/draw_zones.py --camera cam3 --video "input/Day 1/Cam 03/Cam 03/Event20261107071935003.Avi" --t 30
+python scripts/draw_zones.py --camera cam3 --video "input/Day 1/Cam 03/Event20261107071935003.Avi" --t 30
 ```
 
 Keys: `1` pen ROI, `2` feed bunk, `3` waterer; click to add points, `u` undo, `c` clear, `s` save, `q` quit.
@@ -95,3 +95,60 @@ Zones are saved to `configs/camera_zones.yaml` and override the estimated ROIs a
 - **drinking** = at least 5% of the box lies in the waterer polygon.
 
 Check the result with `python scripts/calibration_overlay.py --camera cam1 --video ... --out outputs/calibration/cam1_overlay.jpg`.
+
+## 6. Round 2: more cow boxes (same project)
+
+New frames are appended to `data/annotation` (Cam 2 weighted up now that its full Day 1 is in).
+Import only the new ones so the 218 reviewed tasks are not duplicated:
+
+```bash
+.venv/bin/python scripts/sample_annotation_frames.py --n 150 --append --seed 2 \
+    --camera-share cam1=0.3,cam2=0.4,cam3=0.3 --finetuned models/angus_det_hand_e32.pt
+.venv/bin/python scripts/labelstudio_bridge.py make-tasks \
+    --exclude data/annotation/labelstudio_tasks_round1.json --tasks-name labelstudio_tasks_round2.json
+```
+
+In the existing "Pen6 cows" project: **Import** → `data/annotation/labelstudio_tasks_round2.json`.
+Same rules as section 2. Export and run `to-yolo` exactly as before (the export holds both rounds).
+
+## 7. Behavior labels: one task = one cow for 5 seconds
+
+```bash
+.venv/bin/python scripts/build_behavior_tasks.py build --windows 60 --seed 0   # ~1.5 min per window
+```
+
+Each 5 s window is decoded at 10 fps, the fine-tuned detector + ByteTrack follow every cow whose
+hooves are inside the drawn Pen 6 ROI, and per cow it writes a zoomed, smoothed clip that follows it
+(target outlined in yellow), a full-frame context image, and 5 clean crops used for training.
+Need more? Run again with another `--seed` (new windows) and import the new `labelstudio_tasks_seed<N>.json`.
+
+One-time project setup ("Pen6 behavior", a separate project):
+1. **Create Project** → *Labeling Setup* → *Custom template* → *Code* → paste
+   `data/behavior_annotation/labelstudio_config.xml` → **Save**.
+2. **Settings → Cloud Storage → Add Source Storage** → **Local files**, absolute path
+   `<repo>/data/behavior_annotation` → **Add Storage** (do not Sync).
+3. **Settings → Annotation**: turn on **Use predictions to prelabel tasks**.
+4. **Import** → `data/behavior_annotation/labelstudio_tasks_seed0.json`.
+
+Labelling: play the clip (space), press the behavior hotkey `1`–`0`, **Submit**.
+Only feeding / drinking / walking are ever pre-selected (bunk/waterer overlap, hoof speed); check them.
+- Pick the behavior that fills **most of the 5 s**. If it changes halfway, pick the longer one.
+- `ruminating (lying/standing)`: rhythmic jaw chewing visible. Only if you actually see chewing;
+  otherwise `lying` / `standing`.
+- `feeding` = head in or over the bunk. Standing in the queue behind the bunk = `standing`.
+- `social interaction` = head butting, grooming another cow, mounting, pushing.
+- Flag **bad track** if the box jumps to another cow, covers two cows, or is not a cow (these are dropped).
+  Flag **unsure** if you cannot decide (dropped unless `--keep-unsure`).
+
+Build the classifier dataset (split by clip, so no clip is in both train and val):
+
+```bash
+.venv/bin/python scripts/build_behavior_tasks.py to-cls --export ~/Downloads/<behavior-export>.json
+yolo classify train model=yolo11s-cls.pt data=data/behavior_annotation/cls imgsz=224 epochs=60 batch=64 \
+     project=runs/classify name=behavior_cls
+```
+
+A single crop cannot see motion, so the YOLO-cls model is for posture/location (lying, standing,
+feeding, drinking, …). Walking and rumination keep coming from the motion and jaw-movement cues in
+`classify_behavior.py`; `data/behavior_annotation/behavior_labels.csv` (clip-level labels) is the
+ground truth to evaluate those, and to train a temporal model later.

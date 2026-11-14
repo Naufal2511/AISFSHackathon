@@ -3,7 +3,7 @@
 
   python scripts/draw_zones.py --camera cam1 --video "input/Day 1/Cam 01/Event20261107071945006.Avi" --t 30
   python scripts/draw_zones.py --camera cam2 --video "input/Day 1/Cam 02/<clip>.Avi" --t 30
-  python scripts/draw_zones.py --camera cam3 --video "input/Day 1/Cam 03/Cam 03/Event20261107071935003.Avi" --t 30
+  python scripts/draw_zones.py --camera cam3 --video "input/Day 1/Cam 03/Event20261107071935003.Avi" --t 30
 
 Controls (window must have focus):
   1 / 2 / 3     select layer: 1 = pen ROI, 2 = feed bunk, 3 = waterer
