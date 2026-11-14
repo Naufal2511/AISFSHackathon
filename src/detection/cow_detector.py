@@ -55,7 +55,7 @@ class CowDetector:
         iou_threshold: float = 0.45,
         target_classes: Optional[List[int]] = None,
         boundary_manager: Optional[PenBoundaryManager] = None,
-        enable_preprocessing: bool = True,
+        enable_preprocessing: bool = False,  # detector is trained on RAW frames: keep inference raw too
         imgsz: int = 640,
     ):
         self.model_path = model_path
@@ -76,6 +76,10 @@ class CowDetector:
         if not os.path.exists(model_path):
             raise FileNotFoundError(f"Detector weights not found: {model_path}")
         self.model = YOLO(model_path)
+        # Ultralytics does not pick the Apple GPU by default (it falls back to CPU).
+        import torch
+        self.device = ("cuda:0" if torch.cuda.is_available()
+                       else "mps" if torch.backends.mps.is_available() else "cpu")
 
         # Resolve target classes from the model's own label map. COCO weights call the
         # class "cow" (id 19); the fine-tuned Angus weights have a single class
@@ -116,6 +120,7 @@ class CowDetector:
             iou=self.iou_threshold,
             classes=self.target_classes,
             imgsz=self.imgsz,
+            device=self.device,
             verbose=False,
         )[0]
 

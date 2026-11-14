@@ -260,6 +260,9 @@ class ClipSequenceReader:
                     if target >= n:
                         break
                     ok = True
+                    if target - pos > 2 * fps:  # long way in (start time inside a clip): seek once
+                        cap.set(cv2.CAP_PROP_POS_FRAMES, target)
+                        pos = target
                     while pos < target and ok:
                         ok = cap.grab()
                         pos += 1
