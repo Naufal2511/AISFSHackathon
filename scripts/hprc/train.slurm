@@ -4,8 +4,8 @@
 #   sbatch scripts/hprc/train.slurm                 # s, m, l
 #   sbatch --array=1 scripts/hprc/train.slurm       # just m
 #   sbatch --array=3 --time=08:00:00 scripts/hprc/train.slurm   # x (slow)
-# Everything lives under /scratch/user/$USER/angus:
-#   logs/        Slurm stdout/stderr + per-attempt training logs
+# Everything lives in the bundle folder you submit from (e.g. /scratch/user/$USER/angus):
+#   logs/        per-attempt training logs (Slurm stdout: /scratch/user/$USER/angus_logs/)
 #   runs/<name>/ checkpoints (last.pt every epoch, epochN.pt every 10), best.pt, plots, results.csv
 #   runs/<name>_test/  metrics on the held-out TEST split (never used for training/selection)
 #   test_preds/<name>/ test images with predicted boxes drawn
@@ -17,15 +17,27 @@
 #SBATCH --mem=48G
 #SBATCH --time=04:00:00
 #SBATCH --array=0-2
-#SBATCH --output=/scratch/user/%u/angus/logs/%x_%A_%a.out
+#SBATCH --output=/scratch/user/%u/angus_logs/%x_%A_%a.out
 #SBATCH --requeue
 #SBATCH --signal=B:USR1@300
 
 set -uo pipefail
-ROOT=${ANGUS_ROOT:-/scratch/user/$USER/angus}
-cd "$ROOT"
+# The bundle folder = where you ran sbatch (Slurm runs a COPY of this script, so its own
+# path is useless). Run sbatch from the folder that contains scripts/ data/ venv/.
+ROOT=${ANGUS_ROOT:-${SLURM_SUBMIT_DIR:-$PWD}}
+cd "$ROOT" || { echo "cannot cd to $ROOT"; exit 1; }
+for need in scripts/hprc/env.sh venv/bin/activate data/annotation/dataset_hprc.yaml; do
+  if [ ! -e "$need" ]; then
+    echo "ERROR: $ROOT/$need missing. Run sbatch from the unpacked bundle folder, after"
+    echo "       'bash scripts/hprc/setup.sh' finished there without errors."
+    exit 1
+  fi
+done
+mkdir -p logs runs test_preds
 source scripts/hprc/env.sh
 source venv/bin/activate
+command -v yolo >/dev/null || { echo "ERROR: 'yolo' not in venv (setup.sh pip install failed?)"; exit 1; }
+echo "== bundle folder: $ROOT"
 
 MODELS=(yolo26s yolo26m yolo26l yolo26x)
 BATCHES=(16 8 4 2)               # T4 16 GB at imgsz 1280 with AMP; halved automatically on OOM

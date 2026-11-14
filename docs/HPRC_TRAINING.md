@@ -50,15 +50,17 @@ If the module line fails, run `module spider Python` and edit `env.sh`.
 
 ## 3. Train
 
+Submit **from the unpacked bundle folder** (the job uses the folder you submit from):
+
 ```bash
-sbatch scripts/hprc/train.slurm            # tasks 0,1,2 = yolo26s, yolo26m, yolo26l
+cd /scratch/user/$USER/angus && sbatch scripts/hprc/train.slurm   # tasks 0,1,2 = yolo26s, yolo26m, yolo26l
 squeue -u $USER
 tail -f logs/yolo26m_1280_hand_train_b8.log
 ```
 
 - **GPU**: `--partition=gpu --gres=gpu:t4:1`. Check the names with `sinfo -o "%P %G"` if the job
   pends with an invalid gres.
-- **Logs**: `/scratch/user/<NetID>/angus/logs/`, holding the Slurm output plus one log per training attempt.
+- **Logs**: Slurm output in `/scratch/user/<NetID>/angus_logs/`, training logs in `<bundle>/logs/`.
 - **Checkpoints**: `runs/<model>_1280_hand/weights/last.pt` (every epoch), `epochN.pt` (every 10), `best.pt`.
 - **Resume**: 5 min before the time limit the job saves, requeues itself and continues from
   `last.pt`. Re-running `sbatch` also resumes. Delete `runs/<name>` to start over.
