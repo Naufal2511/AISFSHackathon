@@ -46,8 +46,9 @@ def parse_args():
     parser.add_argument(
         "--model",
         type=str,
-        default="yolo26x-seg.pt",
-        help="Object detection/segmentation model (default: yolo26x-seg.pt for maximum accuracy, or yolo26m-seg.pt / yolo26s-seg.pt)",
+        default="models/angus_det_hprc_m1280.pt",
+        help="Cow detector (default: YOLO26m fine-tuned on hand-labelled Pen 6 frames at 1280, HPRC; "
+             "held-out test recall 0.88 / precision 0.86)",
     )
     parser.add_argument(
         "--conf",

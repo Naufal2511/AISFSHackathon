@@ -30,7 +30,7 @@ def main():
     ap.add_argument("--records", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--video-root", default="input")
-    ap.add_argument("--pen-size", type=int, default=10)
+    ap.add_argument("--pen-size", type=int, default=10, help="herd size cap (use the anchor estimate, scripts/herd_size.py)")
     ap.add_argument("--crops-per-track", type=int, default=3)
     ap.add_argument("--no-appearance", action="store_true")
     a = ap.parse_args()

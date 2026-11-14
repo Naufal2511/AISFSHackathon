@@ -42,9 +42,15 @@ DEFAULTS = dict(
     far_m=5.0,              # (legacy fixed threshold; see far_margin_m)
     base_tol_m=1.5,         # cameras may disagree by base + range_coef * distance-to-camera ...
     range_coef={"cam1": 0.03, "cam2": 0.03, "cam3": 0.09},
+    trusted_range_m={"cam1": 18.0, "cam2": 10.0, "cam3": 20.0},  # a camera DEFINES identities only near
+                            # itself; far tracks may only join an identity (unambiguous agreement)
+    far_range_m=15.0,       # beyond this distance from a camera its error grows faster:
+    far_range_coef={"cam1": 0.10, "cam2": 0.06, "cam3": 0.12},   # extra metres per metre beyond far_range_m
     far_margin_m=3.0,       # ... and are only "different animals" beyond tolerance + this margin
     cam_pos={},             # camera mount positions (pen metres); enables distance-aware tolerance
     fragment_contained=0.7, # a box this much inside a bigger box is a piece of that cow
+    small_contained=1.01,   # (off: it marked cows lying partly behind others as fragments)
+    small_area_ratio=0.3,
     fragment_share=0.6,     # ... for this share of the track's life -> fragment of the host
     tiny_area_frac=0.2,     # median box below this fraction of the camera's median box -> sliver
     part_area_frac=0.0,     # touching-part rule OFF (it absorbed whole cows standing behind others);
@@ -202,7 +208,8 @@ class IdentityResolver:
                         continue
                     a2 = (b2[2] - b2[0]) * (b2[3] - b2[1])
                     inter = max(0, min(b[2], b2[2]) - max(b[0], b2[0])) * max(0, min(b[3], b2[3]) - max(b[1], b2[1]))
-                    if a2 > a and inter / max(a, 1) >= c["fragment_contained"]:
+                    if a2 > a and (inter / max(a, 1) >= c["fragment_contained"] or
+                                   (a < c["small_area_ratio"] * a2 and inter / max(a, 1) >= c["small_contained"])):
                         best = k2
                         break
                     # a head / legs poking out of a much bigger neighbour's box (touching it)
@@ -229,10 +236,14 @@ class IdentityResolver:
         def rng(cam, p):
             cp = c["cam_pos"].get(cam)
             if not cp:
-                return 10.0
+                return np.full(len(p), 10.0)
             return np.hypot(p[:, 0] - cp[0], p[:, 1] - cp[1])
-        return (c["base_tol_m"] + c["range_coef"].get(A.cam, 0.05) * rng(A.cam, pa)
-                + c["range_coef"].get(B.cam, 0.05) * rng(B.cam, pb))
+
+        def err(cam, p):
+            d = rng(cam, p)
+            return (c["range_coef"].get(cam, 0.05) * d
+                    + c["far_range_coef"].get(cam, 0.08) * np.clip(d - c["far_range_m"], 0, None))
+        return c["base_tol_m"] + err(A.cam, pa) + err(B.cam, pb)
 
     def pair_stats(self, A: Tracklet, B: Tracklet, with_far: bool = False):
         common, ia, ib = np.intersect1d(A.secs, B.secs, return_indices=True)
@@ -257,6 +268,14 @@ class IdentityResolver:
         frag = self.fragments(T_all)
         T = {k: v for k, v in T_all.items() if k not in frag}
         keys = list(T)
+        far_tracks = set()
+        if c["cam_pos"]:
+            for k, t in T.items():
+                cp = c["cam_pos"].get(k[0])
+                if cp and np.isfinite(t.xy).all(1).any():
+                    d = np.nanmedian(np.hypot(t.xy[:, 0] - cp[0], t.xy[:, 1] - cp[1]))
+                    if d > c["trusted_range_m"].get(k[0], 99):
+                        far_tracks.add(k)
         if embed_fn is not None:
             for k in keys:
                 T[k].emb = embed_fn(k)
@@ -281,7 +300,7 @@ class IdentityResolver:
                 if n >= c["min_overlap"] and far >= 0.8 and agree < 0.2:
                     cannot.add((a, b)); cannot.add((b, a))
                 if n >= c["min_overlap"] and agree >= c["min_agree"]:
-                    s = agree * n
+                    s = agree * n / (1.0 + med)   # among partners that all agree, the closest wins
                     agree_edges.append((s, a, b, agree, n, med))
                     if s > best[(a, B.cam)][0]:
                         best[(a, B.cam)] = (s, b)
@@ -387,14 +406,27 @@ class IdentityResolver:
         # pairwise provably different animals (seen together in one camera, or far apart at the
         # same moment). pen_size is only a cap: unused slots are never filled by splitting a cow.
         order = big()
+        def near_occ(x):   # seconds from tracks within their camera's trusted range
+            occ = defaultdict(set)
+            for m in cl[x].members:
+                if m not in far_tracks:
+                    occ[m[0]] |= set(T[m].secs.tolist())
+            return occ
+
         def supported(x):  # enough independent evidence that this is a whole animal
-            secs = {cam: len(v) for cam, v in cl[x].occ.items()}
+            secs = {cam: len(v) for cam, v in near_occ(x).items()}
             return (sum(v >= c["animal_min_s_two_cams"] for v in secs.values()) >= 2
                     or max(secs.values(), default=0) >= c["animal_min_s_one_cam"])
         bigs = [x for x in order if cl[x].n >= c["min_identity_obs"] and supported(x)]
         adj = {x: {y for y in bigs if y != x and conflict(x, y, c["conflict_min_s"])} for x in bigs}
         clique = max_clique(adj)
-        core = sorted(clique, key=lambda x: -cl[x].n)[: c["pen_size"]]
+        # quality order: confirmed by >= 2 cameras first, then longest (a cam1-only fragment
+        # must not take a slot from a real cow); pen_size = herd size from anchors when known
+        def quality(x):
+            secs = {cam: len(v) for cam, v in near_occ(x).items()}
+            return (sum(v >= c["animal_min_s_two_cams"] for v in secs.values()) >= 2,
+                    len(set().union(*near_occ(x).values())) if secs else 0)
+        core = sorted(clique, key=quality, reverse=True)[: c["pen_size"]]
         names = {x: f"COW_{i + 1:02d}" for i, x in enumerate(sorted(core, key=lambda x: min(T[m].t0 for m in cl[x].members)))}
         attached, forced = 0, 0
         for x in [x for x in order if x not in core]:
@@ -421,19 +453,20 @@ class IdentityResolver:
             for y in compatible:
                 s = app_sim(x, y)
                 # co-location with a core member in another camera is strong evidence
-                co = 0.0
+                co, dist = 0.0, np.inf
                 for m in cl[x].members:
                     for n in cl[y].members:
                         if m[0] != n[0]:
-                            k, agree, _ = self.pair_stats(T[m], T[n])
-                            if agree is not None and k >= c.get("attach_min_overlap", 3):
-                                co = max(co, agree)
+                            k, agree, med = self.pair_stats(T[m], T[n])
+                            if agree is not None and k >= c.get("attach_min_overlap", 3) and \
+                                    (agree > co or (agree == co and med < dist)):
+                                co, dist = agree, med
                 score = co if c.get("attach_needs_colocation") else max(co, s or 0.0)
                 if score >= c["attach_min"]:
-                    opts.append((score, y))
+                    opts.append((dist, y))
             if opts:
-                opts.sort(reverse=True)
-                if len(opts) == 1 or opts[0][0] - opts[1][0] > 0.05:  # unambiguous only
+                opts.sort(key=lambda o: o[0])   # closest agreeing animal
+                if len(opts) == 1 or opts[0][0] < 0.6 * opts[1][0]:  # clearly closer than the runner-up
                     merge(opts[0][1], x, "attached")
                     attached += 1
 
@@ -509,7 +542,7 @@ class IdentityResolver:
         self.report = {**stats, "tracklets": len(keys), "mutual_agreements": len(mutual),
                        "cannot_links": len(cannot) // 2, "continuity_candidates": len(cont),
                        "attached_leftovers": attached, "forced_by_constraints": forced,
-                       "track_switches_split": self.splits, "sequential_merges": seq,
+                       "track_switches_split": self.splits, "far_tracks": len(far_tracks), "sequential_merges": seq,
                        "animals_required_by_evidence": len(clique), "pen_size_cap": c["pen_size"],
                        "fragments": {"part_of_another_cow": sum(1 for v in frag.values() if v is not None),
                                      "slivers": sum(1 for v in frag.values() if v is None)}, "assigned_box_share": round(n_assigned / max(n_boxes, 1), 3),
