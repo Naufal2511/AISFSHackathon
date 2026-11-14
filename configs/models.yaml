@@ -1,0 +1,41 @@
+# Model and Preprocessing Configuration
+# Merck-TAMU Animal Science Hackathon 2026
+
+detector:
+  primary_model: "yolo26x-seg.pt" # SOTA YOLO26 Extra Large (XL) Instance Segmentation (Maximum Accuracy)
+  balanced_model: "yolo26m-seg.pt" # SOTA YOLO26 Medium Instance Segmentation (Optimal Latency/Recall)
+  fast_model: "yolo26s-seg.pt"     # Fast Real-Time Deployment
+  model_directory: "."
+  device: "cpu" # 'cpu', 'cuda', 'mps' (auto-selected)
+  confidence_threshold: 0.20 # Detection confidence threshold
+  iou_threshold: 0.45        # NMS IoU threshold
+  target_classes: [19]       # COCO class 19 = cow
+  image_size: 1024           # Inference resolution for high-res pens
+  half_precision: false      # FP16 if supported
+  max_detections: 20         # Maximum bounding boxes per frame (expected <= 10 cows)
+
+segmentation:
+  enabled: true
+  mask_format: "polygon"     # 'polygon' or 'rle' for compact disk storage
+  simplify_tolerance: 1.5    # Ramer-Douglas-Peucker polygon simplification in pixels
+
+reidentification:
+  extractor: "dinov2_vits14" # 'dinov2_vits14' or 'resnet50'
+  embedding_dim: 384         # 384 for DINOv2-small, 2048 for ResNet50
+  gallery_size_per_cow: 10   # Maximum multi-view reference exemplars
+  distance_metric: "cosine"  # Cosine distance
+  match_threshold: 0.35      # Cosine distance cutoff for ReID match
+
+preprocessing:
+  day_night_threshold_brightness: 85.0 # Grayscale mean pixel brightness
+  night_profile:
+    clahe_enabled: true
+    clahe_clip_limit: 3.0
+    clahe_tile_grid_size: [8, 8]
+    denoise_enabled: false     # Bilateral/Gaussian filtering (optional)
+    gamma: 1.2
+  day_profile:
+    clahe_enabled: false
+    contrast_stretch: false
+  motion_blur:
+    laplacian_variance_threshold: 100.0 # Frames below threshold flagged as blurred

@@ -1,0 +1,37 @@
+# Multi-Object Tracking & Cross-Camera Association Configuration
+# Merck-TAMU Animal Science Hackathon 2026
+
+local_tracker:
+  algorithm: "bytetrack" # ByteTrack with 2-stage association
+  high_detection_threshold: 0.40 # Detections above this matched in Stage 1
+  low_detection_threshold: 0.15  # Remaining detections matched in Stage 2 (occlusion recovery)
+  match_threshold_stage1: 0.20   # min IoU for confirmed tracks (ByteTrack distance 0.8)
+  match_threshold_stage2: 0.50   # IoU threshold for tentative/occluded tracks
+  max_time_lost: 45              # Frames to keep lost tracks alive before termination (3s at 15fps)
+  min_hits_to_confirm: 3         # Consecutive frames before track is confirmed
+  kalman_motion_weight: 0.05     # Process noise covariance weight
+
+cross_camera:
+  enabled: true
+  spatial_distance_threshold_m: 3.5 # Maximum ground distance (meters) between camera projections
+  appearance_similarity_min: 0.60   # Minimum cosine similarity for appearance match
+  temporal_window_sec: 1.0          # Maximum timestamp difference for simultaneous observation
+  fusion_weights:
+    spatial_proximity: 0.45
+    appearance_similarity: 0.40
+    motion_direction: 0.15
+
+global_registry:
+  expected_cows: 10
+  prefix: "COW_"
+  ids:
+    - "COW_01"
+    - "COW_02"
+    - "COW_03"
+    - "COW_04"
+    - "COW_05"
+    - "COW_06"
+    - "COW_07"
+    - "COW_08"
+    - "COW_09"
+    - "COW_10"

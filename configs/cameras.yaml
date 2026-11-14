@@ -1,0 +1,60 @@
+# Multi-Camera Calibration and Configuration
+# Merck-TAMU Animal Science Hackathon 2026
+
+cameras:
+  cam1:
+    name: "Front Camera"
+    role: "front_overview"
+    mount_position_estimated: [3.0, 0.0, 4.0] # [X, Y, Z] in meters
+    orientation_description: "Mounted on front shelter beam above the feed bunk, looking along pen length toward back fence"
+    # Measured on real 4000x3000 frames (Day 1 07:19 clip). The earlier points came from
+    # 3024x1640 screenshots whose framing differs from the 4:3 video and were misplaced.
+    reference_resolution: [4000, 3000]
+    distortion_k1: -0.2812  # fisheye; fitted so bunk rail / right fence rail / back rail are straight (rms 7-21 px)
+    expected_fps: 15.0
+    time_offset_seconds: 0.0
+    calibration_points:
+      - image: [0.440, 0.190] # Back-left corner, fence base
+        world: [0.0, 30.0]
+      - image: [0.668, 0.200] # Back-right corner, fence base
+        world: [12.0, 30.0]
+      - image: [0.990, 0.920] # Front-right: right fence meets bunk (below rail)
+        world: [12.0, 0.0]
+      - image_undistorted_px: [-3785.9, 3106.9] # Front-left corner is out of frame: intersection of the
+        world: [0.0, 0.0]                        # left-fence ground line with the bunk ground line (undistorted)
+
+  cam2:
+    name: "Top / Feed Bunk Camera"
+    role: "top_bunk_monitoring"
+    mount_position_estimated: [6.0, 1.0, 3.8] # [X, Y, Z] in meters
+    orientation_description: "Mounted overhead angled downward, monitoring feed bunk trough and apron"
+    reference_resolution: [2592, 1944]  # actual cam2 video resolution (4:3)
+    expected_fps: 15.0
+    time_offset_seconds: 0.0
+    calibration_points:
+      - image: [0.1488, 0.9371] # Trough bottom-left
+        world: [0.0, -0.8]
+      - image: [0.8664, 0.7255] # Trough bottom-right
+        world: [12.0, -0.8]
+      - image: [0.8433, 0.0907] # Apron top-right
+        world: [12.0, 3.5]
+      - image: [0.1157, 0.0907] # Apron top-left
+        world: [0.0, 3.5]
+
+  cam3:
+    name: "Back Camera"
+    role: "back_overview"
+    mount_position_estimated: [0.5, 30.0, 4.5] # [X, Y, Z] in meters
+    orientation_description: "Mounted at back-left fence corner looking forward toward front shelter"
+    reference_resolution: [2084, 1164]
+    expected_fps: 15.0
+    time_offset_seconds: 0.0
+    calibration_points:
+      - image: [0.7600, 0.9800] # Back-left corner (near camera, chute side)
+        world: [0.0, 28.0]
+      - image: [0.0200, 0.9800] # Back-right corner
+        world: [12.0, 28.0]
+      - image: [0.2200, 0.4700] # Front-right shelter base
+        world: [12.0, 0.0]
+      - image: [0.6800, 0.4500] # Front-left shelter base
+        world: [0.0, 0.0]

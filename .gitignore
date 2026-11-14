@@ -1,0 +1,30 @@
+# --- Event data: must stay within the event (never commit) ---
+input/
+data/
+outputs/
+runs/
+*.avi
+*.Avi
+*.AVI
+*.mp4
+*.mkv
+*.jpg
+*.jpeg
+*.png
+*.tar.gz
+*.zip
+
+# --- Model weights (download from Ultralytics / produced by training) ---
+*.pt
+*.pth
+*.onnx
+*.npz
+
+# --- Environments / tooling ---
+.venv/
+.venv-labelstudio/
+__pycache__/
+*.pyc
+.DS_Store
+.claude/settings.local.json
+*.log

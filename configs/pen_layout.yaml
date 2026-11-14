@@ -1,0 +1,118 @@
+# Pen Layout and Geometric Specification: Pen 6 (10 Angus Cows)
+# Merck-TAMU Animal Science Hackathon 2026
+
+pen:
+  id: "Pen_6"
+  description: "Texas A&M University Animal Science Research Feedlot Pen 6"
+  num_cows: 10
+  dimensions:
+    width_meters: 12.0   # X-axis: from chute fence (X=0) to Pen 7 fence (X=12)
+    length_meters: 30.0  # Y-axis: from front feed bunk (Y=0) to back fence (Y=30)
+    origin: "front_left_fence_corner" # (0, 0) in meters
+
+landmarks:
+  feed_bunk:
+    description: "Concrete feed bunk trough at the front of the pen"
+    polygon_metric:
+      - [0.0, -1.0]
+      - [12.0, -1.0]
+      - [12.0, 0.0]
+      - [0.0, 0.0]
+  feeding_apron:
+    description: "Concrete apron along the feed bunk where cattle stand while eating"
+    polygon_metric:
+      - [0.0, 0.0]
+      - [12.0, 0.0]
+      - [12.0, 3.5]
+      - [0.0, 3.5]
+  waterer:
+    description: "Automatic float waterer on the right (Pen 7) fence, mid-pen. Per the challenge pen spec
+      (X 8.5-11.5, Y 14-18); independently confirmed by projecting the cam1 calibration onto the yellow waterer."
+    polygon_metric:
+      - [8.5, 14.0]
+      - [11.5, 14.0]
+      - [11.5, 18.0]
+      - [8.5, 18.0]
+  chute_alley:
+    description: "Working chute / handling alley along the left boundary"
+    boundary_x: 0.0
+  pen7_boundary:
+    description: "Dividing fence separating Pen 6 from Pen 7 along the right boundary"
+    boundary_x: 12.0
+
+zones:
+  feeding_zone:
+    name: "Feeding Zone"
+    description: "Area within 4.0m of the feed bunk (challenge pen spec)"
+    polygon_metric:
+      - [0.0, 0.0]
+      - [12.0, 0.0]
+      - [12.0, 4.0]
+      - [0.0, 4.0]
+  drinking_zone:
+    name: "Drinking Zone"
+    description: "Waterer footprint plus ~1 m standing margin"
+    polygon_metric:
+      - [7.5, 13.0]
+      - [12.0, 13.0]
+      - [12.0, 19.0]
+      - [7.5, 19.0]
+  resting_zone:
+    name: "Resting Zone"
+    description: "Mound and bedding area in the central/rear portion of the pen"
+    polygon_metric:
+      - [1.5, 10.0]
+      - [10.5, 10.0]
+      - [10.5, 22.0]
+      - [1.5, 22.0]
+  movement_zone:
+    name: "General Movement Zone"
+    description: "Active alley and transition space between bunk, resting, and waterer"
+    polygon_metric:
+      - [0.0, 4.0]
+      - [12.0, 4.0]
+      - [12.0, 10.0]
+      - [0.0, 10.0]
+
+# Camera-specific 2D Polygonal Regions of Interest (ROI)
+# Defined in normalized [0, 1] coordinates (x_norm = x_pixel / width, y_norm = y_pixel / height)
+camera_rois:
+  # Measured on REAL frames (cam1/cam3 4000x3000, cam2 2592x1944), normalized [0,1].
+  # The previous polygons came from 3024x1640 screenshots with different framing.
+  cam1: # Front camera above the bunk, fisheye. Polygon follows the projected pen outline;
+        # it runs to the frame bottom so cows at the bunk (hooves cut off) are kept.
+    description: "Pen 6 ground from the front camera"
+    normalized_polygon:
+      - [0.440, 0.180] # back-left corner
+      - [0.670, 0.190] # back-right corner
+      - [0.800, 0.400] # right fence
+      - [0.880, 0.580]
+      - [0.950, 0.720]
+      - [1.000, 0.840]
+      - [1.000, 1.000] # bunk (bottom edge)
+      - [0.000, 1.000]
+      - [0.000, 0.560] # left fence leaves frame
+      - [0.200, 0.370]
+  cam2: # Overhead bunk camera (2592x1944)
+    description: "Feed apron and trough from the overhead bunk camera"
+    normalized_polygon:
+      - [0.000, 0.000]
+      - [1.000, 0.000]
+      - [1.000, 0.780]
+      - [0.000, 0.960]
+    trough_polygon: # feed surface; head-over-trough = feeding evidence
+      - [0.060, 0.740]
+      - [0.960, 0.570]
+      - [0.970, 0.760]
+      - [0.070, 0.940]
+  cam3: # Back camera, looking toward the front shelter. Excludes the handling alley on
+        # the right (people + cattle walk there) and other pens beyond the far fence.
+    description: "Pen 6 ground from the back camera"
+    normalized_polygon:
+      - [0.020, 1.000]
+      - [0.020, 0.560]
+      - [0.060, 0.500]
+      - [0.400, 0.500]
+      - [0.780, 0.515]
+      - [0.765, 0.620]
+      - [0.730, 1.000]
