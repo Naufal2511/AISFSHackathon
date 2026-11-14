@@ -66,6 +66,10 @@ DEFAULTS = dict(
     conflict_min_s=5,           # two boxes in one camera prove two animals only if seen together > 5 s
     sequential_gap_s=30,        # identity A ends, B starts within this gap (overlap <= conflict_min_s) ...
     walk_mps=1.6,               # ... and a steer can walk between them -> the same animal
+    gapfill=True,               # forward/backward: an unassigned track goes to the one cow that was
+    gapfill_max_gap_s=180,      # missing then and could walk from where it was last seen (before) to the
+    gapfill_slack_m=2.0,        # track, and from the track to where it is seen next (after)
+    gapfill_margin=0.6,         # several candidates: best must be clearly better (score < margin x second)
     animal_min_s_two_cams=30,   # to COUNT as an animal: >= 30 s in each of two cameras ...
     animal_min_s_one_cam=150,   # ... or >= 150 s in one camera
     max_gap=15.0,           # seconds for a same-camera continuation
@@ -528,6 +532,9 @@ class IdentityResolver:
             if x in cl:
                 for m in cl[x].members:
                     mapping[m] = names[x]
+        # --- forward / backward gap filling (unassigned tracks between a cow's sightings)
+        filled = self._fill_gaps(T, mapping, how, far_tracks) if c.get("gapfill") else 0
+
         # fragments inherit their host's identity (they are part of that cow); slivers stay unassigned
         for k, host in frag.items():
             h = host
@@ -542,6 +549,7 @@ class IdentityResolver:
         self.report = {**stats, "tracklets": len(keys), "mutual_agreements": len(mutual),
                        "cannot_links": len(cannot) // 2, "continuity_candidates": len(cont),
                        "attached_leftovers": attached, "forced_by_constraints": forced,
+                       "gap_filled_tracks": filled,
                        "track_switches_split": self.splits, "far_tracks": len(far_tracks), "sequential_merges": seq,
                        "animals_required_by_evidence": len(clique), "pen_size_cap": c["pen_size"],
                        "fragments": {"part_of_another_cow": sum(1 for v in frag.values() if v is not None),
@@ -552,13 +560,118 @@ class IdentityResolver:
                        "chute_events": chute}
         # how sure each track's identity is, by the strongest evidence that put it there
         agreed = {m for _, a, b in mutual for m in (a, b)}
-        conf_of = {"continuity_merges": 0.85, "appearance_merges": 0.7, "attached": 0.55, "": 0.8}
+        conf_of = {"continuity_merges": 0.85, "appearance_merges": 0.7, "attached": 0.55, "gapfill": 0.6, "": 0.8}
         self.confidence = {k: (None if mapping.get(k) is None else 0.5 if k in frag else
                                0.95 if k in agreed else conf_of.get(how.get(k, ""), 0.8)) for k in mapping}
         self.how = how
         self.fragment_keys = set(frag)
         self.clusters, self.names, self.T = cl, names, T_all
         return mapping
+
+    def _err(self, cam, p):
+        cp = self.c["cam_pos"].get(cam)
+        if not cp:
+            return 1.0
+        d = float(np.hypot(p[0] - cp[0], p[1] - cp[1]))
+        return (self.c["range_coef"].get(cam, 0.05) * d
+                + self.c["far_range_coef"].get(cam, 0.08) * max(0.0, d - self.c["far_range_m"]))
+
+    def _fill_gaps(self, T, mapping, how, far_tracks) -> int:
+        """Give an unassigned track to the cow that (a) is not already boxed in that camera at the
+        same time, (b) does not contradict it from another camera, and (c) can walk from its last
+        sighting BEFORE the track to the track's start and from the track's end to its first
+        sighting AFTER it. Unique answers only; repeated until nothing changes."""
+        c = self.c
+        walk, slack = c["walk_mps"], c["gapfill_slack_m"]
+
+        def build():
+            obs, occ = defaultdict(list), defaultdict(lambda: defaultdict(set))
+            for k, cid in mapping.items():
+                if cid is None or k not in T:
+                    continue
+                t = T[k]
+                occ[cid][k[0]] |= set(t.secs.tolist())
+                ok = np.isfinite(t.xy).all(1)
+                for s_, xy in zip(t.secs[ok], t.xy[ok]):
+                    obs[cid].append((int(s_), xy[0], xy[1], k[0]))
+            return ({cid: np.array(sorted(v), dtype=object) for cid, v in obs.items()}, occ)
+
+        cows = sorted({v for v in mapping.values() if v})
+        filled = 0
+        for _ in range(4):
+            obs, occ = build()
+            changed = False
+            todo = sorted([k for k, v in mapping.items() if v is None and k in T and T[k].n >= c["attach_min_obs"]],
+                          key=lambda k: -T[k].n)
+            for k in todo:
+                t = T[k]
+                ok = np.isfinite(t.xy).all(1)
+                if not ok.any():
+                    continue
+                secs, P = t.secs[ok], t.xy[ok]
+                s0, s1, p0, p1 = int(secs[0]), int(secs[-1]), P[0], P[-1]
+                cands = []
+                for cid in cows:
+                    if len(occ[cid][k[0]] & set(t.secs.tolist())) > 1:
+                        continue                      # that cow is already boxed in this camera then
+                    O = obs.get(cid)
+                    if O is None or not len(O):
+                        continue
+                    osec = O[:, 0].astype(int)
+                    # contradiction from another camera at the same seconds
+                    inside = (osec >= s0) & (osec <= s1)
+                    support = 0.0
+                    if inside.sum() >= 3:
+                        idx = {int(q): i for i, q in enumerate(secs)}
+                        ds, tols = [], []
+                        for row in O[inside]:
+                            j = idx.get(int(row[0]))
+                            if j is None:
+                                continue
+                            q = np.array([row[1], row[2]], float)
+                            ds.append(float(np.hypot(*(q - P[j]))))
+                            tols.append(c["base_tol_m"] + self._err(k[0], P[j]) + self._err(row[3], q))
+                        if ds:
+                            ds, tols = np.array(ds), np.array(tols)
+                            support = float(np.mean(ds < tols))
+                            if support < 0.5:
+                                continue              # another camera sees this cow elsewhere at the same time
+                    # forward / backward reachability
+                    before = O[osec < s0]
+                    after = O[osec > s1]
+                    score, sides = 0.0, 0
+                    feasible = True
+                    for side, anchor, pt in (("b", before[-1] if len(before) else None, p0),
+                                             ("a", after[0] if len(after) else None, p1)):
+                        if anchor is None:
+                            continue
+                        gap = abs((s0 if side == "b" else s1) - int(anchor[0]))
+                        if gap > c["gapfill_max_gap_s"]:
+                            continue
+                        q = np.array([anchor[1], anchor[2]], float)
+                        need = float(np.hypot(*(q - pt)))
+                        allow = walk * max(gap, 1) + slack + self._err(k[0], pt) + self._err(anchor[3], q)
+                        if need > allow:
+                            feasible = False
+                            break
+                        score += need / max(gap, 1)
+                        sides += 1
+                    if not feasible or (sides == 0 and support < 0.7):
+                        continue
+                    cands.append((score - 2.0 * support - 0.5 * sides, cid))
+                if not cands:
+                    continue
+                cands.sort()
+                if len(cands) == 1 or cands[0][0] < c["gapfill_margin"] * cands[1][0] or \
+                        (cands[1][0] - cands[0][0]) > 1.0:
+                    mapping[k] = cands[0][1]
+                    how[k] = "gapfill"
+                    filled += 1
+                    changed = True
+                    obs, occ = build()
+            if not changed:
+                break
+        return filled
 
     def _chute_events(self, cl, T, core, names):
         ev = []
