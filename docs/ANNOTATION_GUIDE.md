@@ -152,3 +152,12 @@ A single crop cannot see motion, so the YOLO-cls model is for posture/location (
 feeding, drinking, …). Walking and rumination keep coming from the motion and jaw-movement cues in
 `classify_behavior.py`; `data/behavior_annotation/behavior_labels.csv` (clip-level labels) is the
 ground truth to evaluate those, and to train a temporal model later.
+
+Rare classes: random windows are mostly lying/standing. A targeted round keeps only cows whose
+cues point at feeding / drinking / walking (you still pick the real label):
+
+```bash
+.venv/bin/python scripts/build_behavior_tasks.py build --windows 150 --seed 1 \
+    --only-guess feeding,drinking,walking --max-tasks 50
+```
+Never run two `build` (or two frame-sampler) jobs at once: each rewrites `manifest.csv` at the end.

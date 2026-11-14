@@ -245,6 +245,9 @@ def build(a):
     rows, tasks = [], []
     rng = random.Random(a.seed)
     for wi, c in enumerate(plan):
+        if a.max_tasks and len(tasks) >= a.max_tasks:
+            print(f"reached --max-tasks {a.max_tasks}")
+            break
         dur = duration(c["path"])
         if dur < a.secs + 10:
             continue
@@ -262,7 +265,11 @@ def build(a):
             inside = sum(in_roi(roi, b, W, H) for b in obs.values())
             if len(obs) >= a.min_cover * n and inside >= 0.5 * len(obs):
                 keep[tid] = interp_boxes(obs, n)
-        split = "val" if is_val(c["clip"], a.val_frac) else "train"
+        guesses = {tid: guess_behavior(c["camera"], bx, zones, W, H, a.fps) for tid, bx in keep.items()}
+        if a.only_guess:  # targeted round: keep only cows whose cues point at a rare class
+            want = set(a.only_guess.split(","))
+            keep = {tid: bx for tid, bx in keep.items() if guesses[tid] in want}
+        split ="val" if is_val(c["clip"], a.val_frac) else "train"
         mid = n // 2
         ctx_base = frames[mid].copy()
         for tid, bx in keep.items():
@@ -304,7 +311,7 @@ def build(a):
             cpath = os.path.join(out, "context", task_id + ".jpg")
             cv2.imwrite(cpath, ctx, [cv2.IMWRITE_JPEG_QUALITY, 88])
 
-            guess = guess_behavior(c["camera"], bx, zones, W, H, a.fps)
+            guess = guesses[tid]
             data = {"video": f"/data/local-files/?d={os.path.relpath(vpath, root)}",
                     "context": f"/data/local-files/?d={os.path.relpath(cpath, root)}",
                     "task_id": task_id, "camera": c["camera"], "clip": c["clip"], "split": split,
@@ -423,6 +430,9 @@ def main():
     b.add_argument("--context-width", type=int, default=1280)
     b.add_argument("--val-frac", type=float, default=0.25)
     b.add_argument("--seed", type=int, default=0)
+    b.add_argument("--only-guess", default=None,
+                   help="targeted round, e.g. feeding,drinking,walking: keep only cows with that cue")
+    b.add_argument("--max-tasks", type=int, default=0, help="stop after this many new tasks (0 = no limit)")
     c = sub.add_parser("to-cls")
     c.add_argument("--export", required=True, help="Label Studio JSON export of the behavior project")
     c.add_argument("--out", default="data/behavior_annotation/cls")

@@ -47,11 +47,19 @@ DEFAULTS = dict(
     fragment_contained=0.7, # a box this much inside a bigger box is a piece of that cow
     fragment_share=0.6,     # ... for this share of the track's life -> fragment of the host
     tiny_area_frac=0.2,     # median box below this fraction of the camera's median box -> sliver
+    part_area_frac=0.0,     # touching-part rule OFF (it absorbed whole cows standing behind others);
+                            # unsupported pieces like a head box simply stay unassigned
+    part_max_obs=150,       # ... on a short track -> part of that neighbour
+    animal_min_s_two_cams=30,   # to COUNT as an animal: >= 30 s in each of two cameras ...
+    animal_min_s_one_cam=150,   # ... or >= 150 s in one camera
     max_gap=15.0,           # seconds for a same-camera continuation
     reach_mps=1.5,          # how far a steer can get during the gap (+1 m slack)
     app_merge_min=1.01,     # appearance-only merges OFF: black cows look alike and a wrong merge inflates the head count
-    attach_min=0.70,
+    attach_min=0.85,
     min_identity_obs=30,    # a cluster needs this many observations to count as an animal
+    forced_merges=False,    # never push a cluster onto an animal just because it is the only one left
+    attach_needs_colocation=True,  # leftovers join a cow only on positive position agreement ...
+    attach_min_overlap=10,  # ... over at least this many shared seconds
     chute_x_max=1.5,        # metres from the chute fence (X=0)
     ground_center_cameras=("cam2",),
 )
@@ -134,6 +142,7 @@ class IdentityResolver:
             hosts = []
             for s, b, a in zip(t.secs, t.boxes, areas):
                 best = None
+                gap_px = 0.02 * max(b[2] - b[0], b[3] - b[1], 1) * 10
                 for k2, b2 in by_cs[(k[0], int(s))]:
                     if k2 == k:
                         continue
@@ -142,6 +151,11 @@ class IdentityResolver:
                     if a2 > a and inter / max(a, 1) >= c["fragment_contained"]:
                         best = k2
                         break
+                    # a head / legs poking out of a much bigger neighbour's box (touching it)
+                    touching = (b[0] <= b2[2] + gap_px and b2[0] <= b[2] + gap_px and
+                                b[1] <= b2[3] + gap_px and b2[1] <= b[3] + gap_px)
+                    if touching and a < c["part_area_frac"] * a2 and t.n <= c["part_max_obs"]:
+                        best = k2
                 hosts.append(best)
             inside = [h for h in hosts if h is not None]
             if len(inside) >= c["fragment_share"] * len(hosts):
@@ -314,7 +328,11 @@ class IdentityResolver:
         # pairwise provably different animals (seen together in one camera, or far apart at the
         # same moment). pen_size is only a cap: unused slots are never filled by splitting a cow.
         order = big()
-        bigs = [x for x in order if cl[x].n >= c["min_identity_obs"]]
+        def supported(x):  # enough independent evidence that this is a whole animal
+            secs = {cam: len(v) for cam, v in cl[x].occ.items()}
+            return (sum(v >= c["animal_min_s_two_cams"] for v in secs.values()) >= 2
+                    or max(secs.values(), default=0) >= c["animal_min_s_one_cam"])
+        bigs = [x for x in order if cl[x].n >= c["min_identity_obs"] and supported(x)]
         adj = {x: {y for y in bigs if y != x and conflict(x, y)} for x in bigs}
         clique = max_clique(adj)
         core = sorted(clique, key=lambda x: -cl[x].n)[: c["pen_size"]]
@@ -324,10 +342,22 @@ class IdentityResolver:
             if x not in cl:
                 continue
             compatible = [y for y in core if not conflict(x, y)]
-            if len(compatible) == 1 and cl[x].n >= c["min_identity_obs"]:
-                merge(compatible[0], x, "attached")   # the constraints leave only one possible animal
-                forced += 1
-                continue
+
+            def colocation(y):
+                best = None
+                for m in cl[x].members:
+                    for n in cl[y].members:
+                        if m[0] != n[0]:
+                            k, agree, _ = self.pair_stats(T[m], T[n])
+                            if agree is not None and k >= 3:
+                                best = agree if best is None else max(best, agree)
+                return best
+            if c.get("forced_merges", True) and len(compatible) == 1 and cl[x].n >= c["min_identity_obs"]:
+                co = colocation(compatible[0])
+                if (co is None and not c.get("forced_needs_colocation")) or (co is not None and co >= 0.5):
+                    merge(compatible[0], x, "attached")
+                    forced += 1
+                    continue
             opts = []
             for y in compatible:
                 s = app_sim(x, y)
@@ -337,9 +367,9 @@ class IdentityResolver:
                     for n in cl[y].members:
                         if m[0] != n[0]:
                             k, agree, _ = self.pair_stats(T[m], T[n])
-                            if agree is not None and k >= 3:
+                            if agree is not None and k >= c.get("attach_min_overlap", 3):
                                 co = max(co, agree)
-                score = max(co, s or 0.0)
+                score = co if c.get("attach_needs_colocation") else max(co, s or 0.0)
                 if score >= c["attach_min"]:
                     opts.append((score, y))
             if opts:
@@ -383,6 +413,7 @@ class IdentityResolver:
         self.confidence = {k: (None if mapping.get(k) is None else 0.5 if k in frag else
                                0.95 if k in agreed else conf_of.get(how.get(k, ""), 0.8)) for k in mapping}
         self.how = how
+        self.fragment_keys = set(frag)
         self.clusters, self.names, self.T = cl, names, T_all
         return mapping
 

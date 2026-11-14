@@ -69,6 +69,9 @@ def main():
 
     key = list(zip(rec.camera_id, rec.local_track_id.astype(int)))
     rec["resolved_id"] = [mapping.get(k) for k in key]
+    # head / leg / sliver boxes carry the cow's ID but not a position (a head in the trough is not where the cow stands)
+    is_part = np.array([k in res.fragment_keys for k in key])
+    rec.loc[is_part, ["gx", "gy"]] = np.nan
     after = cross_camera_consistency(rec, "resolved_id")
     before = cross_camera_consistency(rec, "global_cow_id")
     report = {**res.report, "consistency_before": before, "consistency_after": after}
@@ -83,6 +86,7 @@ def main():
     # positions from the current calibration of every camera (cam2/cam3 were refitted from cows)
     assert len(rec) == len(out) and (rec.local_track_id.to_numpy() == out.local_track_id.to_numpy()).all()
     out["world_x"], out["world_y"] = rec.gx.round(3).to_numpy(), rec.gy.round(3).to_numpy()
+    out["box_role"] = np.where(is_part, "part", "body")
     out.to_csv(os.path.join(a.out, "tracking_records_resolved.csv"), index=False)
 
     # identity sheet: per cow, up to 3 crops per camera

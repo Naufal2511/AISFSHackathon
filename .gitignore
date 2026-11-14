@@ -2,6 +2,7 @@
 input/
 data/
 outputs/
+handoff/
 runs/
 *.avi
 *.Avi
