@@ -11,9 +11,9 @@ ollama:                      # local Qwen2.5-VL on this Mac:  ollama pull qwen2.
   image_max_side: 896        # smaller images = faster prefill on a local model
   keep_images: 1
 
-tamu:                        # TAMU AI Chat API (fill base_url/model from the TAMU portal)
-  base_url: ""
-  model: ""
+tamu:                        # TAMU AI Chat API (tamu.ai). Key: TAMU_API_KEY in the git-ignored .env
+  base_url: https://chat-api.tamu.ai/openai   # unverified (community client); confirm on docs.tamus.ai
+  model: ""                  # set after: python scripts/list_models.py --backend tamu
   api_key_env: TAMU_API_KEY
   timeout: 120
   max_tokens: 600

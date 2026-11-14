@@ -212,7 +212,20 @@ class RulePolicy:
                                                        "evidence": [], "summary": f["detail"]}}
 
 
+def load_dotenv(path: str = ".env"):
+    """KEY=value lines from a git-ignored .env into the environment (never printed)."""
+    if not os.path.exists(path):
+        return
+    for line in open(path):
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        k, v = line.split("=", 1)
+        os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
+
+
 def make_backend(cfg: Dict):
+    load_dotenv()
     b = (os.environ.get("AGENT_BACKEND") or cfg.get("backend", "ollama")).lower()
     if b == "rules":
         return RulePolicy()
