@@ -40,12 +40,12 @@ Problem 2: BRD Agentic Vision > Agentic Computer Vision Hackathon Dataset, with 
 
 ```bash
 bash scripts/hprc/fetch_footage.sh check    # lists the Drive folder: should say "Day 1, Day 2" and the clip count
-bash scripts/hprc/fetch_footage.sh plan     # outputs/shares/plan.json: Day 1 -> 3 laptops, Day 2 -> HPRC
-bash scripts/hprc/fetch_footage.sh share    # download the Day 2 clips (+ the Day 1 clips around midnight)
+# put the team's plan.json (made on a laptop with all of Day 1) in outputs/shares/ first, then:
+bash scripts/hprc/fetch_footage.sh share    # Drive listing + download ALL of Day 2 (+ the Day 1 clips around midnight)
 ```
 
-**Send `outputs/shares/plan.json` to the three laptops now** (they put it in `outputs/shares/`). It is made from the
-full Drive listing, so all four places split the work the same way.
+Use the **same `plan.json` as the laptops** (do not run `fetch_footage.sh plan` once they have started): the HPRC
+share always runs to the end of Day 2, and the clips for it come from the Drive listing.
 
 * `downloadQuotaExceeded`: Google throttles shared files many people download. Wait and rerun (it resumes), or copy
   the folder into your own Drive server-side and point `drive.folder` / `shared_with_me` at the copy.

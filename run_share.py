@@ -118,6 +118,12 @@ def make_plan(videos: str, layout: str = "day1-laptops-day2-hprc") -> dict:
         if midnight >= n_min:
             raise SystemExit("the clips cover only one day: use --layout all-laptops")
         shares = {**split(0, midnight, PEOPLE), **split(midnight, n_min, [HPRC_SHARE])}
+        # HPRC takes ALL of the next day, whatever this machine had of it: the plan can be made where only Day 1
+        # is complete, and HPRC fetches its clips from the Drive listing (fetch_clips.py) for the full window
+        day_end = (t0.replace(hour=0, minute=0) + timedelta(days=2)).strftime(FMT)
+        if shares[HPRC_SHARE]["end"] < day_end:
+            shares[HPRC_SHARE]["end"] = day_end
+            shares[HPRC_SHARE]["note"] = "end set to the end of day 2; clips come from the Drive listing"
     else:
         raise SystemExit(f"unknown layout {layout}: {', '.join(LAYOUTS)}")
     return {"created": datetime.now().isoformat(timespec="seconds"), "videos_seen": str(Path(videos).resolve()),

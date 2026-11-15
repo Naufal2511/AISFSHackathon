@@ -72,7 +72,17 @@ def needed(who: str, have: set[str], lead_min: float = 5.0) -> list[str]:
         raise SystemExit(f"{who} is not in plan.json (shares: {', '.join(plan['shares'])})")
     sh = plan["shares"][who]
     start = rs.lead_in(sh["start"], plan["span"][0], lead_min)     # the clip running into the first chunk's lead-in too
-    return rs.missing_for_window(plan, have, start, sh["end"])
+    miss = set(rs.missing_for_window(plan, have, start, sh["end"]))
+    listing = SHARES / "all_clips.txt"                             # the Drive's own list (fetch_clips.py --list): clips
+    if listing.exists():                                           # the plan maker did not have (e.g. Day 2) count too
+        from datetime import datetime, timedelta
+        s, e = datetime.strptime(start, rs.FMT), datetime.strptime(sh["end"], rs.FMT)
+        for line in listing.read_text(encoding="utf-8").splitlines():
+            n = line.strip().split("/")[-1]
+            t = rs.clip_start(n)
+            if t is not None and s - timedelta(seconds=900) <= t < e and n.lower() not in have:
+                miss.add(n)
+    return sorted(miss)
 
 
 def copy(rc: str, flags: list[str], src: str, dest: Path, include_lines: list[str]) -> int:

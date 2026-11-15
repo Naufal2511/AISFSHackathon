@@ -15,7 +15,7 @@ case "${1:?usage: fetch_footage.sh check|plan|share|all}" in
   check) $PY --check ;;
   plan)  $PY --list && venv/bin/python run_share.py --plan-only --replan --videos outputs/shares/all_clips.txt
          echo "send outputs/shares/plan.json to the three laptops (they put it in outputs/shares/)" ;;
-  share) $PY --who "${PEN6_WHO:-hprc_day2}" --dest "$VIDEOS" ;;
+  share) $PY --list && $PY --who "${PEN6_WHO:-hprc_day2}" --dest "$VIDEOS" ;;   # Drive listing first: all of Day 2
   all)   $PY --all --dest "$VIDEOS" ;;
   *) echo "unknown command $1 (check|plan|share|all)"; exit 1 ;;
 esac
