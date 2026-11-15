@@ -55,8 +55,12 @@ Defaults live in `configs/pipeline.yaml`.
 
 ```
 outputs/pipeline/<name>/
-  final/activity.csv            one row per behavior bout (every cow, every minute)   <- the deliverable
-  final/activity_minute.csv     one row per cow-minute: behavior, confidence, correction, rationale
+  final/activity.csv            one row per behavior bout, every cow, every minute of the covered days   <- the deliverable
+                                (cow_id, date, start_time, end_time, duration_min, behavior with the brief's class names,
+                                mean_confidence, basis, observed_share, n_agent_minutes, cameras)
+  final/activity_minute.csv     one row per cow-minute: label, confidence, basis, reason, correction, rationale
+  final/time_budgets.csv        per cow per day and overall: minutes, hours, share of time, share of visible time
+  final/traces/                 one success, one failure, one night trace picked from the BRD agent's traces (+ README.md)
   final/actions.csv             every agent action with its reason
   stage2/traces/                agent reasoning traces (.md + .json)
   level2/                       brd_risk.csv, index.html, cards/ (BRD risk; per-share chunks stop before this)
@@ -69,6 +73,12 @@ outputs/pipeline/<name>/
   logs/<n>_<step>.log           full output of each step
   pipeline_state.json           step status (resume); pipeline_manifest.json: settings, timings, git commit
 ```
+
+`basis` separates what was observed from what was estimated (brief, section 3): `verified` (the BRD agent looked
+at the frames), `observed` (stage 1 label passed the rule checks), `unverified` (seen, agent could not confirm),
+`estimated` (calm bout carried or gap filled), `not_visible` (no camera saw the cow). A bout takes its minutes'
+majority basis; a tie goes to the less certain one. Written by `pipeline/deliverables.py` for one run and for the
+stitched 48 h. `python scripts/run_viewer.py --run <run folder>` makes an interactive `viewer.html` of a run.
 
 ## Cameras
 

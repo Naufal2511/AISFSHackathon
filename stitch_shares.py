@@ -15,10 +15,13 @@
    Black Angus look alike to DINOv2, so those appearance matches are flagged. Weak matches are flagged in id_map.csv;
    `--id-map` overrides any of them: {<chunk name>: {<local id>: <global id>}}.
 3. Writes outputs/stitched/:
-     final/activity.csv          one row per behavior bout (bouts joined across chunk edges)   <- the deliverable
-     final/activity_minute.csv   one row per cow-minute (wall time + day/minute on one clock)
+     final/activity.csv          one row per behavior bout, every cow, every minute of both days (pipeline/deliverables.py:
+                                 dates + clock times, official class names, basis = verified/observed/unverified/
+                                 estimated/not_visible), bouts joined across chunk edges   <- the deliverable
+     final/activity_minute.csv   one row per cow-minute
+     final/time_budgets.csv      per cow per day and overall: minutes, share of time, share of visible time
+     final/traces/               one success, one failure, one night trace (+ README.md)
      final/actions.csv           every agent action with its reason
-     final/time_budgets.csv      minutes and share per behavior, per cow per day and overall
      id_map.csv                  chunk, local id -> global id, similarity, margin, status
      traces/<chunk>/, id_agent/<chunk>/ (traces + 30-min ID-check sheets; id_check CSVs relabelled, legend.csv)
      runs/<chunk>/               Level 1 contract + assets relabelled to the global ids (Level 2 input)
@@ -213,6 +216,9 @@ def stitch_minutes(chunks, idmap, origin) -> pd.DataFrame:
         df = pd.read_csv(p, low_memory=False)
         ts = pd.to_datetime(df.minute_start)
         df = df[_in_window(ts, ch)].copy()
+        # where this minute's trace lives (chunk-local cow id and chunk clock), for the saved-trace pick
+        df["local_cow"], df["run_day"], df["run_minute"] = df.cow_id.astype(str), df.day, df.minute
+        df["trace_dir"] = str(ch["dir"] / "stage2" / "traces")
         df["cow_id"] = df.cow_id.astype(str).map(idmap[ch["name"]]).fillna(df.cow_id)
         df["chunk"] = ch["name"]
         parts.append(df)
@@ -224,39 +230,6 @@ def stitch_minutes(chunks, idmap, origin) -> pd.DataFrame:
     m = m.sort_values(["cow_id", "minute_start", "chunk"]).drop_duplicates(["cow_id", "minute_start"], keep="first")
     first = ["cow_id", "minute_start", "day", "minute", "behavior", "confidence"]
     return m[first + [c for c in m.columns if c not in first]].reset_index(drop=True)
-
-
-def bouts(m: pd.DataFrame) -> pd.DataFrame:
-    """Same rule as brd_agent Store.rebuild_bouts (same cow, day and behavior, consecutive minutes), on the joined
-    minutes, so a bout that crosses a chunk edge is one bout."""
-    rows, cur = [], None
-    for r in m.sort_values(["cow_id", "day", "minute"]).itertuples(index=False):
-        if cur and (r.cow_id, r.day, r.behavior) == (cur["cow_id"], cur["day"], cur["behavior"]) and r.minute == cur["end_minute"] + 1:
-            cur["end_minute"] = r.minute
-            cur["_c"].append(r.confidence if pd.notna(r.confidence) else 0.0)
-            cur["n_agent_minutes"] += int(getattr(r, "tier", 0) == 2)
-            continue
-        if cur:
-            rows.append(cur)
-        cur = {"cow_id": r.cow_id, "day": r.day, "behavior": r.behavior, "start_minute": r.minute, "end_minute": r.minute,
-               "_c": [r.confidence if pd.notna(r.confidence) else 0.0], "n_agent_minutes": int(getattr(r, "tier", 0) == 2)}
-    if cur:
-        rows.append(cur)
-    out = pd.DataFrame(rows)
-    if out.empty:
-        return out
-    out["duration_min"] = out.end_minute - out.start_minute + 1
-    out["mean_confidence"] = [round(float(np.mean(c)), 4) for c in out._c]
-    return out[["cow_id", "day", "behavior", "start_minute", "end_minute", "duration_min", "mean_confidence", "n_agent_minutes"]]
-
-
-def time_budgets(m: pd.DataFrame) -> pd.DataFrame:
-    g = m.groupby(["cow_id", "day", "behavior"]).size().rename("minutes").reset_index()
-    tot = m.groupby(["cow_id", "behavior"]).size().rename("minutes").reset_index().assign(day="all")
-    out = pd.concat([g, tot], ignore_index=True)
-    out["share"] = (out.minutes / out.groupby(["cow_id", "day"]).minutes.transform("sum")).round(4)
-    out["hours"] = (out.minutes / 60).round(2)
-    return out.sort_values(["cow_id", "day", "minutes"], ascending=[True, True, False]).reset_index(drop=True)
 
 
 def stitch_actions(chunks, idmap, origin) -> pd.DataFrame:
@@ -382,16 +355,15 @@ def main(argv=None) -> int:
     if origin is None:
         raise SystemExit("chunks have no recorded windows")
     m = stitch_minutes(chunks, idmap, origin)
-    m.to_csv(out / "final" / "activity_minute.csv", index=False)
-    b = bouts(m)
-    b.to_csv(out / "final" / "activity.csv", index=False)
-    time_budgets(m).to_csv(out / "final" / "time_budgets.csv", index=False)
+    from pipeline import deliverables
+    res = deliverables.write_level1(m, out / "final", deliverables.trace_finder(None),
+                                    cows=sorted(idm.global_id.unique().tolist()))
     acts = stitch_actions(chunks, idmap, origin)
     acts.to_csv(out / "final" / "actions.csv", index=False)
-    print(f"final: {len(m)} cow-minutes, {len(b)} bouts, {len(acts)} actions, "
-          f"{m.minute_start.min()} .. {m.minute_start.max()} (day 1 = {origin:%Y-%m-%d})")
+    print(f"final: {res['cows']} cows, days {res['days']}, {res['minutes']} cow-minutes, {res['bouts']} bouts, "
+          f"{len(acts)} actions; basis {res['basis']}; traces {res['traces']}")
     cover = m.groupby("cow_id").size().div(60).round(1)
-    print("hours per cow:", cover.to_dict())
+    print("hours seen per cow:", cover.to_dict())
 
     runs = []
     if (out / "runs").exists():

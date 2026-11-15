@@ -82,11 +82,39 @@ def test_overlap_boxes_beat_appearance(tmp_path):
     assert g.status.str.startswith("overlap").all()
 
 
+def _mins(rows):
+    return pd.DataFrame([{"cow_id": c, "minute_start": t, "behavior": beh, "confidence": 0.9, "reason": r, "source": "model_estimate",
+                          "correction": "confirmed", "tier": 2 if r.startswith("agent") else 1, "flags": "", "cameras_used": "['front']"}
+                         for c, t, beh, r in rows])
+
+
+def test_activity_meets_the_brief():
+    from pipeline import deliverables as dv
+    m = _mins([("COW_01", "2026-11-07 16:00", "ruminating_lying", "agent_accept"),
+               ("COW_01", "2026-11-07 16:01", "ruminating_lying", "stable_carry"),
+               ("COW_01", "2026-11-07 16:02", "ruminating_lying", "keep_tier1"),
+               ("COW_02", "2026-11-08 09:00", "social_interaction", "unresolved_fallback_tier1")])
+    g = dv.full_grid(m, cows=["COW_01", "COW_02", "COW_09"])
+    assert len(g) == 3 * 2 * 1440                                   # every cow, every minute of both days
+    b = dv.bouts(g)
+    rum = b[(b.cow_id == "COW_01") & (b.behavior == "ruminating (lying)")].iloc[0]   # official class names
+    assert (rum.start_time, rum.end_time, rum.duration_min) == ("2026-11-07 16:00", "2026-11-07 16:03", 3)
+    assert rum.basis == "estimated" and rum.observed_share   # 1 verified, 1 carried, 1 observed: tie -> least certain == round(2 / 3, 3) and rum.n_agent_minutes == 1
+    assert b[b.cow_id == "COW_09"].behavior.unique().tolist() == ["other / not visible"]
+    assert set(b[b.cow_id == "COW_09"].basis) == {"not_visible"}
+    assert b.groupby("cow_id").duration_min.sum().tolist() == [2880, 2880, 2880]
+    assert dv.basis_of({"reason": "unresolved_fallback_tier1", "behavior": "social_interaction"}) == "unverified"
+    tb = dv.time_budgets(g)
+    one = tb[(tb.cow_id == "COW_01") & (tb.date == "all") & (tb.behavior == "ruminating (lying)")].iloc[0]
+    assert one.minutes == 3 and one.share_of_visible_time == 1.0
+
+
 def test_bouts_join_across_chunk_edge():
-    m = pd.DataFrame({"cow_id": ["COW_01"] * 4, "day": [1] * 4, "minute": [600, 601, 602, 604],
-                      "behavior": ["lying"] * 4, "confidence": [0.9] * 4, "tier": [1, 2, 1, 1]})
-    b = stitch_shares.bouts(m)
-    assert b[["start_minute", "end_minute", "duration_min", "n_agent_minutes"]].values.tolist() == [[600, 602, 3, 1], [604, 604, 1, 0]]
+    from pipeline import deliverables as dv
+    m = _mins([("COW_01", f"2026-11-07 10:{k:02d}", "lying", "keep_tier1") for k in (0, 1, 2, 4)])
+    b = dv.bouts(dv.full_grid(m))
+    lying = b[b.behavior == "lying"]
+    assert lying[["start_minute", "end_minute", "duration_min"]].values.tolist() == [[600, 602, 3], [604, 604, 1]]
 
 
 def test_minute_activity_gets_wall_time(tmp_path):

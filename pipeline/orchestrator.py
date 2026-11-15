@@ -284,8 +284,18 @@ def step_export(a, cfg, run: Run, env) -> dict:
         _need_file(run.final / f, f"final {f}")
     n = minute_activity_with_wall_time(run.final / "activity_minute.csv", run.store / "meta.json",
                                        run.level1 / "final" / "activity.csv")
-    out = {f: str(run.final / f) for f in FINAL_FILES}
+    # the deliverables in the brief's form: bouts with dates and clock times, official class names, every minute of
+    # the covered days, observed vs estimated, time budgets, three saved traces
+    from . import deliverables
+    import pandas as pd
+    mins = pd.read_csv(run.level1 / "final" / "activity.csv", low_memory=False)
+    mins = mins.assign(run_day=mins.day, run_minute=mins.minute)
+    res = deliverables.write_level1(mins, run.final, deliverables.trace_finder(run.traces))
+    print(f"   deliverables: {res['cows']} cows x {res['minutes'] // max(res['cows'], 1)} min, {res['bouts']} bouts, "
+          f"basis {res['basis']}, traces {res['traces']}")
+    out = {f: str(run.final / f) for f in FINAL_FILES + ["time_budgets.csv"]}
     out["level2_activity"] = f"{run.level1 / 'final' / 'activity.csv'} ({n} cow-minutes)"
+    out["deliverables"] = res
     return out
 
 
