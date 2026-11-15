@@ -64,14 +64,12 @@ def color_descriptor(frame_bgr: np.ndarray, bbox) -> np.ndarray:
 
 
 def fuse_embedding(dino: Optional[np.ndarray], color: Optional[np.ndarray], color_weight: float = 0.6) -> Optional[np.ndarray]:
-    parts = []
-    if dino is not None and np.linalg.norm(dino) > 0:
-        parts.append(dino / np.linalg.norm(dino))
-    if color is not None and np.linalg.norm(color) > 0:
-        parts.append(color_weight * color)
-    if not parts:
+    # Always the same length (dino + 36 colour dims): a tiny box gives an all-zero colour part, which is kept as zeros
+    # rather than dropped, so a tracklet's running average never mixes vectors of different sizes.
+    if dino is None or np.linalg.norm(dino) == 0:
         return None
-    v = np.concatenate(parts).astype(np.float32)
+    col = color if color is not None and np.linalg.norm(color) > 0 else np.zeros(36, np.float32)
+    v = np.concatenate([dino / np.linalg.norm(dino), color_weight * col]).astype(np.float32)
     return v / (np.linalg.norm(v) + 1e-6)
 
 
@@ -179,7 +177,7 @@ class TrackletIdentityManager:
                 e = track_embeddings.get(key)
                 if e is not None and np.linalg.norm(e) > 0:
                     a = 1.0 if tl.emb is None else max(c["emb_ema"], 1.0 / (tl.n_obs + 1))
-                    tl.emb = e if tl.emb is None else (1 - a) * tl.emb + a * e
+                    tl.emb = e if tl.emb is None or tl.emb.shape != e.shape else (1 - a) * tl.emb + a * e
                     tl.emb = tl.emb / (np.linalg.norm(tl.emb) + 1e-6)
                 tl.n_obs += 1
                 tls.append((t, tl))
@@ -212,7 +210,9 @@ class TrackletIdentityManager:
                 occluded = getattr(t, "occlusion_score", 0.0) or 0.0
                 if tl.emb is not None and (slot.proto is None or (margin >= c["proto_update_margin"] and occluded < 0.3)):
                     lr = 1.0 if slot.proto is None else c["proto_lr"]
-                    p = tl.emb if slot.proto is None else (1 - lr) * slot.proto + lr * tl.emb
+                    if slot.proto is not None and slot.proto.shape != tl.emb.shape:
+                        lr = 1.0
+                    p = tl.emb if lr == 1.0 else (1 - lr) * slot.proto + lr * tl.emb
                     slot.proto = p / (np.linalg.norm(p) + 1e-6)
                     slot.n_updates += 1
                 rec = self.registry[cid]
