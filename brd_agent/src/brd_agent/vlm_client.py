@@ -7,6 +7,8 @@ import base64
 import hashlib
 import io
 import json
+import logging
+import os
 import time
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
@@ -14,6 +16,8 @@ from pathlib import Path
 from typing import Any, Callable, Optional, Type
 
 import requests
+
+log = logging.getLogger(__name__)
 from PIL import Image
 from pydantic import BaseModel, ValidationError
 
@@ -110,14 +114,44 @@ def make_vlm(settings: Settings, cfg: AgentConfig) -> VLMClient:
                             api_key=settings.openai_api_key, image_detail=settings.openai_image_detail or None,
                             temperature=settings.openai_temperature, max_tokens=settings.openai_max_tokens,
                             max_tokens_param="max_completion_tokens", json_mode=True)
-    return OpenAICompatVLM(conn, cfg.vlm, cfg.prompt_version)
+    primary = OpenAICompatVLM(conn, cfg.vlm, cfg.prompt_version)
+    fb_key = os.environ.get("FALLBACK_OPENAI_API_KEY")
+    fb_model = os.environ.get("FALLBACK_OPENAI_MODEL")
+    if fb_key and fb_model:
+        fb = ProviderConn("openai-fallback", _chat_url(os.environ.get("FALLBACK_OPENAI_BASE_URL", "https://api.openai.com/v1")),
+                          fb_model, api_key=fb_key, image_detail=settings.openai_image_detail or None,
+                          temperature=None, max_tokens=settings.openai_max_tokens,
+                          max_tokens_param="max_completion_tokens", json_mode=True)
+        return FallbackVLM(primary, OpenAICompatVLM(fb, cfg.vlm, cfg.prompt_version))
+    return primary
+
+
+class FallbackVLM(VLMClient):
+    """The primary provider (TAMU: 3 tries with 2 s / 4 s backoff inside its client), then the same model on OpenAI.
+    Which provider answered is in the call info and the trace (`provider`)."""
+
+    def __init__(self, primary: "OpenAICompatVLM", secondary: "OpenAICompatVLM"):
+        self.primary, self.secondary = primary, secondary
+        self.provider, self.model = primary.provider, primary.model
+        self.fallbacks = 0
+
+    def ask(self, task, system, user, images, schema, meta=None):
+        try:
+            return self.primary.ask(task, system, user, images, schema, meta)
+        except Exception as e:                       # network, quota, 5xx after retries, bad reply
+            self.fallbacks += 1
+            log.warning("primary VLM failed (%s): %s -> %s", self.primary.model, str(e)[:200], self.secondary.model)
+            res = self.secondary.ask(task, system, user, images, schema, meta)
+            if isinstance(res, tuple) and isinstance(res[1], dict):
+                res[1]["fallback_from"] = self.primary.model
+            return res
 
 
 class OpenAICompatVLM(VLMClient):
     RETRY_STATUS = {429, 500, 502, 503, 504}
 
     def __init__(self, conn: ProviderConn, cfg: VLMCfg, prompt_version: str,
-                 max_retries: int = 3, backoff_s: float = 2.0):
+                 max_retries: int = 2, backoff_s: float = 2.0):     # 3 tries: wait 2 s, then 4 s
         self.conn, self.cfg, self.pv = conn, cfg, prompt_version
         self.provider, self.model = conn.provider, conn.model
         self.max_retries, self.backoff_s = max_retries, backoff_s

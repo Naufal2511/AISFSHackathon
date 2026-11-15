@@ -174,6 +174,10 @@ def check_env(r: Report) -> str | None:
         r.add(FAIL, "TAMU_API_KEY", "empty", "edit .env:  TAMU_API_KEY=<key>   (no quotes, no spaces)")
         return None
     r.add(OK, "TAMU_API_KEY", f"set ({len(key)} characters, ends ...{key[-4:]})")
+    oa = os.environ.get("OPENAI_API_KEY") or env.get("OPENAI_API_KEY")
+    r.add(OK if oa else WARN, "OPENAI_API_KEY (fallback)", f"set (ends ...{oa[-4:]})" if oa else "not set",
+          "add  OPENAI_API_KEY=<your key>  to .env: when TAMU fails 3 times, the agents switch to the same model on\n"
+          "OpenAI. Without it a TAMU outage leaves those minutes unverified.")
     b = REPO / "brd_agent" / ".env"
     if b.exists():
         r.add(WARN, "brd_agent/.env", "exists, so stage 2 uses ITS provider instead of TAMU",
@@ -217,8 +221,20 @@ def check_tamu(r: Report):
         r.add(FAIL, "TAMU from the BRD agent (stage 2)", f"{type(ex).__name__}: {str(ex)[:160]}",
               "check the key in .env, your internet / VPN, and that tamu.ai is up")
     try:
-        from src.agent.vlm import make_backend
+        from src.agent.vlm import load_dotenv, make_backend
+        load_dotenv(str(REPO / ".env"))
         cfg = yaml.safe_load((REPO / "configs" / "agent.yaml").read_text(encoding="utf-8"))
+        if os.environ.get("OPENAI_API_KEY"):
+            fb = make_backend(cfg, "openai_luna", with_fallback=False)
+            t = time.time()
+            try:
+                ok = bool(fb.complete([{"role": "user", "content": [{"type": "text", "text": "Reply with the word ok."}]}]))
+                r.add(OK if ok else FAIL, "OpenAI fallback answers", f"{fb.model}, {time.time() - t:.1f} s",
+                      "empty reply: check OPENAI_MODEL in .env")
+            except Exception as ex:
+                r.add(FAIL, "OpenAI fallback answers", f"{fb.model}: {str(ex)[:150]}",
+                      "check OPENAI_API_KEY; if the model name is wrong, set OPENAI_MODEL=<model> in .env\n"
+                      "(the same model as TAMU's protected.gpt-5.6-luna)")
         prof = yaml.safe_load((REPO / "configs" / "pipeline.yaml").read_text(encoding="utf-8")).get("stage1", {}).get(
             "id_agent_backend", "tamu_luna")
         be = make_backend(cfg, prof, with_fallback=False)          # TAMU only: a pass must not be the local fallback
@@ -259,8 +275,8 @@ def check_videos(r: Report, videos: str | None, who: str | None, env: dict) -> d
     plan_p = REPO / "outputs" / "shares" / "plan.json"
     if not plan_p.exists():
         r.add(WARN, "shared plan", "outputs/shares/plan.json not here yet",
-              "ONE person runs:  python run_share.py --plan-only --videos <ALL clips>  and sends plan.json to the\n"
-              "others, who put it in outputs/shares/. All three must use the same file.")
+              "it is made once on HPRC from the Drive listing (scripts/hprc/fetch_footage.sh plan) and sent to\n"
+              "everyone: put it in outputs/shares/. All machines must use the same file.")
     else:
         digest = hashlib.sha256(plan_p.read_bytes()).hexdigest()[:10]
         plan = json.loads(plan_p.read_text(encoding="utf-8"))
@@ -272,8 +288,8 @@ def check_videos(r: Report, videos: str | None, who: str | None, env: dict) -> d
             r.add(FAIL if miss else OK,
                   f"clips for {who}", f"{len(share['clips']) - len(miss)} of {len(share['clips'])} present "
                   f"({share['start']} -> {share['end']})" + (f"; missing e.g. {miss[:2]}" if miss else ""),
-                  "copy the missing clips into the video folder (keep the original names); run_share.py shows which\n"
-                  "chunks need them and writes the full list to outputs/shares/<you>/missing_clips.txt")
+                  f"python fetch_clips.py --who {who} --dest \"{videos}\"   (downloads exactly the missing ones\n"
+                  "from the organizers' Drive; one-time rclone setup is in its --help)")
             info["share_bytes"] = sum(os.path.getsize(c.path) for c in clips if c.name in set(share["clips"]))
     # one real decode, the way the pipeline does it: the AVIs carry HEVC under a proprietary 'GHEC' tag, so ffmpeg
     # stream-copies them into an MP4 (forcing the hevc decoder) and OpenCV reads that
@@ -297,6 +313,27 @@ def check_videos(r: Report, videos: str | None, who: str | None, env: dict) -> d
                   "install the standalone ffmpeg full build (Windows: gyan.dev) and pass --ffmpeg-dir; "
                   "make sure opencv-python is installed")
     return info
+
+
+def check_drive(r: Report):
+    try:
+        import fetch_clips as fc
+        rc = fc.rclone_bin()
+    except SystemExit:
+        r.add(WARN, "rclone installed", "no", "Mac: brew install rclone   Windows: winget install Rclone.Rclone\n"
+              "(only needed to download missing clips with fetch_clips.py)")
+        return
+    d = fc.drive_cfg()
+    remotes = subprocess.run([rc, "listremotes"], capture_output=True, text=True).stdout.split()
+    if f"{d['remote']}:" not in remotes:
+        r.add(WARN, "rclone connected to Google Drive", f"no remote '{d['remote']}'",
+              f"rclone config create {d['remote']} drive scope=drive.readonly   (browser sign-in, the account the folder is shared with)")
+        return
+    p = subprocess.run([rc, "lsf", "--dirs-only", *(["--drive-shared-with-me"] if d["shared"] else []),
+                        f"{d['remote']}:{d['folder']}"], capture_output=True, text=True, timeout=120)
+    r.add(OK if p.returncode == 0 else WARN, "organizers' Drive folder reachable",
+          (", ".join(x.strip("/") for x in p.stdout.split("\n") if x.strip()) or "empty") if p.returncode == 0 else p.stderr.strip()[-150:],
+          "check drive.folder in configs/pipeline.yaml matches 'Shared with me' > ... and that this Google account has access")
 
 
 def check_machine(r: Report, info: dict):
@@ -332,6 +369,8 @@ def run_checks(who: str | None, videos: str | None, ffmpeg_dir: str | None, tamu
         check_tamu(r)
     section("Footage")
     info = check_videos(r, videos, who, env)
+    section("Google Drive (only needed if clips are missing)")
+    check_drive(r)
     section("This machine")
     check_machine(r, info)
     return _verdict(r, who)

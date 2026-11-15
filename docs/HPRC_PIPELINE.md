@@ -31,27 +31,26 @@ tools/rclone config
 #  n  -> name: gdrive -> storage: drive -> client_id / secret: Enter -> scope: 2 (read-only) -> service account: Enter
 #  advanced: n -> "Use web browser to authenticate?": n
 #  it prints:  rclone authorize "drive" "eyJ..."
-#  run THAT line on your laptop (Mac: brew install rclone), sign in with the account the footage is shared with,
-#  paste the result back -> shared drive: n -> y -> q
+#  run THAT line on your laptop (Mac: brew install rclone), sign in with the account the hackathon folder is shared
+#  with, paste the result back -> shared drive: n -> y -> q
 ```
 
-Then (use the Drive folder name as you see it; quote it):
+The organizers' folder is already in `configs/pipeline.yaml` (`drive:`: Shared with me > AISFS HACKATHON >
+Problem 2: BRD Agentic Vision > Agentic Computer Vision Hackathon Dataset, with `Day 1/`, `Day 2/` and `Cam 01..03`).
 
 ```bash
-export RCLONE_FLAGS="--drive-shared-with-me"           # if the folder is in "Shared with me"
-bash scripts/hprc/fetch_footage.sh list 'gdrive:<folder>'   # every clip name -> outputs/shares/all_clips.txt
-bash scripts/hprc/fetch_footage.sh plan                     # outputs/shares/plan.json: Day 1 -> 3 laptops, Day 2 -> HPRC
-bash scripts/hprc/fetch_footage.sh share 'gdrive:<folder>'  # download the Day 2 clips (+ the Day 1 clips around midnight)
+bash scripts/hprc/fetch_footage.sh check    # lists the Drive folder: should say "Day 1, Day 2" and the clip count
+bash scripts/hprc/fetch_footage.sh plan     # outputs/shares/plan.json: Day 1 -> 3 laptops, Day 2 -> HPRC
+bash scripts/hprc/fetch_footage.sh share    # download the Day 2 clips (+ the Day 1 clips around midnight)
 ```
 
 **Send `outputs/shares/plan.json` to the three laptops now** (they put it in `outputs/shares/`). It is made from the
 full Drive listing, so all four places split the work the same way.
 
-* Only have a folder link? `export RCLONE_FLAGS="--drive-root-folder-id <ID>"` (the ID after `/folders/`) and use `'gdrive:'`.
-* `downloadQuotaExceeded`: Google throttles shared files many people download. Copy the folder into your own Drive
-  first (server side, nothing downloaded), then fetch from the copy:
-  `tools/rclone copy 'gdrive:<folder>' 'gdrive:pen6_copy' --drive-shared-with-me --drive-server-side-across-configs -P`
-* Want to stitch and run Level 2 here too? `fetch_footage.sh all 'gdrive:<folder>'` downloads everything.
+* `downloadQuotaExceeded`: Google throttles shared files many people download. Wait and rerun (it resumes), or copy
+  the folder into your own Drive server-side and point `drive.folder` / `shared_with_me` at the copy.
+* Want to stitch and run Level 2 here too? `fetch_footage.sh all` downloads everything.
+* `.env` on HPRC: `TAMU_API_KEY=` and `OPENAI_API_KEY=` (the fallback), `chmod 600 .env`.
 
 ## 4. Run
 

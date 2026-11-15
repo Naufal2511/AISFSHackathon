@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import os
+import random
 import re
 import time
 import urllib.error
@@ -131,7 +132,8 @@ class OpenAICompatVLM:
                                               "User-Agent": "Mozilla/5.0 (Macintosh) pen6-agent/1.0",  # some gateways 403 urllib's default
                                               **({"Authorization": f"Bearer {self.api_key}"} if self.api_key else {})})
         last = None
-        for attempt in range(3):
+        attempts = int(os.environ.get("PEN6_VLM_ATTEMPTS", 3))
+        for attempt in range(attempts):        # 3 tries, waiting 2 s then 4 s (exponential), then the caller's fallback
             t0 = time.time()
             try:
                 with urllib.request.urlopen(req, timeout=self.timeout) as r:
@@ -139,10 +141,15 @@ class OpenAICompatVLM:
                 self.calls += 1
                 self.seconds += time.time() - t0
                 return out["choices"][0]["message"]["content"] or ""
-            except (urllib.error.URLError, TimeoutError, KeyError, json.JSONDecodeError) as e:
+            except urllib.error.HTTPError as e:
                 last = e
-                time.sleep(2 * (attempt + 1))
-        raise RuntimeError(f"VLM request failed: {last}")
+                if e.code in (400, 401, 403, 404):  # bad key / unknown model: retrying will not help
+                    break
+            except (urllib.error.URLError, TimeoutError, KeyError, json.JSONDecodeError, OSError) as e:
+                last = e
+            if attempt < attempts - 1:
+                time.sleep(2 ** (attempt + 1) + random.random())
+        raise RuntimeError(f"VLM request to {self.model} failed after {attempt + 1} attempt(s): {last}")
 
     def next_action(self, state) -> Dict:
         text = self.complete(self._messages(state))
@@ -424,7 +431,7 @@ def make_backend(cfg: Dict, name: Optional[str] = None, with_fallback: bool = Tr
         return RulePolicy()
     p = cfg.get(b, {})
     base = os.environ.get("AGENT_VLM_BASE_URL") or p.get("base_url")
-    model = os.environ.get("AGENT_VLM_MODEL") or p.get("model")
+    model = os.environ.get("AGENT_VLM_MODEL") or (os.environ.get(p["model_env"]) if p.get("model_env") else None) or p.get("model")
     key = os.environ.get("AGENT_VLM_API_KEY") or (os.environ.get(p["api_key_env"]) if p.get("api_key_env") else None)
     if not base or not model:
         raise ValueError(f"backend '{b}' needs base_url and model (configs/agent.yaml or AGENT_VLM_* env vars)")

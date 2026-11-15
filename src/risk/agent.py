@@ -87,7 +87,8 @@ class Backends:
             key = os.environ.get(p.get("api_key_env", ""), None)
             if not p or not key:
                 continue
-            self.models.append((n, OpenAICompatVLM(p["base_url"], p["model"], key,
+            model = (os.environ.get(p["model_env"]) if p.get("model_env") else None) or p["model"]
+            self.models.append((n, OpenAICompatVLM(p["base_url"], model, key,
                                                    temperature=None if "temperature" in p and p["temperature"] is None else p.get("temperature", 0.1),
                                                    max_tokens=p.get("max_tokens", 2000), timeout=p.get("timeout", 180),
                                                    image_max_side=p.get("image_max_side", 1024),

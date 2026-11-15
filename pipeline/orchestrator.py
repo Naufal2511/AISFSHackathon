@@ -241,15 +241,25 @@ def _tamu_for_stage2(cfg: dict) -> dict:
     prof = cfg.get("stage2", {}).get("tamu_profile", "tamu_luna")
     acfg = yaml.safe_load((REPO / "configs" / "agent.yaml").read_text(encoding="utf-8"))
     p = acfg.get(prof) or {}
-    return {"USE_LOCAL_VLM": "false", "OPENAI_API_KEY": key, "OPENAI_BASE_URL": p.get("base_url", "https://chat-api.tamu.ai/openai"),
-            "OPENAI_MODEL": p.get("model", "protected.gpt-5.6-luna"), "OPENAI_TEMPERATURE": "",
-            "OPENAI_MAX_COMPLETION_TOKENS": str(p.get("max_tokens", 2500))}
+    out = {"USE_LOCAL_VLM": "false", "OPENAI_API_KEY": key, "OPENAI_BASE_URL": p.get("base_url", "https://chat-api.tamu.ai/openai"),
+           "OPENAI_MODEL": p.get("model", "protected.gpt-5.6-luna"), "OPENAI_TEMPERATURE": "",
+           "OPENAI_MAX_COMPLETION_TOKENS": str(p.get("max_tokens", 2500))}
+    # fallback after 3 failed TAMU tries: the same model on OpenAI, with each person's OPENAI_API_KEY from .env
+    env = _root_env()
+    oa = os.environ.get("OPENAI_API_KEY") if os.environ.get("OPENAI_API_KEY") != key else None
+    oa = oa or env.get("OPENAI_API_KEY")
+    if oa:
+        fb = acfg.get("openai_luna") or {}
+        out.update({"FALLBACK_OPENAI_API_KEY": oa,
+                    "FALLBACK_OPENAI_MODEL": os.environ.get("OPENAI_MODEL") or env.get("OPENAI_MODEL") or fb.get("model", "gpt-5.6-luna"),
+                    "FALLBACK_OPENAI_BASE_URL": fb.get("base_url", "https://api.openai.com/v1")})
+    return out
 
 
 def _s2_env(env: dict, s2: Path, cfg: dict | None = None) -> dict:
     out = {**env, "PYTHONPATH": str(s2 / "src") + os.pathsep + env.get("PYTHONPATH", "")}
     if cfg is not None and not (s2 / ".env").exists():
-        out = {**_tamu_for_stage2(cfg), **{k: v for k, v in out.items()}}
+        out = {**out, **_tamu_for_stage2(cfg)}      # TAMU (+ OpenAI fallback) wins over OPENAI_* already in the shell
     return out
 
 

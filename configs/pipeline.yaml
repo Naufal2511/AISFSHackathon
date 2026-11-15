@@ -40,3 +40,8 @@ stage2:
   max_agent_runs_per_hour: 120   # full BRD-agent runs per hour of footage (10 cows = 600 cow-minutes/h, so ~20%);
                                  # the rest keep the rule-checked stage 1 label. Night sends every minute to the
                                  # agent otherwise (10 min of night = 70 runs, ~620k TAMU tokens).
+
+drive:              # where the organizers' footage is (fetch_clips.py downloads exactly the clips a share needs)
+  remote: gdrive    # the rclone remote name (rclone config create gdrive drive scope=drive.readonly)
+  folder: "AISFS HACKATHON/Problem 2: BRD Agentic Vision/Agentic Computer Vision Hackathon Dataset"   # holds Day 1/, Day 2/ with Cam 01..03
+  shared_with_me: true   # the folder is in "Shared with me", not in your own Drive

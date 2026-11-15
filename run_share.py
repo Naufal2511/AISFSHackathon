@@ -430,9 +430,16 @@ def main(argv=None) -> int:
             blocked.append((i, miss))
     if a.dry_run:
         return 0
+    if blocked and not a.allow_missing and interactive and \
+            _ask(f"\n{len(blocked)} chunk(s) miss clips. Download them now from the organizers' Drive? (y/n)", "y").lower() in ("y", "yes"):
+        from fetch_clips import fetch_for
+        if fetch_for(a.who, Path(a.videos)):
+            a.have = {p.name.lower() for p in Path(a.videos).rglob("*") if p.suffix.lower() in camlib.VIDEO_EXTS}
+            blocked = [(i, m) for i, (s, e) in enumerate(chunks)
+                       if (m := missing_for_window(plan, a.have, lead_in(s, a.span_start, a.overlap_min), e))]
     if blocked and not a.allow_missing:
         print(f"\nSTOP: {len(blocked)} chunk(s) need clips that are not in {a.videos}.")
-        print("FIX: copy those clips into the video folder (keep the original names; any subfolder is fine), then run again.")
+        print(f"FIX: python fetch_clips.py --who {a.who} --dest \"{a.videos}\"   (downloads exactly those from the Drive), then run again.")
         print("     (--allow-missing runs anyway: those minutes come out as 'not visible')")
         lst = SHARES / a.who / "missing_clips.txt"
         lst.parent.mkdir(parents=True, exist_ok=True)

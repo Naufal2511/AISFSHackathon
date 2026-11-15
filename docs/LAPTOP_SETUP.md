@@ -44,10 +44,12 @@ NVIDIA laptop: install the CUDA build of torch first (pytorch.org, "Get started"
 Create a file named `.env` in the repo folder (next to `README.md`) with one line:
 
 ```
-TAMU_API_KEY=<the key you were sent>
+TAMU_API_KEY=<your own TAMU AI Chat key>
+OPENAI_API_KEY=<your own OpenAI key>
 ```
 
-No quotes, no spaces. There must be **no** `brd_agent/.env` (it would switch stage 2 away from TAMU).
+No quotes, no spaces. Each person uses their own keys. Every agent tries TAMU 3 times (waiting 2 s, then 4 s) and
+then switches to the same model on OpenAI; the check below sends one tiny request to each to prove they work. There must be **no** `brd_agent/.env` (it would switch stage 2 away from TAMU).
 
 ## 5. The plan and the footage
 
@@ -55,8 +57,17 @@ No quotes, no spaces. There must be **no** `brd_agent/.env` (it would switch sta
   made once on HPRC from the full Google Drive listing (`docs/HPRC_PIPELINE.md` step 3) and sent to everyone; put
   it in `outputs/shares/` (create the folder). (Without HPRC: `python run_share.py --plan-only --layout all-laptops
   --videos "<folder with ALL clips>"`.)
-* Your video folder needs at least the clips of your share (the checker lists what is missing). Keep the original
-  file names; `Cam 01 / Cam 02 / Cam 03` subfolders are fine.
+* Your video folder needs every clip of your share. Missing ones come straight from the organizers' Drive (Shared
+  with me > AISFS HACKATHON > Problem 2 > Agentic Computer Vision Hackathon Dataset), only the ones you need:
+
+  ```bash
+  brew install rclone                                   # Windows: winget install Rclone.Rclone (then a new terminal)
+  rclone config create gdrive drive scope=drive.readonly   # a browser opens: sign in with the account it's shared with
+  python fetch_clips.py --who <you> --dest "<your video folder>"
+  ```
+
+  It keeps the Drive layout (`Day 1/Cam 01/...`), downloads only what is missing, and can be rerun. `run_share.py`
+  also offers to do this itself when a chunk is missing clips.
 
 ## 5b. GPU
 

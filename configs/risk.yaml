@@ -3,7 +3,7 @@
 # Reasoning model for the risk agent (TAMU gateway, names from configs/agent.yaml).
 # Claude Opus 4.8: fastest heavy model in our probe (3 s, valid JSON, cautious about night images).
 backend: tamu_opus
-fallback: [tamu_sol, tamu_luna]
+fallback: [tamu_sol, tamu_luna, openai_luna]   # last: OpenAI (OPENAI_API_KEY) if TAMU is down
 max_steps: 9                  # tool calls per cow before it must decide
 deep_review_top: 4            # full visual review for the top N by behavior score; others get a short check
 

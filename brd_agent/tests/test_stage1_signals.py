@@ -76,3 +76,22 @@ def test_open_identity_holds_only_that_cow(tmp_path):
     assert "id_unresolved" in (db.get_row("COW_01", 1, 181)["yolo_flags"] or "")
     assert "id_unresolved" not in (db.get_row("COW_01", 1, 180)["yolo_flags"] or "")   # confirmed case: no hold
     db.close()
+
+
+def test_openai_fallback_after_tamu_fails():
+    from brd_agent.vlm_client import FallbackVLM
+    from brd_agent.schemas import Hypothesis
+
+    class Down:
+        provider, model = "openai", "protected.gpt-5.6-luna"
+        def ask(self, *a, **k):
+            raise RuntimeError("HTTP 503 after 3 attempts")
+
+    class Up:
+        provider, model = "openai-fallback", "gpt-5.6-luna"
+        def ask(self, *a, **k):
+            return Hypothesis(label="lying", confidence=0.8, cues=[]), {"provider": "openai-fallback"}
+
+    v = FallbackVLM(Down(), Up())
+    h, info = v.ask("hypothesis", "s", "u", [], Hypothesis)
+    assert h.label == "lying" and info["fallback_from"] == "protected.gpt-5.6-luna" and v.fallbacks == 1
