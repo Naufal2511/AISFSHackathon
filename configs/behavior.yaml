@@ -63,6 +63,23 @@ rumination:
   min_bout_for_probe_sec: 120
   probes_per_bout: 2
 
+learned_model:
+  # Fine-tuned per-box classifier (src/behavior/learned.py) used as the emission model instead of
+  # the hand-built cue model. Needs --video-root; boxes without a scored crop keep the heuristic.
+  enabled: true
+  weights: models/behavior/beh_finetuned.pt   # git-ignored; from Git LFS (branch behavior-model-weights)
+  device: auto               # cuda > mps > cpu
+  every_sec: 2               # score body boxes at every 2nd second
+  window_sec: 4              # logits averaged over +-2 s and all cameras (as trained: 2-5 s window)
+  hold_sec: 2                # each observed second takes the nearest scored second within this
+  pad_frac: 0.1              # context pad around the box (head / trough stays in view)
+  batch_size: 32
+  camera_weight: {cam1: 1.0, cam2: 0.6, cam3: 1.0}   # cam2 overhead: val acc 0.38 vs 0.73 on cam1
+  gates:                     # physical vetoes on the model (fusion.gate_learned)
+    feed_min: 0.3            # feeding only if in_feed >= this (share of box in drawn bunk zone / thr)
+    drink_min: 0.3           # drinking only if in_drink >= this; else next most probable class
+    walking_from_speed: true # walking = measured ground speed x upright mass (model walking F1 0.2)
+
 camera_weights:              # how much each view is trusted per cue
   cam1: {posture: 1.0, motion: 1.0, feed: 0.6, drink: 0.8}
   cam2: {posture: 0.3, motion: 0.8, feed: 1.5, drink: 0.0}

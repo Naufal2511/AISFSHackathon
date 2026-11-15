@@ -45,8 +45,11 @@ def zone_of(x, y, zones):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--run", required=True)
-    ap.add_argument("--behavior-model", default="heuristic-fusion-v1")
+    ap.add_argument("--behavior-model", default=None, help="default: <run>/behavior/model.txt, else heuristic-fusion-v1")
     a = ap.parse_args()
+    if a.behavior_model is None:
+        mt = os.path.join(a.run, "behavior", "model.txt")
+        a.behavior_model = open(mt).read().strip() if os.path.exists(mt) else "heuristic-fusion-v1"
     out_dir = os.path.join(a.run, "contract")
     os.makedirs(out_dir, exist_ok=True)
     cams = yaml.safe_load(open("configs/cameras.yaml"))["cameras"]

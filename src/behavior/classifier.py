@@ -42,6 +42,20 @@ class BehaviorClassifier:
         if app is not None and len(app):
             self.fused = self.fused.merge(app, on=["global_cow_id", "sec"], how="left")
 
+    def attach_learned(self, video_index: Dict[str, str], weights: Optional[str] = None) -> Optional[pd.DataFrame]:
+        """Scores body-box crops with the fine-tuned classifier (learned.py) and attaches one
+        calibrated vector per cow-second; returns per-box predictions in the contract shape."""
+        from . import learned
+        lc = self.cfg.get("learned_model", {})
+        self.model = learned.FineTunedBehaviorModel(weights or lc["weights"], lc.get("device"))
+        boxes = learned.score_boxes(self.model, self.rows, video_index, lc)
+        if boxes.empty:
+            print("[BEHAVIOR] learned model scored no boxes; using the heuristic cue model")
+            return None
+        self.fused = learned.attach(self.fused, learned.fuse_scores(boxes, self.model, lc),
+                                    lc.get("hold_sec", lc.get("every_sec", 2)))
+        return learned.contract_predictions(boxes, self.model)
+
     def decode(self) -> pd.DataFrame:
         parts = []
         for cow, d in self.fused.groupby("global_cow_id"):
@@ -89,7 +103,8 @@ class BehaviorClassifier:
     def run(self, records: List[str], clip_start: Optional[str] = None,
             appearance: Optional[pd.DataFrame] = None,
             video_index: Optional[Dict[str, str]] = None, probe_rumination: bool = False) -> pd.DataFrame:
-        self.load(records, clip_start)
+        if self.fused is None:
+            self.load(records, clip_start)
         self.attach_appearance(appearance)
         tl = self.decode()
         if probe_rumination and video_index:

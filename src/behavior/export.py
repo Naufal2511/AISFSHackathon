@@ -125,7 +125,7 @@ def review_queue(bt: pd.DataFrame, cfg: Dict) -> pd.DataFrame:
     """Segments the agent should verify by looking at video (low confidence or heuristic-only)."""
     rc = cfg["review"]
     q = bt[(bt["duration_sec"] >= rc["min_segment_sec"]) & (bt["behavior"] != NOT_VISIBLE) & (
-        (bt["mean_confidence"] < rc["low_confidence"]) | bt["evidence"].str.startswith("estimated_heuristic")
+        (bt["mean_confidence"] < rc["low_confidence"]) | bt["evidence"].str.startswith(("estimated_heuristic", "estimated_model"))
     )].copy()
     q["mid_time"] = q["start_time"] + (q["end_time"] - q["start_time"]) / 2
     q["reason"] = np.where(q["evidence"].str.startswith("estimated"), "heuristic_label_needs_visual_check",
@@ -155,7 +155,7 @@ def write_all(out_dir: str, tl: pd.DataFrame, cfg: Dict, full_days=None, write_1
     if write_1s:
         paths["timeline_1s_csv"] = os.path.join(out_dir, "behavior_timeline_1s.csv")
         cols = ["global_cow_id", "wall_time", "behavior", "confidence", "evidence", "observed", "cameras",
-                "world_x", "world_y", "speed_mps", "height_ratio", "nn_dist"] + [c for c in tl.columns if c.startswith("p::")]
+                "world_x", "world_y", "speed_mps", "height_ratio", "nn_dist", "emission"] + [c for c in tl.columns if c.startswith("p::")]
         tl[[c for c in cols if c in tl.columns]].rename(columns={"global_cow_id": "cow_id"}).to_csv(
             paths["timeline_1s_csv"], index=False, float_format="%.3f")
     summary = {
@@ -166,6 +166,8 @@ def write_all(out_dir: str, tl: pd.DataFrame, cfg: Dict, full_days=None, write_1
         "behavior_share": tl["behavior"].value_counts(normalize=True).round(4).to_dict(),
         "review_segments": int(len(rq)),
     }
+    if "emission" in tl:
+        summary["emission_share_observed"] = tl.loc[tl["observed"], "emission"].value_counts(normalize=True).round(4).to_dict()
     with open(paths["summary_json"], "w") as f:
         json.dump(summary, f, indent=2, default=str)
     return paths
