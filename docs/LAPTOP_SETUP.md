@@ -99,7 +99,8 @@ the repo root and runs `python stitch_shares.py --videos "<all clips>"`.
 
 ## Settings everyone shares (configs/pipeline.yaml)
 
-* 1 frame every 5 seconds (`stage1.fps: 0.2`), detector `models/angus_det_hprc_m1280.pt` at 1280 px.
+* Frame rate `stage1.fps` (1 fps unless the team agrees otherwise; 1 frame / 5 s was tested and breaks cow IDs),
+  detector `models/angus_det_hprc_m1280.pt` at 1280 px.
 * Identity agent and BRD agent on TAMU `protected.gpt-5.6-luna`; at most 120 full BRD-agent checks per hour of
   footage, so TAMU load is predictable.
 * Each chunk also tracks the 2 minutes before its window; that overlap is how the stitcher keeps cow IDs the same

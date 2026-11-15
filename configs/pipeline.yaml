@@ -20,8 +20,9 @@ cameras:
 
 stage1:
   detector: models/angus_det_hprc_m1280.pt   # fine-tuned YOLO26m (Git LFS); main.py's default
-  fps: 0.2          # frames per second sampled for tracking: 1 frame every 5 s (the brief allows sampling).
-                    # Behavior is smoothed on the same 5 s grid and held per second in the contract.
+  fps: 1.0          # frames per second sampled for tracking. NOT 0.2: on 16:00-16:05, 1 frame / 5 s gave the same
+                    # cow ID as 1 fps on only 46% of boxes (cam3: 5%) and the same minute behavior on 39%.
+                    # The rest of the pipeline adapts to any rate (behavior grid, identity thresholds).
   imgsz: 1280       # detector input size (main.py default; 640 loses far-field cows on 4K)
   herd_size: 10     # identity cap passed to run_level1.py --pen-size (the pen holds at most 10)
   id_agent: true    # supervisor agent on identity flags only (duplicate_id, id_jump, extra_cow, cow_missing, 30-min audit)
