@@ -35,3 +35,4 @@ __pycache__/
 
 # --- Deployed behavior model (private repo, stored with Git LFS) ---
 !models/behavior/*.pt
+!models/*.pt
