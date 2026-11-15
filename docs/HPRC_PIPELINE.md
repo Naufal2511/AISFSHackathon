@@ -62,7 +62,9 @@ tail -f /scratch/user/$USER/pen6_logs/pen6_pipe_<jobid>_0.out    # the smoke tes
 
 * The chunk tasks start only if the smoke test passes (`afterok`). At most 8 run at once (`MAX_AT_ONCE`), each on
   one T4 (`GPU=a100` for another type), with 3 BRD-agent and 3 identity-agent threads each so TAMU is not flooded.
-* A chunk that fails or times out: submit again; finished steps are skipped.
+* A chunk that fails or times out: `venv/bin/python why_failed.py --who hprc_day2` and `sacct -j <jobid>` say why
+  ([TROUBLESHOOTING.md](TROUBLESHOOTING.md)); submit again; finished steps are skipped, tracking resumes from its
+  checkpoint.
 * `PEN6_CHUNK_H=4` for 4-hour chunks (fewer, longer tasks).
 
 ## 5. Results

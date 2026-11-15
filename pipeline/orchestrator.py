@@ -461,7 +461,8 @@ def main(argv=None) -> int:
             with lock:
                 done[name].update(status="failed", error=str(e)[:2000], seconds=round(time.time() - t, 1))
                 run.save_state(state)
-            print(f"\nFAILED at '{name}': {e}\nFix it and rerun the same command: finished steps are skipped.", flush=True)
+            print(f"\nFAILED at '{name}': {e}\nWhy: python why_failed.py --run {run.root}   (docs/TROUBLESHOOTING.md)\n"
+                  f"Fix it and rerun the same command: finished steps are skipped.", flush=True)
             return False
         with lock:
             done[name].update(status="ok", ended=_now(), seconds=round(time.time() - t, 1), info=info)

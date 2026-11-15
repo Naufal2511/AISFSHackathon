@@ -101,7 +101,9 @@ It asks who you are and where the clips are, then:
 3. asks the chunk length (**2** or **4** hours) and how many chunks at once (it suggests a number for your
    machine), then runs them. Each chunk prints when it starts and ends; logs are in `outputs/shares/<you>/`.
 
-If anything stops (crash, sleep, lost Wi-Fi): run the same command again. Finished steps and chunks are skipped.
+If anything stops (crash, sleep, lost Wi-Fi): `python why_failed.py --who <you>` says why and what to fix
+(more in [TROUBLESHOOTING.md](TROUBLESHOOTING.md)), then run the same command again. Finished steps and chunks are
+skipped, and tracking resumes from its last checkpoint (at most ~15 min of footage is redone).
 Keep the laptop plugged in and stop it from sleeping (Mac: `caffeinate -dims python run_share.py`; Windows: Power
 settings → Sleep: Never).
 

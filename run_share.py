@@ -211,7 +211,7 @@ def run_chunk(i: int, who: str, start: str, end: str, a, threads: int, workers: 
         status[name].update(status="ok" if rc == 0 else "failed", seconds=round(time.time() - t),
                             ended=datetime.now().isoformat(timespec="seconds"), run=str((root / name).relative_to(REPO)))
         _save_status(who, status)
-    print(f"  [{name}] {'done' if rc == 0 else 'FAILED (exit %d), see the log; rerun to resume' % rc} "
+    print(f"  [{name}] {'done' if rc == 0 else 'FAILED (exit %d): python why_failed.py --who %s ; then rerun to resume' % (rc, who)} "
           f"in {(time.time() - t) / 60:.0f} min", flush=True)
     return rc
 
