@@ -152,6 +152,8 @@ def pick_traces(g: pd.DataFrame, trace_path) -> dict:
     if len(f):
         out["failure"] = f.sort_values("conf").iloc[0]
     night = a[pd.to_numeric(a.get("is_night_final"), errors="coerce") == 1]
+    other = night[~night.path.isin([r["path"] for r in out.values()])]
+    night = other if len(other) else night                 # a different minute from the success/failure picks
     if len(night):
         out["night"] = night.sort_values("conf", ascending=False).iloc[0]
     return out
