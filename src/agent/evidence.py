@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import threading
 from collections import OrderedDict
 from typing import Dict, List, Optional, Sequence, Tuple
 
@@ -39,6 +40,7 @@ class FrameStore:
                     starts.append(((st - pd.Timestamp("1970-01-01")).total_seconds(), sv))
             self.clips[cam] = sorted(starts)
         self._caps: "OrderedDict[str, cv2.VideoCapture]" = OrderedDict()
+        self._lock = threading.RLock()
         self.max_open = max_open
 
     def _path(self, source_video: str) -> Optional[str]:
@@ -63,6 +65,11 @@ class FrameStore:
         return cap
 
     def frame(self, camera: str, t: float) -> Optional[np.ndarray]:
+        # the open VideoCaptures are shared: one seek + read at a time (investigations run in parallel threads)
+        with self._lock:
+            return self._frame(camera, t)
+
+    def _frame(self, camera: str, t: float) -> Optional[np.ndarray]:
         cl = self.clips.get(camera) or []
         cand = [c for c in cl if c[0] <= t]
         if not cand:
@@ -146,9 +153,12 @@ class Embedder:
             except Exception:
                 self.dino = None
 
+    _lock = threading.Lock()
+
     def __call__(self, frame: np.ndarray, bbox) -> np.ndarray:
         from ..tracking.tracklet_identity import color_descriptor, fuse_embedding
-        d = self.dino.extract(frame, bbox) if self.dino is not None else None
+        with Embedder._lock:
+            d = self.dino.extract(frame, bbox) if self.dino is not None else None
         e = fuse_embedding(d, color_descriptor(frame, bbox))
         return e if e is not None else np.zeros(1, np.float32)
 

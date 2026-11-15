@@ -82,7 +82,7 @@ class CalmCfg(BaseModel):
     min_id_conf: float = 0.80
     recheck_every_min: int = 10         # a calm bout is re-verified at least this often
     labels: list[str] = ["lying", "standing", "feeding"]
-    blocking_flags: list[str] = ["camera_conflict", "label_unstable", "gap_fill", "not_visible", "duplicate_id"]
+    blocking_flags: list[str] = ["camera_conflict", "label_unstable", "gap_fill", "not_visible", "duplicate_id", "id_unresolved"]
 
 
 class VideoCfg(BaseModel):

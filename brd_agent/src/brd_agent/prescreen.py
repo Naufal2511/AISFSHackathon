@@ -56,7 +56,7 @@ def prescreen(b: Brief, backend, cfg: AgentConfig, verifier: Verifier) -> tuple[
                 acts.append({"actor": "verifier", "action": "rumination_screen", "args": {}, "reason": "measure jaw motion for a resting label",
                              "outcome": f"measurement failed: {type(e).__name__}", "source": ""})
     for f in b.yolo_flags:
-        if f in ("duplicate_id", "camera_conflict", "label_unstable"):
+        if f in ("duplicate_id", "camera_conflict", "label_unstable", "id_unresolved"):
             reasons.append(f"yolo_flag:{f}")
     outcome = "no contradiction found" if not reasons else "; ".join(reasons)
     acts.append({"actor": "verifier", "action": "rule_verify", "args": {"label": label, "measured": list(F)},

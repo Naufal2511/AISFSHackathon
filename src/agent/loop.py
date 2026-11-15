@@ -16,6 +16,7 @@ from __future__ import annotations
 import json
 import os
 import time
+from concurrent.futures import ThreadPoolExecutor
 from typing import Dict, List, Optional
 
 import cv2
@@ -294,7 +295,9 @@ class Agent:
 
     # ------------------------------------------------------------------ whole run
     def run(self, window_sec: int = 300, audit_every_min: int = 30, trigger_cfg: Optional[Dict] = None,
-            embedder=None, max_flags: Optional[int] = None, log=print) -> List[Dict]:
+            embedder=None, max_flags: Optional[int] = None, log=print, parallel: int = 1) -> List[Dict]:
+        """Windows run in time order (later windows read the memory notes of earlier ones); the flags of one window
+        are independent cases and are investigated `parallel` at a time (the time goes to VLM round trips)."""
         rec, tl = self.tb.rec, self.tb.timeline
         t_lo, t_hi = float(rec.t.min()), float(rec.t.max()) + 1
         audits = audit_schedule(t_lo, t_hi, audit_every_min)
@@ -309,10 +312,12 @@ class Agent:
             flags = [f for f in flags if f.key not in handled]
             log(f"[AGENT] window {self.tb.hms(w0)}-{self.tb.hms(w1)}: {len(flags)} flags "
                 + ", ".join(f"{f.kind}({','.join(f.cow_ids[:2])})" for f in flags))
+            cases = []
             for f in flags:
                 if max_flags is not None and n >= max_flags:
                     break
                 handled.add(f.key)
+                n += 1
                 imgs, txt = [], ""
                 if f.kind == "id_audit":
                     path, rows, sheet = build_sheet(f.t0, rec, self.tb.frames, self.memory, embedder,
@@ -321,13 +326,27 @@ class Agent:
                                           "box carrying that ID now (red label = closer to another card).\n"
                                           + audit_text(rows))
                     log(f"[AGENT]   ID-check sheet -> {path}")
+                cases.append((f, imgs, txt))
+
+            def one(c):
+                f, imgs, txt = c
                 tr = self.investigate(f, imgs, txt)
-                n += 1
                 fin = tr["final"] or {}
                 log(f"[AGENT]   {f.kind}: {fin.get('decision')} ({tr['seconds']} s, {len(tr['steps'])} steps) "
                     f"- {fin.get('summary', '')}")
+                return tr
+
+            if parallel > 1 and len(cases) > 1:
+                with ThreadPoolExecutor(max_workers=min(parallel, len(cases))) as ex:
+                    list(ex.map(one, cases))
+            else:
+                for c in cases:
+                    one(c)
             self.memory.update_last_seen(rec[(rec.t >= w0) & (rec.t < w1)])
         self.memory.save()
+        # parallel cases finish in any order: keep corrections and traces in time order so results are reproducible
+        self.corrections.sort(key=lambda r: (r.get("t0_epoch") or 0, str(r.get("flag")), str(r.get("track_id"))))
+        self.traces.sort(key=lambda t: (t["flag"]["t0"], t["flag"]["kind"], ",".join(t["flag"]["cow_ids"])))
         return self.traces
 
 

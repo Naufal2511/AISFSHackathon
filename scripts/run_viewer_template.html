@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pen 6 Run Viewer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+/* Layout: sticky run bar + section nav; stacked sections (summary first); a right-hand drawer for one minute or case. */
+:root {
+  --bg: #f4f6f4; --surface: #ffffff; --sunk: #eaeeeb; --ink: #18211d; --muted: #5a6861; --line: #d9e0dc;
+  --accent: #2c6b5a; --accent-ink: #ffffff; --good: #2f7d4a; --warn: #a76a00; --bad: #b3372f; --info: #3d62a8;
+  --f-display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Inter", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --b-lying: #4e79a7; --b-standing: #9aa3b2; --b-walking: #f28e2b; --b-feeding: #59a14f; --b-drinking: #4fb0c6;
+  --b-ruminating_lying: #8f5fa8; --b-ruminating_standing: #c99bd4; --b-grooming: #e0b500; --b-social_interaction: #e15759;
+  --b-other_not_visible: #d5dad6;
+  --shadow: 0 10px 30px rgba(20, 40, 30, .14);
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #111614; --surface: #19201d; --sunk: #141a17; --ink: #e5ece8; --muted: #93a39b; --line: #2a3430;
+  --accent: #6cc0a4; --accent-ink: #0d1411; --good: #62c07f; --warn: #e0a640; --bad: #f07a70; --info: #86a8ea;
+  --b-other_not_visible: #343d39; --shadow: 0 10px 30px rgba(0, 0, 0, .5); color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #111614; --surface: #19201d; --sunk: #141a17; --ink: #e5ece8; --muted: #93a39b; --line: #2a3430;
+  --accent: #6cc0a4; --accent-ink: #0d1411; --good: #62c07f; --warn: #e0a640; --bad: #f07a70; --info: #86a8ea;
+  --b-other_not_visible: #343d39; --shadow: 0 10px 30px rgba(0, 0, 0, .5); color-scheme: dark }
+
+* { box-sizing: border-box }
+[hidden] { display: none !important }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.5 var(--f-body); -webkit-font-smoothing: antialiased }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; letter-spacing: -.01em }
+h1 { font-size: 1.5rem; font-weight: 700 }
+h2 { font-size: 1.25rem; font-weight: 600 }
+h3 { font-size: 1rem; font-weight: 600 }
+.mono, code { font-family: var(--f-mono); font-size: .86em }
+.num { font-variant-numeric: tabular-nums }
+.muted { color: var(--muted) }
+.label { font-size: .72rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 600 }
+a { color: var(--accent) }
+button { font: inherit; color: inherit }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+
+.wrap { max-width: 1240px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)) }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface) }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line) }
+.bar .wrap { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; padding-block: 10px }
+.bar .run { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; min-width: 0 }
+.bar nav { display: flex; gap: 4px; flex-wrap: wrap; margin-left: auto }
+.bar nav a { text-decoration: none; color: var(--muted); padding: 5px 10px; border-radius: 6px; font-weight: 500 }
+.bar nav a:hover { background: var(--sunk); color: var(--ink) }
+
+main .wrap { display: grid; gap: 40px; padding-block: 24px 60px }
+section { display: grid; gap: 16px; scroll-margin-top: 70px; min-width: 0 }
+.sec-head { display: flex; gap: 12px 20px; align-items: baseline; flex-wrap: wrap; justify-content: space-between }
+.sec-head p { margin: 0; max-width: 72ch; color: var(--muted) }
+
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; min-width: 0 }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px }
+.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; gap: 2px }
+.kpi b { font: 600 1.45rem/1.2 var(--f-display); font-variant-numeric: tabular-nums }
+
+/* pipeline time strip, drawn to scale */
+.steps { display: flex; height: 38px; border-radius: 8px; overflow: hidden; border: 1px solid var(--line); background: var(--sunk) }
+.steps div { display: flex; align-items: center; justify-content: center; font-size: .78rem; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; min-width: 3px }
+.steps-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: .8rem }
+.steps-legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; background: var(--c); vertical-align: -1px }
+
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .8rem }
+.legend span { display: inline-flex; align-items: center; gap: 6px }
+.sw { width: 12px; height: 12px; border-radius: 3px; display: inline-block }
+.filters { display: flex; flex-wrap: wrap; gap: 6px }
+.chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 3px 11px; cursor: pointer; font-size: .82rem }
+.chip[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent) }
+
+/* ethogram */
+.etho { overflow-x: auto }
+.etho-grid { display: grid; grid-template-columns: 86px 1fr; gap: 10px 12px; min-width: 560px; align-items: center }
+.etho-cow { font: 600 .9rem var(--f-display) }
+.etho-cow small { display: block; font: 400 .72rem var(--f-body); color: var(--muted) }
+.lanes { display: grid; gap: 3px; min-width: 0 }
+.sec-strip { display: flex; height: 10px; border-radius: 3px; overflow: hidden }
+.sec-strip i { flex: 1 1 0; display: block }
+.sec-strip i.gap { opacity: .35 }
+.min-row { display: grid; gap: 3px }
+.min { position: relative; height: 34px; border-radius: 5px; border: 0; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font: 600 .78rem var(--f-mono); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.35); padding: 0 }
+.min:hover { filter: brightness(1.08); transform: translateY(-1px) }
+.min[data-on="true"] { outline: 3px solid var(--ink); outline-offset: 1px }
+.min.dim { opacity: .18 }
+.min .mk { position: absolute; top: 2px; right: 4px; font-size: .68rem }
+.axis { display: grid; font: .72rem var(--f-mono); color: var(--muted) }
+.lane-key { display: flex; gap: 14px; flex-wrap: wrap; font-size: .76rem; color: var(--muted) }
+
+.pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: .74rem; font-weight: 600; border: 1px solid currentColor; white-space: nowrap }
+.p-good { color: var(--good) } .p-warn { color: var(--warn) } .p-bad { color: var(--bad) } .p-info { color: var(--info) } .p-mute { color: var(--muted) }
+
+.cols2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px }
+.cow-card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px; display: grid; gap: 8px; align-content: start }
+.thumbs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px }
+.thumbs img, .gal img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 5px; cursor: zoom-in; display: block; background: var(--sunk) }
+.list { display: grid; gap: 8px }
+.case { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 12px; align-items: center; text-align: left; width: 100%;
+  background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--sev); border-radius: 8px; padding: 10px 12px; cursor: pointer }
+.case:hover { border-color: var(--accent); border-left-color: var(--sev) }
+.case .sum { grid-column: 1 / -1; color: var(--muted); font-size: .86rem }
+.sheet img { width: 100%; border-radius: 8px; cursor: zoom-in; display: block }
+
+table { border-collapse: collapse; width: 100%; font-size: .86rem }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top }
+th { font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600 }
+.tbl { overflow-x: auto }
+.riskbar { height: 8px; border-radius: 4px; background: var(--sunk); width: 120px; overflow: hidden }
+.riskbar i { display: block; height: 100%; background: var(--bad) }
+.reasons { margin: 0; padding-left: 16px; display: grid; gap: 2px }
+.note { border-left: 3px solid var(--warn); background: var(--sunk); padding: 10px 14px; border-radius: 0 8px 8px 0; color: var(--ink); max-width: 90ch }
+.gal { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px }
+
+/* drawer */
+.scrim { position: fixed; inset: 0; background: rgba(10, 20, 15, .35); z-index: 20 }
+.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(560px, 100%); background: var(--surface); z-index: 21; box-shadow: var(--shadow);
+  display: grid; grid-template-rows: auto 1fr; grid-template-columns: minmax(0, 1fr); padding-top: env(safe-area-inset-top, 0px); padding-right: env(safe-area-inset-right, 0px); padding-bottom: env(safe-area-inset-bottom, 0px) }
+.drawer header { display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; padding: 16px 18px; border-bottom: 1px solid var(--line) }
+.drawer .body { overflow-y: auto; overflow-x: hidden; padding: 16px 18px 40px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-content: start; overflow-wrap: anywhere }
+.x { border: 1px solid var(--line); background: var(--sunk); border-radius: 8px; width: 34px; height: 34px; cursor: pointer; flex: none }
+.vs { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 10px; align-items: center }
+.vs > div { border-radius: 8px; padding: 10px; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.3) }
+.vs .lab { font: 600 .95rem var(--f-display) }
+.ev { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: grid; gap: 6px; min-width: 0 }
+.ev .t { display: flex; gap: 8px; align-items: center; flex-wrap: wrap }
+.ev p { margin: 0 }
+.ev .facts { font: .76rem/1.45 var(--f-mono); color: var(--muted); overflow-wrap: anywhere }
+.ev .imgs { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 4px }
+.ev .imgs img { width: 100%; border-radius: 4px; cursor: zoom-in; display: block }
+.checks { display: flex; flex-wrap: wrap; gap: 4px }
+.acts { display: grid; gap: 4px; font-size: .84rem }
+.acts div { display: grid; grid-template-columns: 110px 1fr; gap: 8px; border-bottom: 1px dashed var(--line); padding-bottom: 4px }
+.lightbox { position: fixed; inset: 0; z-index: 30; background: rgba(5, 10, 8, .86); display: flex; align-items: center; justify-content: center; padding: 24px; cursor: zoom-out }
+.lightbox img { max-width: 100%; max-height: 100%; border-radius: 6px }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important } .min:hover { transform: none } }
+@media (max-width: 640px) { .bar nav { margin-left: 0 } .acts div { grid-template-columns: 1fr } }
+</style>
+</head>
+<body>
+<div class="bar"><div class="wrap">
+  <div class="run"><h1 id="t-run">Pen 6 run</h1><span class="muted mono" id="t-window"></span></div>
+  <nav aria-label="Sections"><a href="#overview">Overview</a><a href="#behavior">Behavior</a><a href="#identity">Identity</a><a href="#risk">BRD risk</a><a href="#files">Files</a></nav>
+</div></div>
+<main><div class="wrap">
+  <section id="overview">
+    <div class="sec-head"><h2>Overview</h2><p id="ov-sub"></p></div>
+    <div class="kpis" id="kpis"></div>
+    <div class="panel" style="display:grid;gap:10px">
+      <div class="label">Wall time per pipeline step (to scale)</div>
+      <div class="steps" id="steps"></div>
+      <div class="steps-legend" id="steps-legend"></div>
+    </div>
+  </section>
+
+  <section id="behavior">
+    <div class="sec-head"><h2>Behavior</h2><p>Thin strip: the stage 1 classifier, one tick per second (faded = position predicted, not seen).
+      Blocks: the minute's final label after the BRD validation agent. Click a block to see what the agent looked at and why it decided.</p></div>
+    <div class="legend" id="legend"></div>
+    <div class="filters" id="filters" role="group" aria-label="Highlight minutes"></div>
+    <div class="panel etho"><div class="etho-grid" id="etho"></div></div>
+    <div class="lane-key"><span>✓ confirmed by the agent</span><span>↻ label corrected</span><span>? unresolved (stage 1 label kept)</span><span>≈ calm bout, inherited</span><span>· kept after rule checks</span></div>
+  </section>
+
+  <section id="identity">
+    <div class="sec-head"><h2>Identity</h2><p>Each cow's memory card (reference crops and the traits the VLM wrote), the identity agent's investigations, and the ID-check sheet.</p></div>
+    <div class="kpis" id="id-kpis"></div>
+    <div class="cards" id="cows"></div>
+    <div class="cols2">
+      <div class="panel" style="display:grid;gap:10px"><h3>Identity agent investigations</h3><div class="list" id="cases"></div></div>
+      <div class="panel sheet" style="display:grid;gap:10px"><h3>ID-check sheet</h3><p class="muted" style="margin:0">One row per cow: card reference, then the box carrying that ID on cam1, cam2, cam3. Red label = closer to another card.</p><div id="sheet"></div></div>
+    </div>
+  </section>
+
+  <section id="risk">
+    <div class="sec-head"><h2>BRD risk</h2><p>Level 2: behavior indicators against the herd, plus what the risk agent saw on close views.</p></div>
+    <div id="risk-body"></div>
+  </section>
+
+  <section id="assets">
+    <div class="sec-head"><h2>Close views</h2><p>Largest daylight crops per cow, saved during tracking for head, ear and discharge checks.</p></div>
+    <div class="cols2" id="gallery"></div>
+  </section>
+
+  <section id="files">
+    <div class="sec-head"><h2>Files</h2><p>Paths are relative to the run folder.</p></div>
+    <div class="panel tbl"><table><thead><tr><th>File</th><th>Rows</th><th>Size</th></tr></thead><tbody id="files-body"></tbody></table></div>
+  </section>
+</div></main>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="drawer" hidden aria-modal="true" role="dialog" aria-labelledby="d-title">
+  <header><div><div class="label" id="d-kicker"></div><h2 id="d-title"></h2></div><button class="x" id="d-close" aria-label="Close">✕</button></header>
+  <div class="body" id="d-body"></div>
+</aside>
+<div class="lightbox" id="lightbox" hidden><img id="lb-img" alt=""></div>
+
+<script>
+const D = /*__DATA__*/null;
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+const NICE = {lying: "lying", standing: "standing", walking: "walking", feeding: "feeding", drinking: "drinking",
+  ruminating_lying: "ruminating, lying", ruminating_standing: "ruminating, standing", grooming: "grooming",
+  social_interaction: "social", other_not_visible: "not visible"};
+const col = b => `var(--b-${b || "other_not_visible"})`;
+const hm = m => `${String(Math.floor(m / 60) % 24).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+const pct = v => v == null ? "–" : `${Math.round(v * 100)}%`;
+const src = id => D.img[id] || "";
+
+/* ---------- header + overview */
+$("#t-run").textContent = `Pen 6 · ${D.run}`;
+document.title = `Pen 6 · ${D.run}`;
+$("#t-window").textContent = D.window && D.window[0] ? `${D.window[0]} → ${D.window[1]}` : "";
+const cams = Object.entries(D.cameras || {});
+$("#ov-sub").textContent = `${D.cows.length} cows on ${cams.length} cameras (${cams.map(([c, v]) => `${c}: ${v.clips} clip${v.clips > 1 ? "s" : ""}`).join(", ")}).`;
+const mins = D.minutes;
+const agentRuns = mins.filter(m => m.tier === 2).length;
+const corrected = mins.filter(m => m.correction === "behavior_corrected").length;
+const s2 = D.stage2 || {};
+const idsum = (D.identity || {}).summary || {};
+const kpi = (k, v, sub) => `<div class="kpi"><span class="label">${k}</span><b>${v}</b>${sub ? `<span class="muted" style="font-size:.8rem">${sub}</span>` : ""}</div>`;
+const totalS = D.steps.reduce((a, s) => a + (s.seconds || 0), 0);
+$("#kpis").innerHTML = [
+  kpi("Cow-minutes labelled", mins.length, `${D.cows.length} cows × ${D.m_hi - D.m_lo + 1} min`),
+  kpi("Checked by the BRD agent", agentRuns, `${mins.filter(m => m.correction === "confirmed").length} confirmed · ${corrected} corrected`),
+  kpi("Identity cases", (D.identity.investigations || []).length, Object.entries(idsum.decisions || {}).map(([k, v]) => `${v} ${k}`).join(" · ")),
+  kpi("TAMU calls", (s2.vlm_calls || 0) + (idsum.vlm_calls || 0), `${s2.vlm_calls || 0} behavior · ${idsum.vlm_calls || 0} identity`),
+  kpi("Run time", `${(totalS / 60).toFixed(1)} min`, "for this window"),
+].join("");
+const STEPC = {prepare: "#8a958f", track: "#3d62a8", level1: "#2c6b5a", assets: "#a76a00", import: "#7a6aa8", agent: "#b3372f", export: "#5a6861", level2: "#8f5fa8"};
+$("#steps").innerHTML = D.steps.map(s => `<div style="flex:${Math.max(s.seconds || 0, .5)} 0 0;background:${STEPC[s.name] || "#777"}" title="${s.name}: ${Math.round(s.seconds || 0)} s">${(s.seconds || 0) / totalS > .08 ? s.name : ""}</div>`).join("");
+$("#steps-legend").innerHTML = D.steps.map(s => `<span style="--c:${STEPC[s.name] || "#777"}">${s.name} <span class="mono muted">${Math.round(s.seconds || 0)} s</span></span>`).join("");
+
+/* ---------- behavior */
+$("#legend").innerHTML = D.beh.map(b => `<span><i class="sw" style="background:${col(b)}"></i>${NICE[b]}</span>`).join("");
+const FILTERS = [["all", "All minutes"], ["agent", "Agent checked"], ["behavior_corrected", "Corrected"], ["unresolved", "Unresolved"], ["carried", "Inherited"]];
+let filt = "all";
+const matches = m => filt === "all" || (filt === "agent" ? m.tier === 2 : filt === "carried" ? m.reason === "stable_carry" :
+  filt === "unresolved" ? /unresolved/.test(m.reason) || m.correction === "unresolved" : m.correction === filt);
+$("#filters").innerHTML = FILTERS.map(([k, v]) => `<button class="chip" data-f="${k}" aria-pressed="${k === filt}">${v}</button>`).join("");
+$("#filters").addEventListener("click", e => { const b = e.target.closest("[data-f]"); if (!b) return; filt = b.dataset.f;
+  document.querySelectorAll("#filters .chip").forEach(c => c.setAttribute("aria-pressed", c.dataset.f === filt)); drawEtho(); });
+const mark = m => m.reason === "stable_carry" ? "≈" : m.correction === "behavior_corrected" ? "↻" : /unresolved/.test(m.reason) ? "?" : m.tier === 2 ? "✓" : "·";
+let sel = null;
+function drawEtho() {
+  const span = D.m_hi - D.m_lo + 1;
+  let h = "";
+  for (const cow of D.cows) {
+    const ms = mins.filter(m => m.cow === cow);
+    const sec = D.sec[cow] || [];
+    const off = (D.m_lo - D.sec_start_min) * 60;
+    const ticks = [];
+    for (let i = 0; i < span * 60; i++) {
+      const v = sec[off + i];
+      if (v == null || v < 0) { ticks.push(`<i style="background:var(--sunk)"></i>`); continue; }
+      const gap = v >= 20, b = D.beh[gap ? v - 20 : v];
+      ticks.push(`<i class="${gap ? "gap" : ""}" style="background:${col(b)}"></i>`);
+    }
+    const blocks = [];
+    for (let k = 0; k < span; k++) {
+      const m = ms.find(x => x.minute === D.m_lo + k);
+      if (!m) { blocks.push(`<div class="min" style="background:var(--sunk);cursor:default" aria-hidden="true"></div>`); continue; }
+      const key = `${m.cow}|${m.minute}`;
+      blocks.push(`<button class="min ${matches(m) ? "" : "dim"}" data-k="${key}" data-on="${sel === key}" style="background:${col(m.behavior)}"
+        aria-label="${cow} ${hm(m.minute)} ${NICE[m.behavior]}">${hm(m.minute)}<span class="mk">${mark(m)}</span></button>`);
+    }
+    const n = ms.filter(m => m.tier === 2).length;
+    h += `<div class="etho-cow">${cow}<small>${n} agent check${n === 1 ? "" : "s"}</small></div>
+      <div class="lanes"><div class="sec-strip" title="stage 1, per second">${ticks.join("")}</div>
+      <div class="min-row" style="grid-template-columns:repeat(${span},1fr)">${blocks.join("")}</div></div>`;
+  }
+  h += `<div></div><div class="axis" style="grid-template-columns:repeat(${span},1fr)">${Array.from({length: span}, (_, k) => `<span>${hm(D.m_lo + k)}</span>`).join("")}</div>`;
+  $("#etho").innerHTML = h;
+}
+drawEtho();
+$("#etho").addEventListener("click", e => { const b = e.target.closest("[data-k]"); if (!b) return;
+  const [cow, mi] = b.dataset.k.split("|"); sel = b.dataset.k; drawEtho(); openMinute(mins.find(m => m.cow === cow && m.minute === +mi)); });
+
+const corrPill = m => {
+  if (m.reason === "stable_carry") return `<span class="pill p-info">inherited from calm bout</span>`;
+  if (m.correction === "behavior_corrected") return `<span class="pill p-warn">corrected</span>`;
+  if (/unresolved/.test(m.reason)) return `<span class="pill p-mute">unresolved, stage 1 label kept</span>`;
+  if (m.correction === "confirmed" && m.tier === 2) return `<span class="pill p-good">confirmed by agent</span>`;
+  return `<span class="pill p-mute">${esc(m.reason.replace(/_/g, " "))}</span>`;
+};
+const imgs = ids => ids && ids.length ? `<div class="imgs">${ids.map(i => `<img src="${src(i)}" alt="" loading="lazy">`).join("")}</div>` : "";
+function evHtml(e) {
+  switch (e.type) {
+    case "gate": return `<div class="ev"><div class="t"><span class="label">Gate</span><span class="pill p-info">${esc(e.action)}</span></div><p class="facts">${esc(e.reasons)}</p></div>`;
+    case "night_check": return `<div class="ev"><div class="t"><span class="label">Day / night</span><span class="pill ${String(e.is_night) === "True" || e.is_night === true ? "p-info" : "p-mute"}">${String(e.is_night) === "True" || e.is_night === true ? "night" : "day"}</span></div><p class="facts">camera ${esc(e.camera ?? e.args)} · brightness ${esc(e.brightness ?? "–")}</p></div>`;
+    case "plan": return `<div class="ev"><div class="t"><span class="label">Plan</span></div><p>${esc(e.text)}</p><p class="facts">${(e.steps || []).map(esc).join(" → ")}</p></div>`;
+    case "tool": return `<div class="ev"><div class="t"><span class="label">Tool</span><code>${esc(e.tool)}</code>${e.ok === false ? `<span class="pill p-bad">failed</span>` : ""}</div>${e.reason ? `<p>${esc(e.reason)}</p>` : ""}<p class="facts">${esc(e.facts)}</p>${imgs(e.images)}</div>`;
+    case "hypothesis": return `<div class="ev"><div class="t"><span class="label">Hypothesis · ${esc(e.stage)}</span><span class="pill" style="color:${col(e.label)}">${NICE[e.label] || esc(e.label)} ${pct(+e.conf)}</span></div><p>${esc(e.text)}</p>${(e.cues || []).length ? `<ul class="reasons">${e.cues.map(c => `<li>${esc(c)}</li>`).join("")}</ul>` : ""}</div>`;
+    case "verifier": return `<div class="ev"><div class="t"><span class="label">Rule checks · ${esc(e.stage)}</span></div><div class="checks">${(e.checks || []).map(c => `<span class="pill ${c.ok ? "p-good" : c.sev === "hard" ? "p-bad" : "p-warn"}" title="${esc(c.detail)}">${c.ok ? "✓" : "✗"} ${esc(c.name)}</span>`).join("")}</div></div>`;
+    case "critique": return `<div class="ev"><div class="t"><span class="label">Critique</span></div><p class="facts">${esc(JSON.stringify(e))}</p></div>`;
+    case "decision": return `<div class="ev" style="border-color:var(--accent)"><div class="t"><span class="label">Decision</span><span class="pill" style="color:${col(e.behavior)}">${NICE[e.behavior] || esc(e.behavior)} ${pct(+e.confidence)}</span><span class="pill p-mute">${esc(e.reason)}</span></div><p>${esc(e.rationale)}</p></div>`;
+    case "vlm": return "";
+  }
+  return "";
+}
+function openMinute(m) {
+  const tr = m.trace ? D.traces[m.trace] || [] : [];
+  const vlm = tr.filter(e => e.type === "vlm");
+  $("#d-kicker").textContent = `${m.cow} · day ${m.day} · ${hm(m.minute)}${m.night ? " · night" : ""}`;
+  $("#d-title").textContent = NICE[m.behavior];
+  let h = `<div class="vs"><div style="background:${col(m.tier1)}"><div class="label" style="color:inherit;opacity:.85">Stage 1 classifier</div><div class="lab">${NICE[m.tier1] || "–"}</div></div><span aria-hidden="true">→</span>
+    <div style="background:${col(m.behavior)}"><div class="label" style="color:inherit;opacity:.85">Final</div><div class="lab">${NICE[m.behavior]} · ${pct(m.conf)}</div></div></div>
+    <div>${corrPill(m)}</div><p style="margin:0">${esc(m.rationale)}</p>`;
+  if (vlm.length) h += `<p class="muted" style="margin:0">${vlm.length} TAMU call${vlm.length > 1 ? "s" : ""}, ${vlm.reduce((a, e) => a + (e.tokens || 0), 0).toLocaleString()} tokens, ${vlm.reduce((a, e) => a + (+e.latency || 0), 0).toFixed(1)} s waiting on the model.</p>`;
+  if (tr.length) h += `<h3>Agent trace</h3>` + tr.map(evHtml).join("");
+  else h += `<p class="muted" style="margin:0">No full agent run for this minute: ${m.reason === "stable_carry" ? "it inherited the verified result of its calm bout." : "the stage 1 label passed the rule checks."}</p>`;
+  if (m.actions.length) h += `<h3>Every action, with its reason</h3><div class="acts">${m.actions.map(a => `<div><span class="mono muted">${esc(a.actor)} · ${esc(a.action)}</span><span>${esc(a.reason)}${a.outcome ? ` <span class="muted">→ ${esc(a.outcome)}</span>` : ""}</span></div>`).join("")}</div>`;
+  openDrawer(h);
+}
+
+/* ---------- identity */
+const id = D.identity || {};
+const rep = id.report || {};
+$("#id-kpis").innerHTML = [
+  kpi("Tracklets", rep.tracklets ?? "–", "short tracks from the tracker"),
+  kpi("Cows by evidence", rep.animals_required_by_evidence ?? D.cows.length, `pen cap ${rep.pen_size_cap ?? "–"}`),
+  kpi("Boxes with an ID", rep.assigned_box_share != null ? pct(rep.assigned_box_share) : "–", `${rep.agreement_merges ?? 0} cross-camera merges`),
+  kpi("Agent investigations", (id.investigations || []).length, `${idsum.vlm_calls ?? 0} TAMU calls`),
+].join("");
+$("#cows").innerHTML = (id.cards || []).map(c => `<div class="cow-card"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><h3>${esc(c.cow)}</h3><span class="muted num" style="font-size:.78rem">${(c.stats || {}).n_observations ?? ""} obs · ${((c.stats || {}).cameras || []).join(", ")}</span></div>
+  <div class="thumbs">${c.refs.map(i => `<img src="${src(i)}" alt="${esc(c.cow)} reference crop" loading="lazy">`).join("")}</div>
+  <p style="margin:0;font-size:.85rem">${esc(c.traits || "no traits written")}</p></div>`).join("");
+const SEV = {5: "var(--bad)", 4: "var(--warn)", 3: "var(--info)"};
+const DEC = {confirm: "p-good", relabel: "p-warn", uncertain: "p-mute", escalate: "p-bad", note: "p-info"};
+$("#cases").innerHTML = (id.investigations || []).map((c, i) => `<button class="case" data-i="${i}" style="--sev:${SEV[c.severity] || "var(--line)"}">
+  <code>${esc(c.kind)}</code><span>${esc((c.cows || []).join(", "))} <span class="muted mono">${esc(c.time)}</span></span><span class="pill ${DEC[c.decision] || "p-mute"}">${esc(c.decision)}</span>
+  <span class="sum">${esc(c.summary)}</span></button>`).join("") || `<p class="muted">No identity flags in this window.</p>`;
+$("#cases").addEventListener("click", e => { const b = e.target.closest("[data-i]"); if (!b) return; const c = id.investigations[+b.dataset.i];
+  $("#d-kicker").textContent = `identity · ${c.kind} · ${c.time}`; $("#d-title").textContent = (c.cows || []).join(", ");
+  let h = `<p style="margin:0">${esc(c.detail)}</p><div><span class="pill ${DEC[c.decision] || "p-mute"}">${esc(c.decision)}</span> <span class="muted">${c.seconds} s · ${c.steps.length} tool steps</span></div><p style="margin:0">${esc(c.summary)}</p>`;
+  if (c.evidence.length) h += `<ul class="reasons">${c.evidence.map(x => `<li>${esc(x)}</li>`).join("")}</ul>`;
+  h += c.steps.map((s, k) => `<div class="ev"><div class="t"><span class="label">Step ${k + 1}</span><code>${esc(s.tool)}</code></div><p>${esc(s.thought)}</p><p class="facts">${esc(s.result)}</p>${imgs(s.images)}</div>`).join("");
+  openDrawer(h); });
+const sh = (id.sheets || {}).id_check || (id.sheets || {}).identity_sheet;
+$("#sheet").innerHTML = sh ? `<img src="${src(sh)}" alt="ID-check sheet">` : `<p class="muted">No sheet in this run.</p>`;
+
+/* ---------- risk */
+const R = D.risk || {};
+if (!R.rows) $("#risk-body").innerHTML = `<div class="panel muted">Level 2 has not run for this folder (scripts/run_level2.py).</div>`;
+else {
+  const hrs = Math.max(...R.rows.map(r => r.hours));
+  const SIGN = {present: "p-bad", absent: "p-good", not_assessable: "p-mute"};
+  $("#risk-body").innerHTML = (hrs < 2 ? `<div class="note">Only ${(hrs * 60).toFixed(0)} minutes of footage per cow. Every indicator is noisy at this length, so read this ranking as a demonstration of the output, not a screening result.</div>` : "") +
+    `<div class="panel tbl"><table><thead><tr><th>Rank</th><th>Cow</th><th>Risk</th><th>Why</th><th>Signs checked on video</th></tr></thead><tbody>${R.rows.map(r => `<tr>
+      <td class="num">${r.rank}</td><td><b>${esc(r.cow)}</b><div class="muted" style="font-size:.76rem">${esc(r.confidence)} confidence · ${(r.hours * 60).toFixed(0)} min seen</div></td>
+      <td><div class="num">${r.risk.toFixed(3)}</div><div class="riskbar"><i style="width:${Math.min(100, r.risk * 100 / Math.max(...R.rows.map(x => x.risk)) )}%"></i></div>${r.visual ? `<div class="muted" style="font-size:.76rem">visual ${r.visual > 0 ? "+" : ""}${r.visual}</div>` : ""}</td>
+      <td><ul class="reasons">${r.reasons.slice(0, 3).map(x => `<li>${esc(x)}</li>`).join("")}</ul>${r.assessment ? `<p class="muted" style="margin:6px 0 0;font-size:.82rem">${esc(r.assessment)}</p>` : ""}</td>
+      <td><div class="checks">${Object.entries(r.signs).map(([k, v]) => `<span class="pill ${SIGN[v.status] || "p-mute"}" title="${esc(v.why)}">${esc(k.replace(/_/g, " "))}</span>`).join("") || `<span class="muted">not reviewed</span>`}</div>${r.card ? `<div style="margin-top:6px"><a href="${esc(r.card)}">risk card</a></div>` : ""}</td></tr>`).join("")}</tbody></table></div>` +
+    (R.index ? `<p class="muted" style="margin:0">Full Level 2 page: <a href="${esc(R.index)}">level2/index.html</a> (cards, clips, evidence).</p>` : "");
+}
+
+/* ---------- gallery */
+$("#gallery").innerHTML = D.cows.map(c => `<div class="panel" style="display:grid;gap:8px"><h3>${esc(c)}</h3><div class="gal">${(D.gallery[c] || []).map(g => `<img src="${src(g.img)}" alt="${esc(c)} ${esc(g.cam)}" title="${esc(g.cam)} · box ${g.h}px" loading="lazy">`).join("") || `<span class="muted">no close daylight view</span>`}</div></div>`).join("");
+
+/* ---------- files */
+$("#files-body").innerHTML = D.files.map(f => `<tr><td class="mono">${esc(f.path)}</td><td class="num">${f.rows ?? ""}</td><td class="num muted">${f.kb.toLocaleString()} KB</td></tr>`).join("");
+
+/* ---------- drawer + lightbox */
+function openDrawer(h) { $("#d-body").innerHTML = h; $("#drawer").hidden = false; $("#scrim").hidden = false; $("#d-body").scrollTop = 0; $("#d-close").focus(); }
+function closeDrawer() { $("#drawer").hidden = true; $("#scrim").hidden = true; }
+$("#d-close").addEventListener("click", closeDrawer); $("#scrim").addEventListener("click", closeDrawer);
+document.addEventListener("keydown", e => { if (e.key === "Escape") { if (!$("#lightbox").hidden) $("#lightbox").hidden = true; else closeDrawer(); } });
+document.addEventListener("click", e => { const im = e.target.closest(".imgs img, .thumbs img, .gal img, .sheet img"); if (!im) return; $("#lb-img").src = im.src; $("#lightbox").hidden = false; });
+$("#lightbox").addEventListener("click", () => { $("#lightbox").hidden = true; });
+</script>
+</body>
+</html>

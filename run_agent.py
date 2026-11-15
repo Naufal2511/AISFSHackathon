@@ -95,7 +95,8 @@ def main():
     agent = Agent(tb, memory, backend, a.out, max_steps=ac.get("max_steps", 6))
     t0 = time.time()
     traces = agent.run(window_sec=ac.get("window_sec", 300), audit_every_min=ac.get("audit_every_min", 30),
-                       trigger_cfg=trig, embedder=embedder, max_flags=a.max_flags)
+                       trigger_cfg=trig, embedder=embedder, max_flags=a.max_flags,
+                       parallel=ac.get("parallel_investigations", 1))
     frames.close()
 
     corr = pd.DataFrame(agent.corrections)

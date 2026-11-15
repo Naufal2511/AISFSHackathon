@@ -27,6 +27,7 @@ import os
 import shutil
 import subprocess
 import sys
+import threading
 import time
 from datetime import datetime
 from pathlib import Path
@@ -261,6 +262,9 @@ def step_import(a, cfg, run: Run, env) -> dict:
     frames = run.tracking / "assets_raw" / "frames.csv"
     if frames.exists():
         cmd += ["--frames", frames]       # day/night already measured on every tracked frame
+    idt = run.level1 / "agent" / "traces"
+    if idt.is_dir():
+        cmd += ["--id-traces", idt]       # hold only the cow-minutes whose identity is still open
     _run_cmd("import", cmd, s2, _s2_env(env, s2), run.logs / "3_import.log", a.quiet)
     return {"store": str(run.store)}
 
@@ -419,21 +423,51 @@ def main(argv=None) -> int:
     run.remux.mkdir(parents=True, exist_ok=True)
 
     t_all = time.time()
-    for name in todo:
-        print(f"\n== [{STEPS.index(name) + 1}/{len(STEPS)}] {name}", flush=True)
+    lock = threading.Lock()
+
+    def run_step(name: str) -> bool:
         t = time.time()
-        done[name] = {"status": "running", "started": _now()}
-        run.save_state(state)
+        with lock:
+            done[name] = {"status": "running", "started": _now()}
+            run.save_state(state)
         try:
             info = STEP_FN[name](a, cfg, run, env)
         except (RuntimeError, camlib.CameraError) as e:
-            done[name].update(status="failed", error=str(e)[:2000], seconds=round(time.time() - t, 1))
+            with lock:
+                done[name].update(status="failed", error=str(e)[:2000], seconds=round(time.time() - t, 1))
+                run.save_state(state)
+            print(f"\nFAILED at '{name}': {e}\nFix it and rerun the same command: finished steps are skipped.", flush=True)
+            return False
+        with lock:
+            done[name].update(status="ok", ended=_now(), seconds=round(time.time() - t, 1), info=info)
             run.save_state(state)
-            print(f"\nFAILED at '{name}': {e}\nFix it and rerun the same command: finished steps are skipped.")
+        print(f"   {name} ok in {time.time() - t:.0f} s", flush=True)
+        return True
+
+    # risk assets and stage 2 (import -> agent -> export) both read only the stage 1 contract and the clips:
+    # run them side by side; Level 2 waits for both
+    side = None
+    for name in todo:
+        if name == "assets" and any(s in todo for s in ("import", "agent", "export")):
+            print(f"\n== [{STEPS.index(name) + 1}/{len(STEPS)}] {name} (in parallel with stage 2)", flush=True)
+            side = threading.Thread(target=lambda: side_ok.append(run_step("assets")), daemon=True)
+            side_ok: list = []
+            side.start()
+            continue
+        if name == "level2" and side is not None:
+            side.join()
+            side = None
+            if not all(side_ok):
+                return 1
+        print(f"\n== [{STEPS.index(name) + 1}/{len(STEPS)}] {name}", flush=True)
+        if not run_step(name):
+            if side is not None:
+                side.join()
             return 1
-        done[name].update(status="ok", ended=_now(), seconds=round(time.time() - t, 1), info=info)
-        run.save_state(state)
-        print(f"   ok in {time.time() - t:.0f} s", flush=True)
+    if side is not None:
+        side.join()
+        if not all(side_ok):
+            return 1
 
     finished = all(done.get(s, {}).get("status") == "ok" for s in STEPS[:last + 1])
     if finished and not a.keep_cache and run.remux.exists():

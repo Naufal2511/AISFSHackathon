@@ -57,3 +57,22 @@ def test_without_frames_night_is_left_to_the_frame_check(tmp_path):
     assert res["night_minutes_from_stage1"] is None and res["stage1_rumination"] is False
     assert db.get_meta("night_source") == "frame_check" and db.get_row("COW_01", 1, 180)["is_night"] is None
     db.close()
+
+
+def test_open_identity_holds_only_that_cow(tmp_path):
+    import json
+    _inputs(tmp_path, rum=0.0)
+    tr = tmp_path / "id_traces"
+    tr.mkdir()
+    t0 = (datetime(2026, 11, 7, 3, 1, 5) - datetime(1970, 1, 1)).total_seconds()
+    (tr / "a.json").write_text(json.dumps({"flag": {"kind": "weak_id", "t0": t0, "t1": t0 + 10, "cow_ids": ["COW_01"]},
+                                           "final": {"decision": "uncertain"}}))
+    (tr / "b.json").write_text(json.dumps({"flag": {"kind": "weak_id", "t0": t0 - 60, "t1": t0 - 50, "cow_ids": ["COW_01"]},
+                                           "final": {"decision": "confirm"}}))
+    db = Store(str(tmp_path / "s"))
+    res = import_tracking(db, tmp_path / "obs.csv", tmp_path / "st.csv", AgentConfig(behaviors_path=str(ROOT / "configs" / "behaviors.yaml")),
+                          id_traces=tr)
+    assert res["id_hold_minutes"] == 1
+    assert "id_unresolved" in (db.get_row("COW_01", 1, 181)["yolo_flags"] or "")
+    assert "id_unresolved" not in (db.get_row("COW_01", 1, 180)["yolo_flags"] or "")   # confirmed case: no hold
+    db.close()

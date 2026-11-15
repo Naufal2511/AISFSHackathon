@@ -77,8 +77,32 @@ def _night_by_minute(frames: str | Path, clock) -> dict[tuple[int, int], int]:
     return {k: int(dark[k] * 2 > n) for k, n in tot.items() if n}
 
 
+def _id_holds(trace_dir: str | Path, clock) -> set[tuple[str, int, int]]:
+    """(cow, day, minute) the stage 1 identity agent could not settle (decision uncertain / escalate). Only those
+    cow-minutes are held for a full check; every other cow is verified as usual."""
+    import json as _json
+    from datetime import datetime, timedelta
+    ep, out = datetime(1970, 1, 1), set()
+    for p in Path(trace_dir).glob("*.json"):
+        try:
+            t = _json.loads(p.read_text(encoding="utf-8"))
+        except ValueError:
+            continue
+        f, fin = t.get("flag") or {}, t.get("final") or {}
+        if fin.get("decision") not in ("uncertain", "escalate") or f.get("t0") is None:
+            continue
+        a, b = ep + timedelta(seconds=float(f["t0"])), ep + timedelta(seconds=float(f.get("t1") or f["t0"]))
+        m = a.replace(second=0, microsecond=0)
+        while m <= b:
+            d, mi = clock.to_dm(m)
+            for cow in f.get("cow_ids") or []:
+                out.add((cow, d, mi))
+            m += timedelta(minutes=1)
+    return out
+
+
 def import_tracking(db: Store, observations: str | Path, cow_state: str | Path, cfg: AgentConfig, index=None,
-                    frames: str | Path | None = None) -> dict:
+                    frames: str | Path | None = None, id_traces: str | Path | None = None) -> dict:
     obs, st = _read(observations), _read(cow_state)
     if not st:
         return {"rows": 0, "error": "cow_state file is empty"}
@@ -95,6 +119,7 @@ def import_tracking(db: Store, observations: str | Path, cow_state: str | Path, 
     db.set_meta("stage1_rumination", any((_f(r.get("p_rum_lying")) or 0) > 0 or (_f(r.get("p_rum_standing")) or 0) > 0 for r in st))
     night = _night_by_minute(frames, clock) if frames and Path(frames).exists() else {}
     db.set_meta("night_source", "stage1_frames" if night else "frame_check")
+    holds = _id_holds(id_traces, clock) if id_traces and Path(id_traces).is_dir() else set()
 
     # ---- per-second fused state, indexed
     by_cow_sec: dict[tuple[str, str], dict] = {}
@@ -175,6 +200,8 @@ def import_tracking(db: Store, observations: str | Path, cow_state: str | Path, 
             flags.append("gap_fill")
         if evid.get("not_visible", 0) >= 0.5 * n:
             flags.append("not_visible")
+        if (cow, day, minute) in holds:
+            flags.append("id_unresolved")      # identity agent left this cow's ID open here: full check, no carry
         for f in flags:
             flag_count[f] += 1
         best = max(CAMERAS, key=lambda c: vis[c])
@@ -206,6 +233,7 @@ def import_tracking(db: Store, observations: str | Path, cow_state: str | Path, 
     res = {"cows": cows, "minutes_with_state": len(rows), "boxes_added": n_added, "unidentified_boxes": unid,
            "cameras": {sl: cam_names.get(sl) for sl in sorted(cam_names)}, "speed_unit": "m_s", "flags": dict(flag_count),
            "night_minutes_from_stage1": sum(night.values()) if night else None,
+           "id_hold_minutes": len(holds),
            "stage1_rumination": db.get_meta("stage1_rumination")}
     db.init_rows(cows, sorted({r["day"] for r in rows}), MIN_PER_DAY)
     res["rows"] = db.upsert_minute_records(rows, "minutes", "tracking_state", str(cow_state), 0, extra)["rows"]

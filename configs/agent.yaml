@@ -89,6 +89,7 @@ agent:
   audit_every_min: 30        # scheduled ID check
   max_steps: 6               # tool calls per investigation
   max_flags_per_window: 8    # drastic flags (severity >= 3) are never dropped
+  parallel_investigations: 6 # flags of one window investigated at the same time (time is VLM round trips)
 
 triggers:
   pen_size: 10
