@@ -136,6 +136,10 @@ class TrackletIdentityManager:
             return
         os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
         seen = [c for c in self.cow_ids if self.slots[c].proto is not None]
+        if seen:  # one length only (np.stack): keep the prototypes of the most common length
+            from collections import Counter
+            dim = Counter(self.slots[c].proto.shape for c in seen).most_common(1)[0][0]
+            seen = [c for c in seen if self.slots[c].proto.shape == dim]
         np.savez(path, cow_ids=np.array(seen),
                  protos=np.stack([self.slots[c].proto for c in seen]) if seen else np.zeros((0, 1)),
                  n_updates=np.array([self.slots[c].n_updates for c in seen]))
