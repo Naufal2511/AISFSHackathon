@@ -97,6 +97,7 @@ def _run_cmd(name: str, cmd: list[str], cwd: Path, env: dict, log: Path, quiet: 
         tail: list[str] = []
         for line in p.stdout:
             f.write(line)
+            f.flush()                    # tail -f on the step log shows lines as they happen
             tail = (tail + [line.rstrip()])[-25:]
             if not quiet:
                 print("     " + line.rstrip(), flush=True)
