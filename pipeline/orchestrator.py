@@ -171,7 +171,7 @@ def step_prepare(a, cfg, run: Run, env) -> dict:
 def step_track(a, cfg, run: Run, env) -> dict:
     gallery = Path(a.id_gallery) if a.id_gallery else run.tracking / "id_gallery.npz"
     if not a.id_gallery and gallery.exists():
-        gallery.unlink()          # rerunning tracking: start identities fresh, as a first run would
+        gallery.unlink()          # rerunning tracking: start identities fresh (a resumed checkpoint brings its own)
     cam = {c: run.input / c for c in camlib.CAMERAS}
     cmd = [a.python, "main.py",
            "--front", cam["cam1"] if cam["cam1"].exists() else "",

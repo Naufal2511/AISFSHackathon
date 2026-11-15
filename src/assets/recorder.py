@@ -136,6 +136,28 @@ class AssetRecorder:
         self.last_gallery[key] = st["wall"]
         self.n["gallery"] += 1
 
+    # --- tracking checkpoints (src/pipeline/checkpoint.py): files are not pickled; they are reopened and cut back
+    def snapshot(self) -> Dict[str, int]:
+        """Flush the CSVs and return their sizes, so a resume can drop rows written after this point."""
+        for f in self._f.values():
+            f.flush()
+        return {k: f.tell() for k, f in self._f.items()}
+
+    def __getstate__(self):
+        d = dict(self.__dict__)
+        for k in ("_f", "_w", "cur"):   # open files, writers, and this step's full frames (large, rebuilt next step)
+            d.pop(k, None)
+        d["_mask_cache"] = {}
+        return d
+
+    def reopen(self, sizes: Dict[str, int]):
+        self._f, self._w, self.cur = {}, {}, {}
+        for k, n in sizes.items():
+            f = open(os.path.join(self.dir, f"{k}.csv"), "r+", newline="")
+            f.truncate(n)
+            f.seek(n)
+            self._f[k], self._w[k] = f, csv.writer(f)
+
     def reset_camera(self, cam: str):
         """Footage gap: do not compute motion across it."""
         self.prev.pop(cam, None)

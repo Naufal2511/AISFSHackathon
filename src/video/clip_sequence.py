@@ -136,7 +136,11 @@ class ClipSequenceReader:
         max_gap_sec: float = 10.0,
         keep_remux: Optional[bool] = None,
         max_clip_sec: float = 900.0,
+        first_index: int = 0,
+        segment_id: int = 0,
     ):
+        # first_index / segment_id: continue a stream resumed from a tracking checkpoint (same frame numbers)
+        self.first_index = first_index
         self.all_clips = list_clips(source)
         if not self.all_clips:
             raise ValueError(f"No Event-named video clips found in {source}")
@@ -180,7 +184,7 @@ class ClipSequenceReader:
         self.source = self.clips[0].path  # compatibility with FrameReader users
         self.current_clip: Optional[str] = None
         self.clip_offset_sec = 0.0
-        self.segment_id = 0
+        self.segment_id = segment_id
         self.duration_sec = (
             (self.clips[-1].start - self.origin).total_seconds() + 300.0 - self.t_start
         )
@@ -209,7 +213,7 @@ class ClipSequenceReader:
         """Yields (frame_index, seconds_since_origin, frame_bgr or None for a gap tick)."""
         dt = 1.0 / self.target_fps if self.target_fps and self.target_fps < self.native_fps else None
         gap_dt = dt or 1.0 / self.native_fps
-        idx = 0
+        idx = self.first_index
         next_tick = math.ceil(self.t_start / gap_dt - 1e-9) * gap_dt  # shared grid anchored at origin
         last_t: Optional[float] = None
 

@@ -296,6 +296,8 @@ def main():
         wall_start=args.start,
         wall_end=args.end,
         record_assets=not args.no_assets,
+        # resume point every N min of footage (0 = off); see src/pipeline/checkpoint.py
+        checkpoint_sec=60.0 * float(os.environ.get("PEN6_CKPT_MIN", "15")),
     )
 
     results = pipeline.run(save_dashboard_video=not args.no_video)

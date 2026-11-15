@@ -94,6 +94,12 @@ Unknown suffixes, disagreeing rules or a wrong resolution stop the run before an
   2.5× faster than an ffmpeg process per frame, pixel-identical; bursts keep the exact ffmpeg path.
 * Stage 1 samples 1 fps (`stage1.fps`) and skips the dashboard video (`--render-video` to get it).
 * Every step is resumable, so a failure in the agent never reruns tracking.
+* Tracking itself is resumable too: every 15 min of footage it saves `stage1/tracking/tracking_checkpoint.pkl`
+  (one file, overwritten, deleted when tracking ends; ~50 MB at the end of a 4 h chunk, < 1 s to write). After a
+  crash or Ctrl+C, rerunning the same command continues from the last checkpoint with the same records and cow IDs.
+  `PEN6_CKPT_MIN=<n>` changes the interval, 0 turns it off.
+* One bad second of footage does not stop tracking: the step is skipped and its traceback goes to
+  `stage1/tracking/step_errors.log`; tracking stops only after 30 failed steps in a row (something really broken).
 * The risk-asset post-pass runs before stage 2, while the remuxed clips are still cached.
 * Stage 2 decodes no frame for day/night and no jaw-motion burst when stage 1 supplied them (see the table above),
   and verifies `stage2.workers` cows in parallel (threads waiting on TAMU and ffmpeg).
