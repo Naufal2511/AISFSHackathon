@@ -358,6 +358,11 @@ class MultiCameraPipeline:
                 )
 
             step += 1
+            if step % 300 == 0 and current_timestamps:   # a sign of life every 300 steps (5 min of footage at 1 fps)
+                done_s = max(current_timestamps.values())
+                rate = step / max(0.001, time.time() - t0)
+                print(f"[MULTI-CAM] progress: {done_s / 60:.0f} min of footage tracked, {rate:.2f} steps/s, "
+                      f"{(time.time() - t0) / 60:.0f} min elapsed", flush=True)
 
         if dashboard_writer is not None:
             dashboard_writer.release()
