@@ -144,14 +144,17 @@ class OpenAICompatVLM(VLMClient):
 
     def _post(self, messages, schema) -> dict:
         c = self.conn
-        payload: dict[str, Any] = {"model": c.model, "messages": messages, c.max_tokens_param: c.max_tokens}
+        payload: dict[str, Any] = {"model": c.model, "messages": messages, c.max_tokens_param: c.max_tokens,
+                                   "stream": False}     # TAMU's gateway streams by default (as in src/agent/vlm.py)
         if c.temperature is not None:
             payload["temperature"] = c.temperature
         if c.json_mode:
             payload["response_format"] = {"type": "json_object"}
         if c.guided_json:
             payload["guided_json"] = schema.model_json_schema()   # server-specific; verify for your server version
-        headers = {"Content-Type": "application/json"}
+        # same client header as stage 1 (src/agent/vlm.py): TAMU's gateway returns 403 / error 1010 for the
+        # default python-requests user agent
+        headers = {"Content-Type": "application/json", "User-Agent": "Mozilla/5.0 (Macintosh) pen6-agent/1.0"}
         if c.api_key:
             headers["Authorization"] = f"Bearer {c.api_key}"
         last: Optional[str] = None
