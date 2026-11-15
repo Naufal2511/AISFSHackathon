@@ -1,4 +1,5 @@
 """Agent triggers and self-check on synthetic records (no video, no model)."""
+import copy
 import tempfile
 import unittest
 
@@ -103,6 +104,93 @@ class TestSelfCheck(unittest.TestCase):
 
     def test_parse_json_from_chatty_reply(self):
         self.assertEqual(parse_json('Sure!\n```json\n{"tool": "scene", "args": {"camera": "cam1"}}\n```')["tool"], "scene")
+
+
+class DummyBackend:
+    def __init__(self, name, action):
+        self.name = name
+        self.action = action
+        self.calls = 0
+        self.seconds = 0.0
+
+    @property
+    def label(self):
+        return self.name
+
+    def next_action(self, state):
+        self.calls += 1
+        return copy.deepcopy(self.action)
+
+
+class TestTieredDecision(unittest.TestCase):
+    def test_routine_flag_handled_by_quick_tier(self):
+        from src.agent.vlm import TieredDecisionBackend
+        fast = DummyBackend("fast_m", {"thought": "quick check", "final": {"decision": "confirm", "confidence": 0.85}})
+        major = DummyBackend("major_m", {"thought": "deep check", "final": {"decision": "confirm", "confidence": 0.95}})
+        tiered = TieredDecisionBackend(fast, major, escalate_severity=3)
+
+        state = {"flag": {"kind": "behavior_check", "severity": 1}, "steps": [], "turns": []}
+        act = tiered.next_action(state)
+        self.assertEqual(act["_tier"], "quick")
+        self.assertEqual(act["final"]["confidence"], 0.85)
+        self.assertEqual(fast.calls, 1)
+        self.assertEqual(major.calls, 0)
+
+    def test_critical_flag_routes_direct_to_major_tier(self):
+        from src.agent.vlm import TieredDecisionBackend
+        fast = DummyBackend("fast_m", {"thought": "quick", "final": {"decision": "confirm", "confidence": 0.85}})
+        major = DummyBackend("major_m", {"thought": "deep analysis", "final": {"decision": "relabel", "confidence": 0.90}})
+        tiered = TieredDecisionBackend(fast, major, escalate_severity=3)
+
+        state = {"flag": {"kind": "duplicate_id", "severity": 5}, "steps": [], "turns": []}
+        act = tiered.next_action(state)
+        self.assertEqual(act["_tier"], "major")
+        self.assertEqual(act["final"]["decision"], "relabel")
+        self.assertEqual(fast.calls, 0)
+        self.assertEqual(major.calls, 1)
+
+    def test_uncertain_quick_decision_escalates_to_major(self):
+        from src.agent.vlm import TieredDecisionBackend
+        fast = DummyBackend("fast_m", {"thought": "ambiguous", "final": {"decision": "uncertain", "confidence": 0.4}})
+        major = DummyBackend("major_m", {"thought": "resolved by deep model", "final": {"decision": "confirm", "confidence": 0.88}})
+        tiered = TieredDecisionBackend(fast, major, escalate_severity=3, min_confidence=0.70)
+
+        state = {"flag": {"kind": "weak_id", "severity": 2}, "steps": [], "turns": []}
+        act = tiered.next_action(state)
+        self.assertEqual(act["_tier"], "major")
+        self.assertEqual(act["final"]["decision"], "confirm")
+        self.assertEqual(fast.calls, 1)
+        self.assertEqual(major.calls, 1)
+        self.assertEqual(tiered.escalations, 1)
+
+    def test_self_check_failure_prompts_major_escalation(self):
+        from src.agent.vlm import TieredDecisionBackend
+        fast = DummyBackend("fast_m", {"thought": "tool step", "tool": "trajectory", "args": {}})
+        major = DummyBackend("major_m", {"thought": "handling revision", "final": {"decision": "confirm", "confidence": 0.9}})
+        tiered = TieredDecisionBackend(fast, major, escalate_severity=3)
+
+        state = {"flag": {"kind": "weak_id", "severity": 2}, "steps": [{"tool": "compare_to_cards"}],
+                 "turns": [{"role": "user", "text": "SELF-CHECK FAILED: relabel would create duplicate"}]}
+        act = tiered.next_action(state)
+        self.assertEqual(act["_tier"], "major")
+        self.assertEqual(fast.calls, 0)
+        self.assertEqual(major.calls, 1)
+
+    def test_make_backend_decision(self):
+        from src.agent.vlm import TieredDecisionBackend, make_backend
+        cfg = {
+            "backend": "decision",
+            "decision": {
+                "fast_backend": "rules",
+                "major_backend": "rules",
+                "escalate_severity": 3,
+                "min_confidence": 0.70,
+                "max_quick_steps": 2
+            }
+        }
+        b = make_backend(cfg, "decision")
+        self.assertIsInstance(b, TieredDecisionBackend)
+        self.assertIn("tiered", b.label)
 
 
 if __name__ == "__main__":

@@ -40,6 +40,8 @@ Rules:
 - Feeding means head in the feed bunk; drinking means head at the waterer.
 - A correction (relabel / set_behavior) needs at least TWO different kinds of evidence that
   agree. If evidence conflicts or is weak, answer "uncertain" instead of guessing.
+- A relabel must NEVER assign an ID that is already active on another track in the same camera
+  at the same time (check who_is_near / cow_state).
 - Be brief. One tool call per reply.
 
 Reply with exactly ONE JSON object and nothing else, either
@@ -277,21 +279,138 @@ class FallbackVLM:
         raise RuntimeError(f"all reasoning backends failed: {err}")
 
 
+class TieredDecisionBackend:
+    """Decision model that routes routine/quick checks to a fast tier and critical or
+    ambiguous cases to a major reasoning model.
+
+    * Quick Tier: handles lower-severity flags (severity < escalate_severity, e.g. weak_id, behavior_check)
+      with a fast model (e.g. RulePolicy, Qwen fast, or Luna fast) with a short step budget.
+    * Major Decision Tier: handles critical flags (severity >= escalate_severity, e.g. duplicate_id,
+      id_jump, extra_cow, id_audit) OR takes over when the quick tier is uncertain, low-confidence,
+      or fails verification.
+    The major model inherits all tool outputs and conversation history from the quick tier,
+    so no tool calls or evidence are wasted.
+    """
+
+    name = "decision"
+
+    def __init__(self, fast_backend, major_backend, escalate_severity: int = 3,
+                 min_confidence: float = 0.70, max_quick_steps: int = 2,
+                 escalate_kinds: Optional[List[str]] = None):
+        self.fast = fast_backend
+        self.major = major_backend
+        self.escalate_severity = escalate_severity
+        self.min_confidence = min_confidence
+        self.max_quick_steps = max_quick_steps
+        self.escalate_kinds = set(escalate_kinds or ["duplicate_id", "extra_cow", "new_cow_id", "id_audit"])
+        self.escalations = 0
+
+    @property
+    def label(self):
+        fast_lbl = getattr(self.fast, "label", getattr(self.fast, "name", "fast"))
+        major_lbl = getattr(self.major, "label", getattr(self.major, "name", "major"))
+        return f"tiered[quick: {fast_lbl} | major: {major_lbl}]"
+
+    @property
+    def calls(self):
+        return getattr(self.fast, "calls", 0) + getattr(self.major, "calls", 0)
+
+    @property
+    def seconds(self):
+        return getattr(self.fast, "seconds", 0.0) + getattr(self.major, "seconds", 0.0)
+
+    def _should_escalate_initial(self, flag: Dict) -> bool:
+        if flag.get("severity", 0) >= self.escalate_severity:
+            return True
+        if flag.get("kind") in self.escalate_kinds:
+            return True
+        return False
+
+    def next_action(self, state: Dict) -> Dict:
+        flag = state.get("flag", {})
+        steps = state.get("steps", [])
+        turns = state.get("turns", [])
+
+        is_major = bool(state.get("_escalated_to_major"))
+        if not is_major and self._should_escalate_initial(flag):
+            is_major = True
+            state["_escalated_to_major"] = True
+
+        if not is_major and turns:
+            last_text = turns[-1].get("text", "")
+            if "SELF-CHECK FAILED" in last_text:
+                is_major = True
+                state["_escalated_to_major"] = True
+                self.escalations += 1
+
+        if not is_major and len(steps) >= self.max_quick_steps:
+            is_major = True
+            state["_escalated_to_major"] = True
+            self.escalations += 1
+
+        if is_major:
+            act = self.major.next_action(state)
+            act["_tier"] = "major"
+            act["_model"] = getattr(self.major, "label", self.major.name)
+            return act
+
+        # Fast tier execution
+        act = self.fast.next_action(state)
+        act["_tier"] = "quick"
+        act["_model"] = getattr(self.fast, "label", self.fast.name)
+
+        if "final" in act and isinstance(act["final"], dict):
+            fin = act["final"]
+            dec = fin.get("decision")
+            conf = float(fin.get("confidence") or 0.0)
+            if dec in ("uncertain", "escalate") or conf < self.min_confidence:
+                state["_escalated_to_major"] = True
+                self.escalations += 1
+                act_major = self.major.next_action(state)
+                act_major["_tier"] = "major"
+                act_major["_model"] = getattr(self.major, "label", self.major.name)
+                return act_major
+
+        return act
+
+    def complete(self, messages):
+        if hasattr(self.major, "complete"):
+            return self.major.complete(messages)
+        if hasattr(self.fast, "complete"):
+            return self.fast.complete(messages)
+        raise RuntimeError("no underlying complete method in tiered decision backend")
+
+
 def load_dotenv(path: str = ".env"):
     """KEY=value lines from a git-ignored .env into the environment (never printed)."""
     if not os.path.exists(path):
         return
-    for line in open(path):
-        line = line.strip()
-        if not line or line.startswith("#") or "=" not in line:
-            continue
-        k, v = line.split("=", 1)
-        os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
+    with open(path) as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            k, v = line.split("=", 1)
+            os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
 
 
 def make_backend(cfg: Dict, name: Optional[str] = None, with_fallback: bool = True):
     load_dotenv()
     b = (name or os.environ.get("AGENT_BACKEND") or cfg.get("backend", "ollama")).lower()
+    if b in ("decision", "tiered"):
+        p = cfg.get(b, {})
+        fast_name = p.get("fast_backend", "tamu_luna")
+        major_name = p.get("major_backend", "tamu_luna")
+        fast_b = make_backend(cfg, fast_name, with_fallback=True)
+        major_b = make_backend(cfg, major_name, with_fallback=True)
+        return TieredDecisionBackend(
+            fast_backend=fast_b,
+            major_backend=major_b,
+            escalate_severity=p.get("escalate_severity", 3),
+            min_confidence=p.get("min_confidence", 0.70),
+            max_quick_steps=p.get("max_quick_steps", 2),
+            escalate_kinds=p.get("escalate_kinds"),
+        )
     chain = [x for x in cfg.get("fallback", []) if x != b] if with_fallback and not name else []
     if chain:
         backends = [make_backend(cfg, b, False)]

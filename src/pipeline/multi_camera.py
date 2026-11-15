@@ -48,11 +48,16 @@ class MultiCameraPipeline:
         imgsz: int = 640,
         wall_start: Optional[str] = None,
         wall_end: Optional[str] = None,
+        record_assets: bool = True,
     ):
         self.camera_sources = camera_sources
         self.model_path = model_path
         self.output_dir = output_dir
         os.makedirs(output_dir, exist_ok=True)
+        self.assets = None
+        if record_assets:  # Level 2 risk assets (gallery, motion, bunk signal): src/assets/recorder.py
+            from ..assets.recorder import AssetRecorder
+            self.assets = AssetRecorder(output_dir)
 
         # Core components
         self.boundary_manager = PenBoundaryManager()
@@ -155,6 +160,8 @@ class MultiCameraPipeline:
                 if seg != self._segments[cam_id]:  # hole in the footage: don't bridge it with IoU
                     self.trackers[cam_id].reset()
                     self._segments[cam_id] = seg
+                    if self.assets is not None:
+                        self.assets.reset_camera(cam_id)
                 current_frames[cam_id] = frame
                 current_indices[cam_id] = f_idx
                 current_timestamps[cam_id] = f_ts
@@ -192,6 +199,12 @@ class MultiCameraPipeline:
                     timestamp_sec=f_ts,
                 )
                 camera_active_tracks[cam_id] = tracks
+                if self.assets is not None:
+                    rd = self.readers[cam_id]
+                    self.assets.frame(cam_id, frame, getattr(rd, "current_clip", None) or os.path.basename(rd.source),
+                                      getattr(rd, "clip_offset_sec", f_ts))
+                    for t in tracks:
+                        self.assets.track(cam_id, t.track_id, t.bbox)
 
                 # Extract DINOv2 visual embeddings for active tracks
                 if self.reid_extractor is not None:
@@ -350,6 +363,8 @@ class MultiCameraPipeline:
             dashboard_writer.release()
 
         elapsed = time.time() - t0
+        if self.assets is not None:
+            print(f"[MULTI-CAM] Risk assets: {self.assets.close()} -> {self.assets.dir}")
         print(f"[MULTI-CAM] Completed {step} synchronized steps in {elapsed:.2f}s ({step / max(0.001, elapsed):.1f} steps/s)")
 
         # 5. Export structured tracking records (CSV & Parquet)

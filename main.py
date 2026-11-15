@@ -102,6 +102,8 @@ def parse_args():
         action="store_true",
         help="Disable appearance embedding extraction (DINOv2)",
     )
+    parser.add_argument("--no-assets", action="store_true",
+                        help="skip Level 2 risk assets (head-shot gallery, motion energy, bunk signal)")
     parser.add_argument(
         "--no-video",
         action="store_true",
@@ -293,6 +295,7 @@ def main():
         imgsz=args.imgsz,
         wall_start=args.start,
         wall_end=args.end,
+        record_assets=not args.no_assets,
     )
 
     results = pipeline.run(save_dashboard_video=not args.no_video)

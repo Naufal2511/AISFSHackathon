@@ -1,0 +1,115 @@
+# Level 2: BRD risk from behavior (+ visible clinical signs). Method: docs/LEVEL2_METHOD.md
+#
+# Reasoning model for the risk agent (TAMU gateway, names from configs/agent.yaml).
+# Claude Opus 4.8: fastest heavy model in our probe (3 s, valid JSON, cautious about night images).
+backend: tamu_opus
+fallback: [tamu_sol, tamu_luna]
+max_steps: 9                  # tool calls per cow before it must decide
+deep_review_top: 4            # full visual review for the top N by behavior score; others get a short check
+
+extraction:
+  bunk_y_m: 4.0               # feeding zone = within 4 m of the bunk (pen spec)
+  isolation_m: 5.0            # "alone": no herdmate within 5 m
+  visit_gap_s: 60             # a new bunk / water visit after >= 60 s away
+  max_speed_mps: 2.5          # faster fused speeds are tracking jumps, not walking
+  min_speed_mps: 0.25         # slower = position jitter, not walking (distance moved counts walking only)
+  edge_m: 1.0                 # "pen edge": within 1 m of a fence
+  near_m: 3.0                 # "cows within 3 m"
+  meal_gap_min: 5             # feeding minutes closer than this belong to one meal
+  sync_min_cows: 4            # herd synchrony needs >= 4 cows with a known behavior that minute
+  sync_min_share: 0.6         # ... and >= 60 % of them doing the same thing
+  rush_lo: 0.2                # feed rush: bunk occupancy <= 20 % for the previous quiet_min minutes ...
+  rush_hi: 0.5                # ... then >= 50 %
+  rush_quiet_min: 15
+  latency_cap_min: 60
+
+scoring:
+  shrink_hours: 2.0           # z is multiplied by h / (h + shrink_hours): thin coverage counts less
+  min_hours: 0.25             # below this an indicator is not scored for the cow
+  protective_factor: 0.25     # "healthier than herd" offsets at 1/4 strength (sick signals are one-sided)
+  z_clip: 3.0
+  intercept: -2.2             # herd-typical cow -> 0.10 suspicion; it is an index, not a calibrated probability
+  slope: 1.0                  # per unit of combined z (weighted Stouffer over indicators)
+  trend_weight: 0.5           # self-relative day-to-day decline (needs >= 2 days), relative to the herd's change
+  bootstrap: 200              # block bootstrap over time for rank stability (p_top3)
+  block_min: 30
+
+# direction: +1 = higher is more suspicious, -1 = lower is more suspicious
+# weight: strength of evidence (consistency across studies x how well our video measures it)
+# floor: smallest herd spread used for z (avoids tiny MADs blowing up)
+indicators:
+  feeding_share:       {label: "time feeding",              unit: "%",     direction: -1, weight: 1.0, floor: 0.03, sources: [tamu_cusum, wolfger2015, toaff2018, dart]}
+  bunk_visit_rate:     {label: "bunk visits per hour",      unit: "/h",    direction: -1, weight: 0.6, floor: 0.3,  sources: [wolfger2015, tamu_cusum]}
+  bunk_visit_min:      {label: "minutes per bunk visit",    unit: "min",   direction: -1, weight: 0.6, floor: 2.0,  sources: [tamu_cusum]}
+  feed_call_latency:   {label: "minutes to reach bunk after the herd rush", unit: "min", direction: 1, weight: 0.8, floor: 3.0, sources: [dart, tamu_cusum]}
+  lying_share:         {label: "time lying",                unit: "%",     direction: 1,  weight: 0.5, floor: 0.05, sources: [ear_acc2022, feedlot_acc]}
+  lying_bout_min:      {label: "minutes per lying bout",    unit: "min",   direction: 1,  weight: 0.3, floor: 10.0, sources: [feedlot_acc, ear_acc2022]}
+  distance_m_per_h:    {label: "metres walked per hour",    unit: "m/h",   direction: -1, weight: 0.7, floor: 15.0, sources: [feedlot_acc, ear_acc2022]}
+  rumination_share:    {label: "time ruminating",           unit: "%",     direction: -1, weight: 0.3, floor: 0.04, sources: [marchesini2018]}
+  drinking_visit_rate: {label: "waterer visits per hour",   unit: "/h",    direction: -1, weight: 0.2, floor: 0.2,  sources: [padua_water]}
+  nn_distance_m:       {label: "metres to nearest herdmate", unit: "m",    direction: 1,  weight: 0.5, floor: 0.8,  sources: [hart1988, scirep2022]}
+  isolation_share:     {label: "time alone (> 5 m from all)", unit: "%",   direction: 1,  weight: 0.5, floor: 0.05, sources: [hart1988, scirep2022]}
+  desync_share:        {label: "time out of step with the herd", unit: "%", direction: 1, weight: 0.5, floor: 0.05, sources: [hart1988, toaff2018]}
+  breathing_bpm:       {label: "breaths per minute at rest (video)", unit: "/min", direction: 1, weight: 0.5, floor: 4.0, sources: [dart, merck_resp]}  # unvalidated video estimate: weight 0.5 until checked by eye}
+  motion_energy:       {label: "body movement (pixel motion, z)", unit: "z",  direction: -1, weight: 0.4, floor: 0.3,  sources: [feedlot_acc, ear_acc2022]}
+  jerk_rate:           {label: "sudden movements per hour (cough / head-shake candidates)", unit: "/h", direction: 1, weight: 0.3, floor: 0.5, sources: [dart]}
+  longest_meal_gap_min: {label: "longest gap between meals", unit: "min", direction: 1, weight: 0.5, floor: 20.0, sources: [tamu_cusum]}
+  meals_per_h:         {label: "meals per hour",            unit: "/h",    direction: -1, weight: 0.4, floor: 0.2,  sources: [wolfger2015]}
+  meal_min:            {label: "minutes per meal",          unit: "min",   direction: -1, weight: 0.4, floor: 3.0,  sources: [wolfger2015, tamu_cusum]}
+  longest_lying_bout_min: {label: "longest lying bout",     unit: "min",   direction: 1,  weight: 0.3, floor: 20.0, sources: [feedlot_acc, ear_acc2022]}
+  cows_within_3m:      {label: "herdmates within 3 m",      unit: "cows",  direction: -1, weight: 0.3, floor: 0.3,  sources: [hart1988, scirep2022]}
+  edge_or_alone_share: {label: "time at the pen edge or alone", unit: "%", direction: 1,  weight: 0.4, floor: 0.05, sources: [hart1988]}
+  head_down_share:     {label: "head below withers while standing, not eating (sampled)", unit: "%", direction: 1, weight: 0.6, floor: 0.1, sources: [dart, white2009]}
+  ear_droop_share:     {label: "ears drooping (sampled)",   unit: "%",     direction: 1,  weight: 0.5, floor: 0.1,  sources: [dart, white2009]}
+  back_arched_share:   {label: "arched back (sampled)",     unit: "%",     direction: 1,  weight: 0.3, floor: 0.1,  sources: [dart]}
+  discharge_suspect_share: {label: "nasal/eye discharge suspected (sampled)", unit: "%", direction: 1, weight: 0.5, floor: 0.1, sources: [dart, white2009]}
+  breathing_effort:    {label: "breathing effort (flank amplitude)", unit: "%", direction: 1, weight: 0.3, floor: 0.1, sources: [dart, merck_resp]}
+  grooming_share:      {label: "time self-grooming",        unit: "%",     direction: -1, weight: 0.2, floor: 0.01, sources: [hart1988]}
+
+# Visible clinical signs judged by the agent from images. Log-odds added to the behavior score
+# (deterministic: the model only reports present / absent / not_assessable with image evidence).
+# Relative sizes follow pen-rider scoring practice, where ear droop / head tilt and nasal discharge
+# carry the most points, and DART's modest accuracy (Se ~62 %, Sp ~63 %) caps any single sign.
+visual_signs:
+  head_low:          {present: 0.6, absent: -0.15, label: "head carried low / depressed",  sources: [dart, white2009]}
+  ears_droop:        {present: 0.6, absent: -0.15, label: "ears drooping",                 sources: [dart, white2009]}
+  nasal_discharge:   {present: 0.9, absent: -0.15, label: "nasal discharge",               sources: [dart, white2009]}
+  ocular_discharge:  {present: 0.4, absent: -0.05, label: "ocular discharge / tearing",    sources: [dart]}
+  labored_breathing: {present: 0.9, absent: -0.10, label: "laboured / open-mouth breathing, extended neck", sources: [dart, white2009]}
+  cough:             {present: 0.7, absent: 0.0,   label: "coughing posture",              sources: [dart]}
+  gaunt:             {present: 0.4, absent: -0.05, label: "hollow left flank / gaunt",     sources: [dart]}
+visual_max_down: -0.5           # signs can lower the score by at most this (log-odds)
+visual_min_box_px: 250          # a sign is only assessable on a box at least this tall in the source frame
+discharge_min_box_px: 450       # nasal / ocular discharge need a close view ...
+discharge_needs_daylight: true  # ... in colour daylight (IR night video cannot show it)
+
+sources:
+  tamu_cusum:     "Texas A&M GrowSafe bull studies: feeding-behavior traits (bunk-visit duration, head-down duration, variability of non-feeding intervals) change 1-14 d before BRD diagnosis; CUSUM monitoring (J. Anim. Sci. 2019, doi:10.1093/jas/sky486). https://pmc.ncbi.nlm.nih.gov/articles/PMC6396243"
+  wolfger2015:    "Wolfger B. et al. 2015. Feeding behavior as an early predictor of bovine respiratory disease in North American feedlot systems. J. Anim. Sci. 93:377-385 (meal intake, meal time and bunk-visit frequency predict BRD hazard in the week before pulling)."
+  toaff2018:      "Toaff-Rosenstein R.L., Tucker C.B. 2018. The sickness response at and before clinical diagnosis of spontaneous bovine respiratory disease. Appl. Anim. Behav. Sci. (feeding time reduced on the diagnosis day; fever precedes anorexia)."
+  feedlot_acc:    "High-risk feedlot calves with accelerometers (n = 364): activity reductions began >= 6 d before BRD diagnosis and were largest the day before; lying-bout changes. The Bovine Practitioner. https://bovine-ojs-tamu.tdl.org/bovine/article/view/2883"
+  ear_acc2022:    "Early detection of respiratory diseases in calves by use of an ear-attached accelerometer (n = 508): more inactive time on d -4, -2, 0 and longer lying on d -5, -2. Animals 2022. https://pubmed.ncbi.nlm.nih.gov/35565520/"
+  marchesini2018: "Marchesini G. et al. 2018. Rumination and activity data as health indicators in beef cattle during the early fattening period. Vet. J. https://www.research.unipd.it/retrieve/e14fb26c-9cb8-3de1-e053-1705fe0ac030/Marchesini%202018_TVJ.pdf"
+  padua_water:    "Electronic drinkers in fattening beef cattle: animals treated for BRD drank less water (20.9 vs 27.3 L/d) and intake fell 2 d before treatment, but drinking time and visit counts did not change. Univ. Padova. https://research.unipd.it/handle/11577/3572258"
+  hart1988:       "Hart B.L. 1988. Biological basis of the behavior of sick animals. Neurosci. Biobehav. Rev. 12:123-137 (sickness behavior: lethargy, anorexia, reduced grooming, social withdrawal)."
+  scirep2022:     "Calves' social network position changes during an experimental respiratory pathogen challenge. Sci. Rep. 2022. https://doi.org/10.1038/s41598-022-13088-2"
+  dart:           "DART pen-riding signs (Depression: head down, droopy ears, stiff gait; Appetite: slow to the bunk; Respiration: laboured breathing, nasal discharge, cough; Temperature). Purdue Extension VA-33-W. https://www.extension.purdue.edu/extmedia/VA/VA-33-W.pdf"
+  merck_resp:     "Merck Veterinary Manual, reference guides: resting respiratory rate of adult cattle about 26-50 breaths/min; rapid, laboured breathing is a cardinal sign of respiratory disease. https://www.merckvetmanual.com"
+  white2009:      "White B.J., Renter D.G. 2009. Bayesian estimation of the performance of using clinical observations and harvest lung lesions for diagnosing BRD in post-weaned beef calves. J. Vet. Diagn. Invest. 21:446-453 (clinical-sign diagnosis: Se ~62 %, Sp ~63 %)."
+
+# Risk assets post-pass (scripts/build_risk_assets.py) on top of what the tracking pass recorded
+assets:
+  breath_min_px: 400          # close enough to see the flank move
+  still_motion: 1.2           # motion energy at or below this (and the cow's own 30th percentile) = still
+  breath_window_s: 30         # seconds decoded per breathing estimate (26 s after filter edges: ~2.3/min resolution)
+  breath_every: 3             # use every 3rd frame (30 fps -> 10 fps; breathing is < 1.5 Hz)
+  breath_block_h: 2           # at most breath_per_block windows per cow per 2 h
+  breath_per_block: 2
+  breath_min_quality: 4.0     # spectral peak / median power in band
+  breath_max_drift: 6.0       # mean grey change first->last frame; larger = the cow moved
+  jerk_mad: 8.0               # motion above median + 8 MAD ...
+  jerk_min: 6.0               # ... and above this absolute level
+  jerk_max_speed: 0.5         # m/s: faster = walking, not a cough / head-shake
+  feed_window_s: 300          # bunk trough brightness: median 5 min after vs 5 min before
+  feed_z: 6.0
+  clip_every_h: 4             # one closest-view clip per cow per 4 h

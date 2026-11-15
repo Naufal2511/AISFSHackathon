@@ -114,12 +114,21 @@ class Agent:
                 trace.setdefault("models_used", [])
                 if act["_model"] not in trace["models_used"]:
                     trace["models_used"].append(act["_model"])
+            if act.get("_tier"):
+                trace.setdefault("tiers_used", [])
+                if act["_tier"] not in trace["tiers_used"]:
+                    trace["tiers_used"].append(act["_tier"])
             state["turns"].append({"role": "assistant", "text": json.dumps({k: v for k, v in act.items() if k != "_raw"})})
             if "final" in act or len(state["steps"]) >= self.max_steps:
                 final = act.get("final") or {"decision": "uncertain", "summary": "tool budget used up",
                                              "evidence": [], "confidence": 0.3}
                 ok, reasons = self.verify(final, state)
-                trace["steps"].append({"thought": thought, "final": final, "verified": ok, "check": reasons})
+                step_rec = {"thought": thought, "final": final, "verified": ok, "check": reasons}
+                if act.get("_tier"):
+                    step_rec["tier"] = act["_tier"]
+                if act.get("_model"):
+                    step_rec["model"] = act["_model"]
+                trace["steps"].append(step_rec)
                 if ok or revisions >= 1:
                     if not ok:
                         final = self._downgrade(final, flag, reasons)
@@ -138,7 +147,12 @@ class Agent:
                 state["turns"].append({"role": "assistant", "text": json.dumps({"thought": thought, "final": act["final"]})})
                 final = act["final"]
                 ok, reasons = self.verify(final, state)
-                trace["steps"].append({"thought": thought, "final": final, "verified": ok, "check": reasons})
+                step_rec = {"thought": thought, "final": final, "verified": ok, "check": reasons}
+                if act.get("_tier"):
+                    step_rec["tier"] = act["_tier"]
+                if act.get("_model"):
+                    step_rec["model"] = act["_model"]
+                trace["steps"].append(step_rec)
                 if ok or revisions >= 1:
                     if not ok:
                         final = self._downgrade(final, flag, reasons)
@@ -156,8 +170,13 @@ class Agent:
             kind = self.tb.tools[name].evidence if name in self.tb.tools else "none"
             state["steps"].append({"tool": name, "args": args, "kind": kind, "text": res.text, "data": res.data})
             img_paths = self._save_images(res.images, flag, len(trace["steps"]))
-            trace["steps"].append({"thought": thought, "tool": name, "args": args, "evidence_kind": kind,
-                                   "result": res.text, "images": img_paths})
+            step_rec = {"thought": thought, "tool": name, "args": args, "evidence_kind": kind,
+                        "result": res.text, "images": img_paths}
+            if act.get("_tier"):
+                step_rec["tier"] = act["_tier"]
+            if act.get("_model"):
+                step_rec["model"] = act["_model"]
+            trace["steps"].append(step_rec)
             left = self.max_steps - len(state["steps"])
             nudge = ("\nYou have used all tool calls: reply now with your FINAL decision." if left <= 0 else
                      f"\n({left} tool call{'s' if left > 1 else ''} left.)")

@@ -71,7 +71,9 @@ DEFAULTS = dict(
     gapfill_slack_m=2.0,        # track, and from the track to where it is seen next (after)
     gapfill_margin=0.6,         # several candidates: best must be clearly better (score < margin x second)
     animal_min_s_two_cams=30,   # to COUNT as an animal: >= 30 s in each of two cameras ...
-    animal_min_s_one_cam=150,   # ... or >= 150 s in one camera
+    animal_min_s_one_cam=150,   # ... or >= 150 s in one camera, unless another camera covers that
+    covering_margin_m=2.0,      #     spot (inside its trusted range minus this margin) and was recording
+    covering_share=0.5,         #     for >= this share of those seconds without seeing it (night ghost)
     max_gap=15.0,           # seconds for a same-camera continuation
     reach_mps=1.5,          # how far a steer can get during the gap (+1 m slack)
     app_merge_min=1.01,     # appearance-only merges OFF: black cows look alike and a wrong merge inflates the head count
@@ -362,7 +364,7 @@ class IdentityResolver:
             for m in Y.members:
                 of[m] = x
 
-        stats = {"agreement_merges": 0, "continuity_merges": 0, "appearance_merges": 0, "blocked": 0}
+        stats = {"agreement_merges": 0, "continuity_merges": 0, "appearance_merges": 0, "blocked": 0, "one_camera_ghosts": 0}
         for kind, edges in (("agreement_merges", sorted(mutual, reverse=True)),
                             ("continuity_merges", sorted(cont, reverse=True))):
             for _, a, b in edges:
@@ -417,10 +419,39 @@ class IdentityResolver:
                     occ[m[0]] |= set(T[m].secs.tolist())
             return occ
 
+        cam_secs = defaultdict(set)   # seconds each camera was recording (any box)
+        for k, t in T.items():
+            cam_secs[k[0]] |= set(t.secs.tolist())
+
+        def unseen_by_covering_camera(x, occ):
+            """One-camera evidence is not enough when another camera covers that spot at close
+            range and was recording: a real cow there would have been seen and agreed on."""
+            cam = max(occ, key=lambda k: len(occ[k]))
+            secs = occ[cam]
+            xy = np.vstack([T[m].xy[np.isin(T[m].secs, list(secs))] for m in cl[x].members if m[0] == cam and m not in far_tracks])
+            xy = xy[np.isfinite(xy).all(1)]
+            if not len(xy):
+                return False
+            px, py = np.median(xy, axis=0)
+            for o, cp in (c["cam_pos"] or {}).items():
+                if o == cam or o in occ or not cp:
+                    continue
+                close = np.hypot(px - cp[0], py - cp[1]) < c["trusted_range_m"].get(o, 0) - c["covering_margin_m"]
+                if close and len(secs & cam_secs[o]) >= c["covering_share"] * len(secs):
+                    return True
+            return False
+
         def supported(x):  # enough independent evidence that this is a whole animal
-            secs = {cam: len(v) for cam, v in near_occ(x).items()}
-            return (sum(v >= c["animal_min_s_two_cams"] for v in secs.values()) >= 2
-                    or max(secs.values(), default=0) >= c["animal_min_s_one_cam"])
+            occ = near_occ(x)
+            secs = {cam: len(v) for cam, v in occ.items()}
+            if sum(v >= c["animal_min_s_two_cams"] for v in secs.values()) >= 2:
+                return True
+            if max(secs.values(), default=0) < c["animal_min_s_one_cam"]:
+                return False
+            if unseen_by_covering_camera(x, {k: v for k, v in occ.items() if len(v) >= c["animal_min_s_two_cams"]}):
+                stats["one_camera_ghosts"] += 1
+                return False
+            return True
         bigs = [x for x in order if cl[x].n >= c["min_identity_obs"] and supported(x)]
         adj = {x: {y for y in bigs if y != x and conflict(x, y, c["conflict_min_s"])} for x in bigs}
         clique = max_clique(adj)

@@ -36,7 +36,7 @@ def main():
     ap.add_argument("--out", required=True)
     ap.add_argument("--video-root", default="input")
     ap.add_argument("--backend", default="ollama")
-    ap.add_argument("--pen-size", default="8", help="herd size cap (anchor estimate: scripts/herd_size.py)")
+    ap.add_argument("--pen-size", default="10", help="herd size cap: the pen holds at most 10; the evidence count decides how many IDs are used")
     ap.add_argument("--max-flags", default=None)
     ap.add_argument("--skip-agent", action="store_true")
     a = ap.parse_args()

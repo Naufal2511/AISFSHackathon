@@ -4,12 +4,27 @@
 backend: tamu_luna           # TAMU GPT-5.6 Luna: cheapest + fastest, never failed in the benchmark
 fallback: [ollama]           # local Qwen2.5-VL if TAMU errors, hits a limit, or returns an empty reply
 
+decision:                    # Tiered Decision Mode: fast tier for quick/routine, major tier for critical/complex
+  fast_backend: tamu_luna    # or rules, or ollama
+  major_backend: tamu_luna   # or tamu (Claude Sonnet 5) for gold-standard deep reasoning
+  escalate_severity: 3       # flags with severity >= 3 (duplicate_id, id_jump, id_audit) route straight to major
+  min_confidence: 0.70       # decisions with confidence < 0.70 escalate to major
+  max_quick_steps: 2         # max tool steps allowed in quick mode before deciding or escalating
+
 ollama:                      # local Qwen2.5-VL on this Mac:  ollama pull qwen2.5vl:7b
   base_url: http://localhost:11434/v1
-  model: qwen2.5vl-agent     # qwen2.5vl:7b with a 16k context (configs/Modelfile.qwen_agent)
+  model: qwen2.5vl-agent     # qwen2.5vl:7b with an 8k context (configs/Modelfile.qwen_agent)
   timeout: 300
   max_tokens: 500
-  image_max_side: 896        # smaller images = faster prefill on a local model
+  image_max_side: 512        # 512px cuts visual tokens by ~3x vs 896px for much faster local prefill
+  keep_images: 1
+
+ollama_fast:                 # fast local Qwen option:  ollama pull qwen2.5vl:3b
+  base_url: http://localhost:11434/v1
+  model: qwen2.5vl:3b
+  timeout: 180
+  max_tokens: 400
+  image_max_side: 448
   keep_images: 1
 
 tamu:                        # TAMU AI Chat API (tamu.ai). Key: TAMU_API_KEY in the git-ignored .env
@@ -40,6 +55,26 @@ tamu_luna:                   # cheap TAMU option
   max_tokens: 2500           # reasoning tokens count against this
   image_max_side: 1024
   keep_images: 2
+
+tamu_opus:                   # heavy reasoning (Level 2 risk agent): fastest heavy model in our probe
+  base_url: https://chat-api.tamu.ai/openai
+  model: "protected.Claude Opus 4.8"
+  api_key_env: TAMU_API_KEY
+  timeout: 180
+  max_tokens: 3000
+  image_max_side: 1280
+  keep_images: 3
+
+tamu_sol:                    # heavy GPT option (fallback for the risk agent)
+  base_url: https://chat-api.tamu.ai/openai
+  model: protected.gpt-5.6-sol
+  api_key_env: TAMU_API_KEY
+  temperature: null
+  token_key: max_completion_tokens
+  timeout: 240
+  max_tokens: 6000           # reasoning tokens count against this
+  image_max_side: 1280
+  keep_images: 3
 
 vllm:                        # Qwen2.5-VL served on an HPRC GPU node with vLLM
   base_url: http://localhost:8000/v1
