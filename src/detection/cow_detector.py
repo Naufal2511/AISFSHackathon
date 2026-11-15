@@ -1,7 +1,9 @@
 """Deep learning cow detection and instance segmentation pipeline."""
 
 import os
-os.environ.setdefault("YOLO_CONFIG_DIR", "/tmp/ultralytics")
+import tempfile
+os.environ.setdefault("YOLO_CONFIG_DIR", "/tmp/ultralytics" if os.name != "nt"
+                      else os.path.join(tempfile.gettempdir(), "ultralytics"))
 from dataclasses import dataclass
 from typing import List, Tuple, Optional, Dict, Any
 import cv2

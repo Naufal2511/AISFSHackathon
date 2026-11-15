@@ -41,7 +41,8 @@ def resolve_video(source_video: Optional[str], index: Dict[str, str]) -> Optiona
     m = EVENT_RE.search(source_video)
     if m and m.group(0) in index:
         return index[m.group(0)]
-    remux = os.path.join("/tmp", source_video)
+    from ..video.clip_sequence import REMUX_DIR
+    remux = os.path.join(REMUX_DIR, source_video)
     return remux if os.path.exists(remux) else None
 
 
