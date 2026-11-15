@@ -31,6 +31,25 @@ class Tool:
     evidence: str  # visual | appearance_score | trajectory | classifier | chew_motion | memory
 
 
+def hcat(images, gap: int = 8) -> np.ndarray:
+    """Side by side, padding each image to the tallest one (crops have different aspect ratios)."""
+    h = max(im.shape[0] for im in images)
+    padded = []
+    for i, im in enumerate(images):
+        if im.shape[0] < h:
+            im = np.vstack([im, np.zeros((h - im.shape[0], im.shape[1], 3), np.uint8)])
+        padded.append(im)
+        if i < len(images) - 1:
+            padded.append(np.zeros((h, gap, 3), np.uint8))
+    return np.hstack(padded)
+
+
+def vcat(images) -> np.ndarray:
+    w = max(im.shape[1] for im in images)
+    return np.vstack([np.hstack([im, np.zeros((im.shape[0], w - im.shape[1], 3), np.uint8)]) if im.shape[1] < w else im
+                      for im in images])
+
+
 class Toolbox:
     def __init__(self, rec: pd.DataFrame, frames: FrameStore, memory: Memory,
                  timeline: Optional[pd.DataFrame] = None, embedder=None, video_index=None, world=None,
@@ -191,11 +210,9 @@ class Toolbox:
                + f". Margin best-vs-second {sims[0][1] - (sims[1][1] if len(sims) > 1 else 0):.3f} "
                "(< 0.02 means the score cannot separate them).")
         query = label(crop(fr, bb, pad=0.05, size=256), f"query t{track_id}")
-        rows_img = [np.hstack([query, np.zeros((query.shape[0], 8, 3), np.uint8),
-                               label(self.memory.reference_strip(c, n=3, cell=256)[:256], f"{c} {s:.3f}")])
+        rows_img = [hcat([query, label(self.memory.reference_strip(c, n=3, cell=256)[:256], f"{c} {s:.3f}")])
                     for c, s in top]
-        wmax = max(x.shape[1] for x in rows_img)
-        img = np.vstack([np.hstack([x, np.zeros((x.shape[0], wmax - x.shape[1], 3), np.uint8)]) for x in rows_img])
+        img = vcat(rows_img)
         return ToolResult(txt, [img], {"ranking": sims})
 
     def t_all_views(self, time, cow_id: Optional[str] = None):
@@ -241,12 +258,25 @@ class Toolbox:
                 lines.append(f"{cam} track {int(p0.local_track_id)}: {self.hms(p0.t)}-{self.hms(p1.t)} "
                              f"({len(s)} obs), px x {p0.center_x / p0.frame_width:.2f}->{p1.center_x / p1.frame_width:.2f}"
                              f"{pos}, id conf {s.identity_confidence.mean():.2f}")
-        gw = g[g.world_x.notna()]
-        if len(gw) > 1:
-            dt = np.diff(gw.t.values)
-            dd = np.hypot(np.diff(gw.world_x.values), np.diff(gw.world_y.values))
-            sp = dd / np.maximum(dt, 1e-3)
-            lines.append(f"max world speed {sp.max():.2f} m/s (steer walking ~1 m/s, running ~3 m/s)")
+        # speed: from the fused world state (all cameras, Kalman) if available; per camera only between
+        # that camera's own frames >= 1 s apart (never between two cameras in the same second)
+        if self.world is not None:
+            st = self.world.state
+            w = st[(st.cow_id == cow_id) & st.sec.between(a, b)]
+            if len(w):
+                lines.append(f"fused speed: median {w.speed.median():.2f} m/s, 95th pct {w.speed.quantile(.95):.2f} m/s, "
+                             f"max {w.speed.max():.2f} m/s (steer walking ~1 m/s, running ~3 m/s)")
+        per_cam = []
+        for cam, gc in g[g.world_x.notna()].groupby("camera_id"):
+            gc = gc.sort_values("t").drop_duplicates("sec") if "sec" in gc else gc.sort_values("t")
+            dt = np.diff(gc.t.values)
+            ok = dt >= 1.0
+            if ok.any():
+                sp = np.hypot(np.diff(gc.world_x.values), np.diff(gc.world_y.values))[ok] / dt[ok]
+                per_cam.append(f"{cam} {np.percentile(sp, 95):.2f}")
+        if per_cam:
+            lines.append("per-camera speed, 95th pct m/s: " + ", ".join(per_cam)
+                         + " (cam3 metres are less precise far from it; jumps between track pieces may be ID switches)")
         return ToolResult(f"{cow_id} {self.hms(a)}-{self.hms(b)}:\n" + "\n".join(lines))
 
     def t_near(self, camera: str, time):

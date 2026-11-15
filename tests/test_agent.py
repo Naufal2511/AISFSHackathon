@@ -107,3 +107,11 @@ class TestSelfCheck(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestToolImages(unittest.TestCase):
+    def test_hcat_pads_different_heights(self):
+        from src.agent.tools import hcat, vcat
+        a, b = np.zeros((88, 100, 3), np.uint8), np.zeros((256, 300, 3), np.uint8)
+        self.assertEqual(hcat([a, b]).shape, (256, 408, 3))
+        self.assertEqual(vcat([a, b]).shape, (344, 300, 3))
