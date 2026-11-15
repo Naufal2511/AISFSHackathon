@@ -65,7 +65,7 @@ def fuse_cameras(rows: pd.DataFrame, cfg: Dict) -> pd.DataFrame:
     return g.reset_index()
 
 
-def behavior_probabilities(f: pd.DataFrame) -> np.ndarray:
+def behavior_probabilities(f: pd.DataFrame, gates: Optional[Dict] = None) -> np.ndarray:
     """Factorised behavior model. Returns (N, 10) probabilities.
 
     L lying, M moving, F feed zone, D drink zone, S social, G grooming, R rumination.
@@ -109,7 +109,60 @@ def behavior_probabilities(f: pd.DataFrame) -> np.ndarray:
     if has_app:  # product of experts (geometry x appearance), floor keeps either from vetoing
         P = np.where(app_ok[:, None], (P + 0.02) * (np.nan_to_num(Papp) + 0.05), P)
         P = P / P.sum(1, keepdims=True)
+    ok = learned_mask(f)
+    if ok.any():  # fine-tuned classifier replaces the cue model wherever a crop was scored
+        Pl = gate_learned(f, f[LEARN_COLS].to_numpy(dtype=float).copy(), gates or {})
+        if "p_ruminating" in f:  # measured chewing (rumination.py) still decides rumination
+            Rm = f["p_ruminating"].to_numpy(dtype=float)
+            has = ok & np.isfinite(Rm)
+            for base, rum in (("lying", "ruminating (lying)"), ("standing", "ruminating (standing)")):
+                tot = Pl[has, IDX[base]] + Pl[has, IDX[rum]]
+                Pl[has, IDX[rum]] = tot * Rm[has]
+                Pl[has, IDX[base]] = tot * (1 - Rm[has])
+        P = np.where(ok[:, None], Pl + 1e-4, P)
+        P = P / P.sum(1, keepdims=True)
     return P
+
+
+LEARN_COLS = [f"learn::{b}" for b in BEHAVIORS]
+
+
+def gate_learned(f: pd.DataFrame, Pl: np.ndarray, gates: Dict) -> np.ndarray:
+    """Physical vetoes on the learned vector (learned_model.gates in behavior.yaml).
+
+    feeding / drinking: rejected when the cow is measurably NOT at the bunk / waterer (drawn
+      image zones -> in_feed / in_drink below the minimum); the mass is renormalised over the
+      remaining classes, i.e. the label falls to the next most probable class. Unknown zone
+      (NaN) keeps the model's call.
+    walking: taken from measured ground speed (p_moving) instead of the crop, scaled by the
+      model's upright mass so a lying cow with box jitter is not turned into a walker:
+        P(walk) = p_moving * (1 - P(lying family)),  other classes x (1 - P(walk)).
+    """
+    if not gates:
+        return Pl
+    Pl = Pl.copy()
+    for cls, cue, key in (("feeding", "in_feed", "feed_min"), ("drinking", "in_drink", "drink_min")):
+        if key in gates and cue in f:
+            z = f[cue].to_numpy(dtype=float)
+            veto = np.isfinite(z) & (z < float(gates[key]))
+            Pl[veto, IDX[cls]] = 0.0
+    if gates.get("walking_from_speed") and "p_moving" in f:
+        M = f["p_moving"].to_numpy(dtype=float)
+        has = np.isfinite(M)
+        w = IDX["walking"]
+        Pl[has, w] = 0.0
+        Pl[has] /= Pl[has].sum(1, keepdims=True) + 1e-12
+        lying_fam = Pl[has, IDX["lying"]] + Pl[has, IDX["ruminating (lying)"]]
+        pw = M[has] * (1 - lying_fam)
+        Pl[has] *= (1 - pw)[:, None]
+        Pl[has, w] = pw
+    return Pl / (Pl.sum(1, keepdims=True) + 1e-12)
+
+
+def learned_mask(f: pd.DataFrame) -> np.ndarray:
+    if not all(c in f.columns for c in LEARN_COLS):
+        return np.zeros(len(f), bool)
+    return np.isfinite(f[LEARN_COLS].to_numpy(dtype=float)).all(1)
 
 
 def transition_matrix(cfg: Dict, dt: float) -> np.ndarray:
@@ -165,7 +218,8 @@ def smooth_cow(fused_cow: pd.DataFrame, cfg: Dict, session_gap_sec: int = 300, t
     step = int(tl["step_sec"])
     fused_cow = fused_cow.sort_values("sec")
     secs = fused_cow["sec"].to_numpy()
-    probs = behavior_probabilities(fused_cow) ** temperature  # correlated frames -> temper evidence
+    probs = behavior_probabilities(fused_cow, cfg.get("learned_model", {}).get("gates")) ** temperature  # correlated frames -> temper evidence
+    fused_cow = fused_cow.assign(emission=np.where(learned_mask(fused_cow), "learned", "heuristic"))
     A = transition_matrix(cfg, step)
     K = len(BEHAVIORS)
 
@@ -200,7 +254,7 @@ def smooth_cow(fused_cow: pd.DataFrame, cfg: Dict, session_gap_sec: int = 300, t
         out.append(o)
     res = pd.concat(out, ignore_index=True)
     keep = [c for c in ("cameras", "n_cameras", "world_x", "world_y", "speed_mps", "height_ratio",
-                        "nn_dist", "drink_dist", "source_video", "p_ruminating") if c in fused_cow.columns]
+                        "nn_dist", "drink_dist", "source_video", "p_ruminating", "emission") if c in fused_cow.columns]
     return res.merge(fused_cow[["sec"] + keep], on="sec", how="left")
 
 
@@ -219,5 +273,9 @@ def evidence_label(row) -> str:
         return "observed"
     if b.startswith("ruminating"):
         pr = row.get("p_ruminating")
-        return "observed_chewing" if pd.notna(pr) and pr >= 0.5 else "estimated"
-    return "estimated_heuristic"  # grooming / social interaction until the verifier confirms
+        if pd.notna(pr) and pr >= 0.5:
+            return "observed_chewing"
+        return "estimated_model" if row.get("emission") == "learned" else "estimated"
+    # grooming / social interaction / rumination without chewing: the fine-tuned model's val F1 on
+    # these is ~0, so they stay "estimated" and go to the agent review queue
+    return "estimated_model" if row.get("emission") == "learned" else "estimated_heuristic"

@@ -39,6 +39,9 @@ def main():
     ap.add_argument("--probe-rumination", action="store_true")
     ap.add_argument("--appearance-model", default=None)
     ap.add_argument("--appearance-every-sec", type=int, default=10)
+    ap.add_argument("--emission", choices=["auto", "learned", "heuristic"], default="auto",
+                    help="auto = fine-tuned classifier when enabled in config and --video-root is given")
+    ap.add_argument("--weights", default=None, help="Override learned_model.weights")
     ap.add_argument("--no-1s", action="store_true", help="Skip the large per-second timeline CSV")
     a = ap.parse_args()
 
@@ -59,6 +62,23 @@ def main():
         clf.load(records, a.clip_start)
         appearance = predict_rows(a.appearance_model, clf.rows, video_index or {}, a.appearance_every_sec)
         print(f"[BEHAVIOR] appearance expert scored {len(appearance)} cow-seconds")
+
+    lc = clf.cfg.get("learned_model", {})
+    use_learned = a.emission == "learned" or (a.emission == "auto" and lc.get("enabled") and video_index)
+    if a.emission == "learned" and not video_index:
+        sys.exit("--emission learned needs --video-root (crops are read from the raw video)")
+    model_name = "heuristic-fusion-v1"
+    os.makedirs(a.out, exist_ok=True)
+    if use_learned:
+        if clf.fused is None:
+            clf.load(records, a.clip_start)
+        preds = clf.attach_learned(video_index, a.weights)
+        if preds is not None:
+            preds.to_csv(os.path.join(a.out, "box_predictions.csv"), index=False)
+            model_name = clf.model.version
+    with open(os.path.join(a.out, "model.txt"), "w") as f:  # read by scripts/export_contract.py
+        f.write(model_name + "\n")
+    print(f"[BEHAVIOR] emission model: {model_name}")
 
     tl = clf.run(records, a.clip_start, appearance, video_index, a.probe_rumination)
     paths = write_all(a.out, tl, clf.cfg, full_days=a.full_days, write_1s=not a.no_1s)
