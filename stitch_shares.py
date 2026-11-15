@@ -10,6 +10,7 @@
 2. Gives each cow ONE id across chunks. Every chunk numbers its cows itself (COW_01.. by its own identity pass).
    run_share.py makes each chunk also track 2 min before the window it owns, so in that lead-in both chunks have
    boxes on the same frames: overlapping boxes (IoU >= 0.5, same camera and second) vote, Hungarian on the votes.
+   Two chunks can link cam1 and cam3 differently: a match whose cameras disagree is kept, flagged overlap_split.
    Cows the overlap cannot settle fall back to the memory-card prototypes (mean DINOv2 appearance per cow,
    stage1/level1/agent/memory/prototypes.npz; Hungarian on cosine similarity; each cow keeps every prototype it had).
    Black Angus look alike to DINOv2, so those appearance matches are flagged. Weak matches are flagged in id_map.csv;
@@ -94,16 +95,16 @@ def _boxes(ch: dict, t0, t1) -> pd.DataFrame:
     return o[(ts >= t0) & (ts < t1)]
 
 
-def overlap_votes(prev: dict, ch: dict, prev_map: dict) -> tuple[pd.DataFrame, int]:
+def overlap_votes(prev: dict, ch: dict, prev_map: dict) -> tuple[pd.DataFrame, int, dict]:
     """Both chunks tracked the same frames in ch's lead-in [run_start, start): a box in one is the same cow as the box
-    it overlaps (IoU >= 0.5) in the other, same camera, same second. Returns votes (local id x global id) and the
-    number of seconds compared."""
+    it overlaps (IoU >= 0.5) in the other, same camera, same second. Returns votes (local id x global id), the
+    number of seconds compared, and the same votes per camera ({camera: local x global})."""
     t0, t1 = max(ch["run_start"], prev["start"]), min(ch["start"], prev["end"])
     if t1 <= t0:
-        return pd.DataFrame(), 0
+        return pd.DataFrame(), 0, {}
     a, b = _boxes(prev, t0, t1), _boxes(ch, t0, t1)
     if a.empty or b.empty:
-        return pd.DataFrame(), 0
+        return pd.DataFrame(), 0, {}
     a = a.assign(gid=a.cow_id.astype(str).map(prev_map).fillna(a.cow_id.astype(str)))
     j = b.merge(a, on=["wall_time", "camera"], suffixes=("", "_p"))
     ix = (np.minimum(j.x2, j.x2_p) - np.maximum(j.x1, j.x1_p)).clip(lower=0)
@@ -111,13 +112,32 @@ def overlap_votes(prev: dict, ch: dict, prev_map: dict) -> tuple[pd.DataFrame, i
     inter = ix * iy
     union = (j.x2 - j.x1) * (j.y2 - j.y1) + (j.x2_p - j.x1_p) * (j.y2_p - j.y1_p) - inter
     j = j[(inter / union.clip(lower=1)) >= 0.5]
-    return j.groupby([j.cow_id.astype(str), j.gid]).size().unstack(fill_value=0), j.wall_time.nunique()
+    votes = lambda d: d.groupby([d.cow_id.astype(str), d.gid]).size().unstack(fill_value=0)  # noqa: E731
+    return votes(j), j.wall_time.nunique(), {cam: votes(g) for cam, g in j.groupby("camera")}
 
 
-def align_ids(chunks: list[dict], min_sim: float, min_margin: float, overrides: dict, min_votes: int = 10) -> pd.DataFrame:
-    """Overlap first (same boxes in the same frames: near-certain), appearance prototypes for whatever is left (cows
-    not seen in the overlap, chunks with a gap before them). Black Angus look alike to DINOv2, so appearance alone
-    gives small margins; every such match is flagged."""
+def _cam_detail(per_cam: dict, local: str) -> str | None:
+    """'cam1 COW_03 120; cam3 COW_09 120': where each camera's boxes of `local` point (for id_map.csv)."""
+    parts = []
+    for cam in sorted(per_cam):
+        V = per_cam[cam]
+        if local in V.index and V.loc[local].max() > 0:
+            parts.append(f"{cam} {V.loc[local].idxmax()} {int(V.loc[local].max())}")
+    return "; ".join(parts) or None
+
+
+def align_ids(chunks: list[dict], min_sim: float, min_margin: float, overrides: dict, min_votes: int = 10,
+              min_share: float = 0.25, agree_share: float = 0.8) -> pd.DataFrame:
+    """Overlap first (same boxes in the same frames), appearance prototypes for whatever is left (cows not seen in
+    the overlap, chunks with a gap before them). Black Angus look alike to DINOv2, so appearance alone gives small
+    margins; every such match is flagged.
+
+    Each chunk links its cam1 and cam3 boxes into cows on its own, and two chunks do not always link them the same
+    way: one cow in chunk B can be cow X on cam1 and cow Y on cam3 in chunk A (seen on c01/c02: the boxes matched
+    perfectly per camera, the votes split 50/50, and the old 60 % rule threw all of them away for near-tied
+    appearance). So the one-to-one assignment that keeps the most boxes in agreement is taken when it has at least
+    `min_share` of the cow's boxes; below `agree_share` it is flagged 'overlap_split' (the cameras disagree: right on
+    at least one camera, which beats a coin flip on appearance). Appearance breaks ties between equal votes."""
     from scipy.optimize import linear_sum_assignment
     bank: dict[str, list[np.ndarray]] = {}
     rows = []
@@ -139,16 +159,22 @@ def align_ids(chunks: list[dict], min_sim: float, min_margin: float, overrides: 
         assign: dict[str, tuple] = {}
         by_overlap: dict[str, tuple] = {}
         prev = next((p for p in reversed(chunks[:chunks.index(ch)]) if p["end"] > ch["run_start"]), None)
+        per_cam: dict = {}
         if prev is not None and ch["run_start"] < ch["start"]:
-            V, nsec = overlap_votes(prev, ch, maps.get(prev["name"], {}))
+            V, nsec, per_cam = overlap_votes(prev, ch, maps.get(prev["name"], {}))
             V = V.drop(index=[l for l in V.index if l in ov], errors="ignore")
             if len(V):
-                ri, ci = linear_sum_assignment(-V.values)
+                # tie-break equal votes by appearance (< 1 vote, so it never outweighs a real box)
+                tb = np.array([[max((float(pr[l] @ q) for q in bank.get(g, []) if l in pr and q.shape == pr[l].shape),
+                                    default=0.0) for g in V.columns] for l in V.index])
+                ri, ci = linear_sum_assignment(-(V.values + 0.5 * tb))
                 for i, k in zip(ri, ci):
                     v, tot = int(V.values[i, k]), int(V.values[i].sum())
-                    if v >= min_votes and v >= 0.6 * tot:
+                    if v >= min_votes and v >= min_share * tot:
                         by_overlap[V.index[i]] = (V.columns[k], v, tot)
-            print(f"  {ch['name']}: {len(by_overlap)} cows matched by box overlap with {prev['name']} ({nsec} s compared)")
+            n_split = sum(1 for _, v, tot in by_overlap.values() if v < agree_share * tot)
+            print(f"  {ch['name']}: {len(by_overlap)} cows matched by box overlap with {prev['name']} ({nsec} s "
+                  f"compared; {n_split} of them with the cameras disagreeing)")
         local = sorted(set(pr) | set(by_overlap) | set(ov)) or sorted(_local_ids(ch))
         todo = [l for l in local if l not in ov and l in pr and l not in by_overlap]
         used = {g for g, _, _ in by_overlap.values()} | set(ov.values())
@@ -167,7 +193,9 @@ def align_ids(chunks: list[dict], min_sim: float, min_margin: float, overrides: 
                 g, sim, mar, status = ov[l], None, None, "override"
             elif l in by_overlap:
                 g, v, tot = by_overlap[l]
-                sim, mar, status = round(v / max(tot, 1), 3), None, f"overlap ({v} boxes)"
+                sim, mar = round(v / max(tot, 1), 3), None
+                status = (f"overlap ({v} boxes)" if v >= agree_share * tot
+                          else f"overlap_split ({v} of {tot} boxes; cameras disagree)")
             elif not pr:
                 g, sim, mar, status = (l if l not in taken else new_id(taken)), None, None, "no_cards"
             elif l in assign and assign[l][1] >= min_sim and assign[l][0] not in taken:
@@ -184,11 +212,12 @@ def align_ids(chunks: list[dict], min_sim: float, min_margin: float, overrides: 
             maps.setdefault(ch["name"], {})[l] = g
             rows.append({"chunk": ch["name"], "who": ch["who"], "start": ch["start"], "local_id": l, "global_id": g,
                          "similarity": None if sim is None else round(sim, 3),
-                         "margin": None if mar is None else round(mar, 3), "status": status})
+                         "margin": None if mar is None else round(mar, 3), "status": status,
+                         "overlap_detail": _cam_detail(per_cam, l)})
     df = pd.DataFrame(rows)
     n = df.global_id.nunique() if len(df) else 0
     if n > 10:
-        print(f"  WARNING {n} global ids for a pen of 10: check the 'new' / 'low_margin' rows of id_map.csv "
+        print(f"  WARNING {n} global ids for a pen of 10: check the 'new' / 'low_margin' / 'overlap_split' rows of id_map.csv "
               f"and merge them with --id-map")
     return df
 
@@ -347,10 +376,12 @@ def main(argv=None) -> int:
     idmap = {c: dict(zip(g.local_id, g.global_id)) for c, g in idm.groupby("chunk")}
     for c in chunks:
         idmap.setdefault(c["name"], {})
-    flagged = idm[idm.status.isin(["new", "low_margin"]) & (idm.chunk != chunks[0]["name"])]
+    flagged = idm[(idm.status.isin(["new", "low_margin"]) | idm.status.str.startswith("overlap_split"))
+                  & (idm.chunk != chunks[0]["name"])]
     print(f"ids: {idm.global_id.nunique()} cows; {len(flagged)} weak/new matches to check in {out / 'id_map.csv'}")
     if len(flagged):
-        print(flagged[["chunk", "local_id", "global_id", "similarity", "margin", "status"]].to_string(index=False))
+        print(flagged[["chunk", "local_id", "global_id", "similarity", "margin", "status", "overlap_detail"]]
+              .to_string(index=False))
 
     origin = min(c["start"] for c in chunks if c["start"] != pd.Timestamp.min).normalize() \
         if any(c["start"] != pd.Timestamp.min for c in chunks) else None

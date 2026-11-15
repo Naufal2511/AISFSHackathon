@@ -127,8 +127,12 @@ python stitch_shares.py --videos "<all clips>"
 
 Each chunk numbers its cows itself. Every chunk also tracks the 2 minutes before the window it owns
 (`--overlap-min`), so the stitcher joins ids where both chunks saw the same boxes in the same frames (IoU >= 0.5,
-Hungarian on the votes). Cows not seen in that overlap fall back to memory-card appearance prototypes; black Angus
-look alike to DINOv2 (different cows score 0.75-0.94), so those matches are flagged. Weak or new matches are listed in `outputs/stitched/id_map.csv` and can be fixed
+Hungarian on the votes). Each chunk links its cam1 and cam3 boxes into cows on its own, and two chunks do not
+always link them the same way (c01/c02: per camera the boxes matched perfectly, but one c02 cow was two c01 cows,
+one per camera). Such a match is still taken from the overlap and flagged `overlap_split`; the `overlap_detail`
+column says where each camera's boxes point. Cows not seen in that overlap fall back to memory-card appearance
+prototypes; black Angus look alike to DINOv2 (different cows score 0.75-0.94), so those matches are flagged.
+Weak, split or new matches are listed in `outputs/stitched/id_map.csv` and can be fixed
 with `--id-map overrides.yaml` (`{chunk: {local_id: global_id}}`). It writes `outputs/stitched/final/`
 (`activity.csv` bouts joined across chunk edges, `activity_minute.csv`, `actions.csv`, `time_budgets.csv`), traces
 and ID-check sheets per chunk (sheet images keep the chunk's own ids; `legend.csv` maps them), and runs Level 2 over

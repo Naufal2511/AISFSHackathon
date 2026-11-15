@@ -82,6 +82,34 @@ def test_overlap_boxes_beat_appearance(tmp_path):
     assert g.status.str.startswith("overlap").all()
 
 
+
+def test_overlap_split_across_cameras_is_kept_and_flagged(tmp_path):
+    """Seen on c01/c02: each chunk links cam1 and cam3 boxes into cows on its own. Here c02 calls the cam1 box and
+    the cam3 box one cow; c01 calls them two. The boxes still match perfectly per camera, so the match is taken
+    from the overlap (flagged), not from near-tied appearance; equal votes are broken by appearance."""
+    rng = np.random.default_rng(2)
+    a, b, c = (rng.normal(size=16) for _ in range(3))
+    c1 = _chunk(tmp_path, "c01", "2026-11-07 10:00", "2026-11-07 11:00", {"COW_01": a, "COW_02": b})
+    c2 = _chunk(tmp_path, "c02", "2026-11-07 11:00", "2026-11-07 12:00",
+                {"COW_01": b + 0.05 * rng.normal(size=16), "COW_02": a + 0.05 * rng.normal(size=16), "COW_03": c})
+    c2["run_start"] = pd.Timestamp("2026-11-07 10:58")
+    secs = pd.date_range("2026-11-07 10:58", periods=30, freq="s").strftime("%Y-%m-%dT%H:%M:%S")
+    def obs(ch, boxes):                              # boxes: [(camera, cow_id, x)]
+        p = ch["dir"] / "stage1" / "level1" / "contract"
+        p.mkdir(parents=True, exist_ok=True)
+        pd.DataFrame([{"wall_time": t, "camera": cam, "cow_id": cid, "x1": x, "y1": 0, "x2": x + 100, "y2": 100}
+                      for t in secs for cam, cid, x in boxes]).to_csv(p / "observations.csv", index=False)
+    obs(c1, [("cam1", "COW_01", 0), ("cam3", "COW_02", 300)])
+    obs(c2, [("cam1", "COW_01", 0), ("cam3", "COW_01", 300)])     # c02: both boxes are one cow
+    m = stitch_shares.align_ids([c1, c2], 0.55, 0.05, {})
+    g = m[m.chunk == "c02"].set_index("local_id")
+    assert g.loc["COW_01", "status"].startswith("overlap_split")    # kept from the overlap, flagged
+    assert g.loc["COW_01", "global_id"] == "COW_02"                 # 30 vs 30 votes: appearance breaks the tie
+    assert g.loc["COW_01", "overlap_detail"] == "cam1 COW_01 30; cam3 COW_02 30"
+    assert g.loc["COW_02", "global_id"] == "COW_01"                 # the rest by appearance
+    assert g.loc["COW_03", "status"] == "new"
+    assert m.global_id.nunique() == 3
+
 def _mins(rows):
     return pd.DataFrame([{"cow_id": c, "minute_start": t, "behavior": beh, "confidence": 0.9, "reason": r, "source": "model_estimate",
                           "correction": "confirmed", "tier": 2 if r.startswith("agent") else 1, "flags": "", "cameras_used": "['front']"}
