@@ -117,7 +117,14 @@ def main():
             "downgraded_by_self_check": int(d.downgraded.sum()),
             "decisions": d.decision.value_counts().to_dict(), "wall_s": round(time.time() - t0, 1)}
     df = pd.DataFrame(rows)
-    df.to_csv(os.path.join(out, "comparison_rows.csv"), index=False)
+    # merge with earlier runs of other backends (same flags: the selection is deterministic)
+    rp, jp = os.path.join(out, "comparison_rows.csv"), os.path.join(out, "comparison.json")
+    if os.path.exists(rp):
+        old = pd.read_csv(rp)
+        df = pd.concat([old[~old.backend.isin(summary)], df], ignore_index=True)
+    if os.path.exists(jp):
+        summary = {**{k: v for k, v in json.load(open(jp)).items() if k not in summary}, **summary}
+    df.to_csv(rp, index=False)
     json.dump(summary, open(os.path.join(out, "comparison.json"), "w"), indent=1, default=str)
     with open(os.path.join(out, "comparison.md"), "w") as fh:
         fh.write(f"# Agent backend comparison on {name}\n\n")

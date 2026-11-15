@@ -85,13 +85,14 @@ class OpenAICompatVLM:
 
     def __init__(self, base_url: str, model: str, api_key: Optional[str] = None, temperature: float = 0.1,
                  max_tokens: int = 600, timeout: float = 180, image_max_side: int = 1024,
-                 keep_images: int = 2, extra_body: Optional[Dict] = None):
+                 keep_images: int = 2, extra_body: Optional[Dict] = None, token_key: str = "max_tokens"):
         self.base_url = base_url.rstrip("/")
         self.model = model
         self.api_key = api_key
         self.temperature, self.max_tokens, self.timeout = temperature, max_tokens, timeout
         self.image_max_side, self.keep_images = image_max_side, keep_images
         self.extra_body = extra_body or {}
+        self.token_key = token_key
         self.calls, self.seconds = 0, 0.0
 
     @property
@@ -119,10 +120,13 @@ class OpenAICompatVLM:
         return msgs
 
     def complete(self, messages: List[Dict]) -> str:
-        body = {"model": self.model, "messages": messages, "temperature": self.temperature,
-                "max_tokens": self.max_tokens, **self.extra_body}
+        body = {"model": self.model, "messages": messages, self.token_key: self.max_tokens,
+                "stream": False, **self.extra_body}  # some gateways stream by default
+        if self.temperature is not None:  # GPT-5 / o-series accept only their default temperature
+            body["temperature"] = self.temperature
         req = urllib.request.Request(self.base_url + "/chat/completions", data=json.dumps(body).encode(),
                                      headers={"Content-Type": "application/json",
+                                              "User-Agent": "Mozilla/5.0 (Macintosh) pen6-agent/1.0",  # some gateways 403 urllib's default
                                               **({"Authorization": f"Bearer {self.api_key}"} if self.api_key else {})})
         last = None
         for attempt in range(3):
@@ -147,7 +151,8 @@ class OpenAICompatVLM:
             text = self.complete(self._messages(state))
             state["turns"].pop(); state["turns"].pop()
             act = parse_json(text) or {"thought": text[:500], "final": {"decision": "escalate",
-                                                                         "reason": "agent reply was not valid JSON"}}
+                                                                         "reason": "agent reply was not valid JSON: "
+                                                                                   + (text or "")[:300]}}
         act["_raw"] = text
         return act
 
@@ -212,6 +217,66 @@ class RulePolicy:
                                                        "evidence": [], "summary": f["detail"]}}
 
 
+class FallbackVLM:
+    """Primary reasoning model with automatic fallbacks (e.g. TAMU GPT-5.6 Luna -> local Qwen).
+    A backend is skipped for that call when it errors (network, quota, 4xx/5xx) or returns an
+    empty / non-JSON reply; the trace records which model answered."""
+
+    name = "fallback"
+
+    def __init__(self, backends):
+        self.backends = backends
+        self.fallbacks = 0
+        self.last_used = None
+
+    @property
+    def label(self):
+        return " -> ".join(getattr(b, "label", b.name) for b in self.backends)
+
+    @property
+    def calls(self):
+        return sum(getattr(b, "calls", 0) for b in self.backends)
+
+    @property
+    def seconds(self):
+        return sum(getattr(b, "seconds", 0.0) for b in self.backends)
+
+    @staticmethod
+    def _bad(act):
+        fin = act.get("final") or {}
+        return fin.get("decision") == "escalate" and str(fin.get("reason", "")).startswith("agent reply was not valid JSON")
+
+    def next_action(self, state):
+        err = None
+        for i, b in enumerate(self.backends):
+            try:
+                act = b.next_action(state)
+            except Exception as e:  # network, quota, gateway errors
+                err = e
+                self.fallbacks += i < len(self.backends) - 1
+                continue
+            if self._bad(act) and i < len(self.backends) - 1:
+                self.fallbacks += 1
+                continue
+            act["_model"] = getattr(b, "label", b.name)
+            self.last_used = act["_model"]
+            return act
+        raise RuntimeError(f"all reasoning backends failed: {err}")
+
+    def complete(self, messages):
+        err = None
+        for b in self.backends:
+            if not hasattr(b, "complete"):
+                continue
+            try:
+                out = b.complete(messages)
+                if out and out.strip():
+                    return out
+            except Exception as e:
+                err = e
+        raise RuntimeError(f"all reasoning backends failed: {err}")
+
+
 def load_dotenv(path: str = ".env"):
     """KEY=value lines from a git-ignored .env into the environment (never printed)."""
     if not os.path.exists(path):
@@ -224,9 +289,18 @@ def load_dotenv(path: str = ".env"):
         os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
 
 
-def make_backend(cfg: Dict):
+def make_backend(cfg: Dict, name: Optional[str] = None, with_fallback: bool = True):
     load_dotenv()
-    b = (os.environ.get("AGENT_BACKEND") or cfg.get("backend", "ollama")).lower()
+    b = (name or os.environ.get("AGENT_BACKEND") or cfg.get("backend", "ollama")).lower()
+    chain = [x for x in cfg.get("fallback", []) if x != b] if with_fallback and not name else []
+    if chain:
+        backends = [make_backend(cfg, b, False)]
+        for fb in chain:
+            try:
+                backends.append(make_backend(cfg, fb, False))
+            except Exception:
+                pass
+        return FallbackVLM(backends) if len(backends) > 1 else backends[0]
     if b == "rules":
         return RulePolicy()
     p = cfg.get(b, {})
@@ -235,7 +309,8 @@ def make_backend(cfg: Dict):
     key = os.environ.get("AGENT_VLM_API_KEY") or (os.environ.get(p["api_key_env"]) if p.get("api_key_env") else None)
     if not base or not model:
         raise ValueError(f"backend '{b}' needs base_url and model (configs/agent.yaml or AGENT_VLM_* env vars)")
-    return OpenAICompatVLM(base, model, key, temperature=p.get("temperature", 0.1),
+    return OpenAICompatVLM(base, model, key, temperature=p.get("temperature", 0.1) if "temperature" not in p or p["temperature"] is not None else None,
+                           token_key=p.get("token_key", "max_tokens"),
                            max_tokens=p.get("max_tokens", 600), timeout=p.get("timeout", 180),
                            image_max_side=p.get("image_max_side", 1024), keep_images=p.get("keep_images", 2),
                            extra_body=p.get("extra_body"))

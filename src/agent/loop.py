@@ -110,6 +110,10 @@ class Agent:
                          "evidence": [], "summary": "backend unavailable"}
                 break
             thought = act.get("thought", "")
+            if act.get("_model"):
+                trace.setdefault("models_used", [])
+                if act["_model"] not in trace["models_used"]:
+                    trace["models_used"].append(act["_model"])
             state["turns"].append({"role": "assistant", "text": json.dumps({k: v for k, v in act.items() if k != "_raw"})})
             if "final" in act or len(state["steps"]) >= self.max_steps:
                 final = act.get("final") or {"decision": "uncertain", "summary": "tool budget used up",

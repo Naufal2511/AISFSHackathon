@@ -28,7 +28,8 @@ def main():
         sys.exit(f"no key: put {p.get('api_key_env')}=... in .env")
     for path in ("/models", "/v1/models", "/api/models"):
         try:
-            req = urllib.request.Request(base + path, headers={"Authorization": f"Bearer {key}"})
+            req = urllib.request.Request(base + path, headers={"Authorization": f"Bearer {key}",
+                                                                "User-Agent": "Mozilla/5.0 (Macintosh) pen6-agent/1.0"})
             with urllib.request.urlopen(req, timeout=30) as r:
                 data = json.loads(r.read())
             items = data.get("data", data) if isinstance(data, dict) else data

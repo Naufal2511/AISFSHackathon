@@ -1,7 +1,8 @@
 # Supervisor agent (src/agent). Pick the backend here or with AGENT_BACKEND=<name>.
 # Any OpenAI-compatible endpoint works; the API key is read from the env var named in api_key_env
 # (never put keys in this file).
-backend: ollama
+backend: tamu_luna           # TAMU GPT-5.6 Luna: cheapest + fastest, never failed in the benchmark
+fallback: [ollama]           # local Qwen2.5-VL if TAMU errors, hits a limit, or returns an empty reply
 
 ollama:                      # local Qwen2.5-VL on this Mac:  ollama pull qwen2.5vl:7b
   base_url: http://localhost:11434/v1
@@ -12,11 +13,31 @@ ollama:                      # local Qwen2.5-VL on this Mac:  ollama pull qwen2.
   keep_images: 1
 
 tamu:                        # TAMU AI Chat API (tamu.ai). Key: TAMU_API_KEY in the git-ignored .env
-  base_url: https://chat-api.tamu.ai/openai   # unverified (community client); confirm on docs.tamus.ai
-  model: ""                  # set after: python scripts/list_models.py --backend tamu
+  base_url: https://chat-api.tamu.ai/openai   # verified: /models lists the TAMU models with the key
+  model: protected.Claude-Sonnet-5            # list: python scripts/list_models.py --backend tamu
   api_key_env: TAMU_API_KEY
   timeout: 120
-  max_tokens: 600
+  max_tokens: 1500           # fuller reasoning; 600 truncated the JSON
+  image_max_side: 1024
+  keep_images: 2
+
+tamu_flash:                  # fast TAMU option for the latency comparison
+  base_url: https://chat-api.tamu.ai/openai
+  model: protected.gemini-3.5-flash
+  api_key_env: TAMU_API_KEY
+  timeout: 120
+  max_tokens: 1500
+  image_max_side: 1024
+  keep_images: 2
+
+tamu_luna:                   # cheap TAMU option
+  base_url: https://chat-api.tamu.ai/openai
+  model: protected.gpt-5.6-luna
+  api_key_env: TAMU_API_KEY
+  temperature: null          # GPT-5 family: default temperature only
+  token_key: max_completion_tokens
+  timeout: 120
+  max_tokens: 2500           # reasoning tokens count against this
   image_max_side: 1024
   keep_images: 2
 
