@@ -96,7 +96,7 @@ def main():
     t0 = time.time()
     traces = agent.run(window_sec=ac.get("window_sec", 300), audit_every_min=ac.get("audit_every_min", 30),
                        trigger_cfg=trig, embedder=embedder, max_flags=a.max_flags,
-                       parallel=ac.get("parallel_investigations", 1))
+                       parallel=int(os.environ.get("PEN6_ID_PARALLEL") or ac.get("parallel_investigations", 1)))
     frames.close()
 
     corr = pd.DataFrame(agent.corrections)

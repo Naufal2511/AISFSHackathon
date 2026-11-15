@@ -47,14 +47,24 @@ def _folder_camera(path: Path, root: Path, pattern: re.Pattern) -> Optional[str]
 
 
 def assign_cameras(root: str | Path, cfg: dict) -> list[ClipInfo]:
+    """root: a folder of clips, or a .txt LIST of clip paths (one per line, relative, e.g. the output of
+    `rclone lsf -R remote:folder`): a plan can be made from the organizers' drive without downloading it."""
     root = Path(root).resolve()
-    if not root.is_dir():
-        raise CameraError(f"--videos {root} is not a folder")
+    listed = root.is_file() and root.suffix.lower() == ".txt"
+    if not root.is_dir() and not listed:
+        raise CameraError(f"--videos {root} is not a folder (or a .txt list of clip paths)")
+    if listed:
+        names = [l.strip().replace("\\", "/") for l in root.read_text(encoding="utf-8-sig").splitlines() if l.strip()]
+        base = root.parent / "__listed__"
+        files = [base / n for n in names]
+        root = base
+    else:
+        files = [p for p in sorted(root.rglob("*")) if p.is_file()]
     pattern = re.compile(cfg.get("folder_pattern", r"^cam(?:era)?[\s_-]*0?([1-3])$"), re.I)
     suffix = {str(k): v for k, v in (cfg.get("suffix") or {}).items()}
     clips, seen, unknown, conflicts = [], {}, [], []
-    for p in sorted(root.rglob("*")):
-        if not p.is_file() or p.suffix.lower() not in VIDEO_EXTS or p.name.startswith("."):
+    for p in sorted(files):
+        if p.suffix.lower() not in VIDEO_EXTS or p.name.startswith("."):
             continue
         m = EVENT_RE.search(p.name)
         if not m:

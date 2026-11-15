@@ -66,7 +66,15 @@ def _intervals(clips) -> list[tuple[datetime, datetime]]:
     return out
 
 
-def make_plan(videos: str, n_shares: int = 3) -> dict:
+HPRC_SHARE = "hprc_day2"
+LAYOUTS = {
+    "day1-laptops-day2-hprc": "Day 1 split by footage over the 3 laptops; Day 2 (and anything later) on HPRC",
+    "all-laptops": "the whole recording split by footage over the 3 laptops",
+}
+
+
+def make_plan(videos: str, layout: str = "day1-laptops-day2-hprc") -> dict:
+    """videos: the folder with ALL clips, or a .txt list of their paths (e.g. `rclone lsf -R gdrive:Pen6 > all.txt`)."""
     cfg = yaml.safe_load((REPO / "configs" / "pipeline.yaml").read_text(encoding="utf-8"))
     clips = camlib.assign_cameras(videos, cfg["cameras"])
     iv = _intervals(clips)
@@ -84,23 +92,51 @@ def make_plan(videos: str, n_shares: int = 3) -> dict:
                 break
             cover[i] += ov
             i += 1
-    total = sum(cover)
-    cuts, acc, k = [0], 0.0, 1
-    for i, c in enumerate(cover):
-        acc += c
-        while k < n_shares and acc >= total * k / n_shares:
-            cuts.append(i + 1)
-            k += 1
-    cuts += [n_min] * (n_shares + 1 - len(cuts))
-    shares = {}
-    for j, who in enumerate(PEOPLE[:n_shares]):
-        s, e = t0 + timedelta(minutes=cuts[j]), t0 + timedelta(minutes=cuts[j + 1])
-        shares[who] = {"start": s.strftime(FMT), "end": e.strftime(FMT),
-                       "footage_h": round(sum(cover[cuts[j]:cuts[j + 1]]) / 3600, 2),
-                       "clips": sorted(c.name for c in camlib.clips_in_window(clips, s.isoformat(), e.isoformat()))}
+
+    def split(lo: int, hi: int, names: list[str]) -> dict:
+        """minutes [lo, hi) into len(names) parts with the same amount of footage, on whole minutes"""
+        total = sum(cover[lo:hi])
+        cuts, acc, k = [lo], 0.0, 1
+        for i in range(lo, hi):
+            acc += cover[i]
+            while k < len(names) and acc >= total * k / len(names):
+                cuts.append(i + 1)
+                k += 1
+        cuts += [hi] * (len(names) + 1 - len(cuts))
+        out = {}
+        for j, who in enumerate(names):
+            s, e = t0 + timedelta(minutes=cuts[j]), t0 + timedelta(minutes=cuts[j + 1])
+            out[who] = {"start": s.strftime(FMT), "end": e.strftime(FMT),
+                        "footage_h": round(sum(cover[cuts[j]:cuts[j + 1]]) / 3600, 2),
+                        "clips": sorted(c.name for c in camlib.clips_in_window(clips, s.isoformat(), e.isoformat()))}
+        return out
+
+    if layout == "all-laptops":
+        shares = split(0, n_min, PEOPLE)
+    elif layout == "day1-laptops-day2-hprc":
+        midnight = int(((t0.replace(hour=0, minute=0) + timedelta(days=1)) - t0).total_seconds() // 60)
+        if midnight >= n_min:
+            raise SystemExit("the clips cover only one day: use --layout all-laptops")
+        shares = {**split(0, midnight, PEOPLE), **split(midnight, n_min, [HPRC_SHARE])}
+    else:
+        raise SystemExit(f"unknown layout {layout}: {', '.join(LAYOUTS)}")
     return {"created": datetime.now().isoformat(timespec="seconds"), "videos_seen": str(Path(videos).resolve()),
-            "n_clips": len(clips), "span": [t0.strftime(FMT), t1.strftime(FMT)],
-            "footage_h_total": round(total / 3600, 2), "shares": shares}
+            "layout": layout, "n_clips": len(clips), "span": [t0.strftime(FMT), t1.strftime(FMT)],
+            "footage_h_total": round(sum(cover) / 3600, 2), "shares": shares}
+
+
+def clip_start(name: str) -> datetime | None:
+    m = camlib.EVENT_RE.search(name)
+    return datetime.strptime(m.group(1), "%Y%m%d%H%M%S") if m else None
+
+
+def missing_for_window(plan: dict, have: set[str], start: str, end: str) -> list[str]:
+    """Clips of the plan (made from the FULL footage) that a window needs, incl. the one running into its start,
+    that are not in this laptop's video folder."""
+    s, e = datetime.strptime(start, FMT), datetime.strptime(end, FMT)
+    need = [n for sh in plan["shares"].values() for n in sh["clips"]
+            if (t := clip_start(n)) is not None and s - timedelta(seconds=900) <= t < e]
+    return sorted({n for n in need if n.lower() not in have})
 
 
 def chunks_of(share: dict, chunk_hours: float, parallel: int) -> list[tuple[str, str]]:
@@ -215,6 +251,11 @@ def smoke_test(a, share: dict, minutes: int = 5) -> dict:
             return prev
     s = datetime.strptime(share["start"], FMT)
     e = s + timedelta(minutes=minutes)
+    if getattr(a, "plan", None) is not None and getattr(a, "have", None) is not None:
+        miss = missing_for_window(a.plan, a.have, s.strftime(FMT), e.strftime(FMT))
+        if miss:
+            print(f"\nSTOP: the smoke-test window needs {len(miss)} clip(s) that are not in {a.videos}: {', '.join(miss[:4])}")
+            return {"ok": False}
     print(f"\n== smoke test: {minutes} minutes of {a.who}'s share ({s:%Y-%m-%d %H:%M} -> {e:%H:%M}), full pipeline, real TAMU")
     print("   takes about 10-20 minutes; every step prints when it finishes")
     cmd = [sys.executable, "run_pipeline.py", "--videos", a.videos, "--name", name, "--out-root", str(root),
@@ -287,7 +328,7 @@ def _ask(prompt: str, default: str | None = None) -> str:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--who", choices=PEOPLE)
+    ap.add_argument("--who", choices=PEOPLE + [HPRC_SHARE])
     ap.add_argument("--videos", help="folder with the Event*.Avi clips (all 48 h, or at least this laptop's share)")
     ap.add_argument("--parallel", type=int, help="chunks running at the same time (default: from this laptop's cores/RAM/GPU)")
     ap.add_argument("--chunk-hours", type=float, default=4.0, help="target chunk length (shorter = finer resume, more ID joins)")
@@ -298,10 +339,14 @@ def main(argv=None) -> int:
     ap.add_argument("--no-id-agent", action="store_true")
     ap.add_argument("--replan", action="store_true", help="recompute plan.json from --videos (only before anyone started)")
     ap.add_argument("--plan-only", action="store_true")
+    ap.add_argument("--layout", choices=list(LAYOUTS), default="day1-laptops-day2-hprc", help="how plan.json splits the work")
     ap.add_argument("--pack", action="store_true", help="zip this laptop's results for stitch_shares.py and exit")
     ap.add_argument("--dry-run", action="store_true", help="print the chunks and exit")
     ap.add_argument("--yes", action="store_true", help="no confirmation prompt")
     ap.add_argument("--skip-checks", action="store_true", help="do not run check_setup.py first (not recommended)")
+    ap.add_argument("--allow-missing", action="store_true", help="run chunks even if some of their clips are missing")
+    ap.add_argument("--stage2-workers", type=int, help="BRD-agent threads per chunk (default 8 / parallel); HPRC: keep "
+                    "(chunks at once x workers) under ~30 so TAMU is not flooded")
     ap.add_argument("--no-smoke", action="store_true", help="skip the 5-minute smoke test (only after it passed once)")
     ap.add_argument("--smoke-only", action="store_true", help="run the checks and the 5-minute smoke test, then stop")
     a = ap.parse_args(argv)
@@ -328,7 +373,7 @@ def main(argv=None) -> int:
         raise SystemExit("give --videos")
     a.videos = str(Path(a.videos).expanduser().resolve())
     if plan is None:
-        plan = make_plan(a.videos)
+        plan = make_plan(a.videos, a.layout)
         PLAN.parent.mkdir(parents=True, exist_ok=True)
         PLAN.write_text(json.dumps(plan, indent=1), encoding="utf-8")
         print(f"wrote {PLAN.relative_to(REPO)}: {plan['n_clips']} clips, {plan['span'][0]} .. {plan['span'][1]}, "
@@ -341,11 +386,9 @@ def main(argv=None) -> int:
 
     share = plan["shares"][a.who]
     a.span_start = plan["span"][0]
+    a.plan = plan
     have = {p.name.lower() for p in Path(a.videos).rglob("*") if p.suffix.lower() in camlib.VIDEO_EXTS}
-    missing = [c for c in share["clips"] if c.lower() not in have]
-    if missing:
-        print(f"WARNING: {len(missing)} of {len(share['clips'])} clips of {a.who}'s share are not in {a.videos} "
-              f"(first: {missing[:3]}). Those minutes will be empty.")
+    a.have = have
     if not a.skip_checks:
         from check_setup import run_checks
         print()
@@ -375,11 +418,27 @@ def main(argv=None) -> int:
     a.parallel = max(1, a.parallel)
     chunks = chunks_of(share, a.chunk_hours, a.parallel)
     threads = max(1, hw["cores"] // a.parallel)
-    workers = max(2, 8 // a.parallel)     # stage 2 VLM threads per chunk: keeps total TAMU concurrency ~8
+    workers = a.stage2_workers or max(2, 8 // a.parallel)     # stage 2 VLM threads per chunk: total TAMU concurrency ~8
     print(f"\n{a.who}: {share['start']} -> {share['end']} in {len(chunks)} chunks, {a.parallel} at a time "
           f"({threads} CPU threads each, device {hw['device']}, {workers} stage 2 workers each)")
+    blocked = []
     for i, (s, e) in enumerate(chunks):
-        print(f"  {a.who}_c{i + 1:02d}: owns {s} -> {e}  (tracks from {lead_in(s, a.span_start, a.overlap_min)})")
+        miss = missing_for_window(plan, a.have, lead_in(s, a.span_start, a.overlap_min), e)
+        print(f"  {a.who}_c{i + 1:02d}: owns {s} -> {e}  (tracks from {lead_in(s, a.span_start, a.overlap_min)})  "
+              + ("clips: all present" if not miss else f"MISSING {len(miss)} clip(s), e.g. {', '.join(miss[:3])}"))
+        if miss:
+            blocked.append((i, miss))
+    if a.dry_run:
+        return 0
+    if blocked and not a.allow_missing:
+        print(f"\nSTOP: {len(blocked)} chunk(s) need clips that are not in {a.videos}.")
+        print("FIX: copy those clips into the video folder (keep the original names; any subfolder is fine), then run again.")
+        print("     (--allow-missing runs anyway: those minutes come out as 'not visible')")
+        lst = SHARES / a.who / "missing_clips.txt"
+        lst.parent.mkdir(parents=True, exist_ok=True)
+        lst.write_text("\n".join(sorted({n for _, m in blocked for n in m})) + "\n", encoding="utf-8")
+        print(f"     full list: {lst.relative_to(REPO)}")
+        return 1
     if a.dry_run:
         return 0
     if a.chunk is not None:

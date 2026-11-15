@@ -108,19 +108,23 @@ def check_packages(r: Report):
 
 
 def check_device(r: Report) -> str:
+    """The device every model will use (src/device.py: CUDA, else Apple MPS, else CPU; PEN6_DEVICE forces one),
+    and a real computation on it, so a broken GPU setup shows up here and not hours into the run."""
     try:
         import torch
-        if torch.cuda.is_available():
-            dev = f"cuda ({torch.cuda.get_device_name(0)})"
-        elif getattr(torch.backends, "mps", None) and torch.backends.mps.is_available():
-            dev = "mps (Apple GPU)"
-        else:
-            dev = "cpu"
+        from src.device import pick_device
+        dev = pick_device()
+        x = torch.randn(64, 64, device=dev)
+        float((x @ x).sum().cpu())
+        name = torch.cuda.get_device_name(0) if dev == "cuda" else ("Apple GPU" if dev == "mps" else platform.processor() or "CPU")
     except Exception as e:
-        r.add(FAIL, "PyTorch works", str(e)[:200], "reinstall torch for your platform (pytorch.org)")
+        r.add(FAIL, "GPU / device works", f"{type(e).__name__}: {str(e)[:160]}",
+              "force the CPU for this laptop:  Mac/Linux: export PEN6_DEVICE=cpu   Windows: $env:PEN6_DEVICE=\"cpu\"\n"
+              "(slower, but it works), then run this check again")
         return "none"
-    r.add(OK if dev != "cpu" else WARN, "GPU for tracking", dev,
-          "no GPU: tracking runs on the CPU and is several times slower. Use fewer chunks in parallel, or HPRC.")
+    forced = os.environ.get("PEN6_DEVICE")
+    r.add(OK if dev != "cpu" else WARN, "device for the models", f"{dev} ({name})" + (f", forced by PEN6_DEVICE" if forced else ""),
+          "no GPU: everything runs on the CPU, several times slower. Run 1 chunk at a time, or use HPRC.")
     return dev
 
 
@@ -265,10 +269,11 @@ def check_videos(r: Report, videos: str | None, who: str | None, env: dict) -> d
             share = plan["shares"][who]
             have = {c.name.lower() for c in clips}
             miss = [n for n in share["clips"] if n.lower() not in have]
-            r.add(FAIL if len(miss) > 0.02 * len(share["clips"]) else (WARN if miss else OK),
+            r.add(FAIL if miss else OK,
                   f"clips for {who}", f"{len(share['clips']) - len(miss)} of {len(share['clips'])} present "
                   f"({share['start']} -> {share['end']})" + (f"; missing e.g. {miss[:2]}" if miss else ""),
-                  "copy the missing clips into the video folder (keep the original names)")
+                  "copy the missing clips into the video folder (keep the original names); run_share.py shows which\n"
+                  "chunks need them and writes the full list to outputs/shares/<you>/missing_clips.txt")
             info["share_bytes"] = sum(os.path.getsize(c.path) for c in clips if c.name in set(share["clips"]))
     # one real decode, the way the pipeline does it: the AVIs carry HEVC under a proprietary 'GHEC' tag, so ffmpeg
     # stream-copies them into an MP4 (forcing the hevc decoder) and OpenCV reads that
@@ -349,7 +354,7 @@ def _verdict(r: Report, who: str | None) -> Report:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--who", choices=PEOPLE)
+    ap.add_argument("--who", choices=PEOPLE + ["hprc_day2"])
     ap.add_argument("--videos")
     ap.add_argument("--ffmpeg-dir")
     ap.add_argument("--no-tamu", action="store_true", help="skip the two live TAMU requests")

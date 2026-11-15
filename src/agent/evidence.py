@@ -149,7 +149,7 @@ class Embedder:
         if use_dino:
             try:
                 from ..tracking.reidentification import CowAppearanceExtractor
-                self.dino = CowAppearanceExtractor(model_name="dinov2_vits14", device="cpu")
+                self.dino = CowAppearanceExtractor(model_name="dinov2_vits14")   # CUDA / MPS / CPU (src/device.py)
             except Exception:
                 self.dino = None
 

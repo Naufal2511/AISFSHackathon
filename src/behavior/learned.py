@@ -36,11 +36,8 @@ def _device(pref: Optional[str] = None) -> str:
     import torch
     if pref and pref != "auto":
         return pref
-    if torch.cuda.is_available():
-        return "cuda"
-    if torch.backends.mps.is_available():
-        return "mps"
-    return "cpu"
+    from ..device import pick_device
+    return pick_device()
 
 
 class FineTunedBehaviorModel:

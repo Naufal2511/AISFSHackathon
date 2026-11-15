@@ -51,11 +51,18 @@ No quotes, no spaces. There must be **no** `brd_agent/.env` (it would switch sta
 
 ## 5. The plan and the footage
 
-* All laptops use the **same** `outputs/shares/plan.json`. It is made once, by whoever has every clip:
-  `python run_share.py --plan-only --videos "<folder with ALL clips>"`, then sent to the other two, who put it in
-  `outputs/shares/` (create the folder).
+* All laptops use the **same** `outputs/shares/plan.json`: Day 1 split over the three laptops, Day 2 on HPRC. It is
+  made once on HPRC from the full Google Drive listing (`docs/HPRC_PIPELINE.md` step 3) and sent to everyone; put
+  it in `outputs/shares/` (create the folder). (Without HPRC: `python run_share.py --plan-only --layout all-laptops
+  --videos "<folder with ALL clips>"`.)
 * Your video folder needs at least the clips of your share (the checker lists what is missing). Keep the original
   file names; `Cam 01 / Cam 02 / Cam 03` subfolders are fine.
+
+## 5b. GPU
+
+Nothing to set: every model uses the NVIDIA GPU (CUDA) if there is one, else the Apple GPU (MPS) on a Mac, else
+the CPU. The check below runs a computation on it. If the Mac GPU misbehaves, force the CPU for that laptop:
+`export PEN6_DEVICE=cpu` (Windows PowerShell: `$env:PEN6_DEVICE="cpu"`) before running anything.
 
 ## 6. Check the laptop
 
@@ -75,7 +82,9 @@ python run_share.py                         # Windows: python run_share.py --ffm
 
 It asks who you are and where the clips are, then:
 
-1. runs the setup checks again (stops on any FAIL);
+1. runs the setup checks again (stops on any FAIL), including that **every clip your share needs is in your video
+   folder**: if not, it stops, says which chunks are affected and writes the list to
+   `outputs/shares/<you>/missing_clips.txt`;
 2. runs a **5-minute smoke test** through the whole pipeline with real TAMU (10–20 min) and prints ✔ / ✖ for each
    check plus an estimate for your whole share. It stops if anything fails;
 3. asks the chunk length (**2** or **4** hours) and how many chunks at once (it suggests a number for your

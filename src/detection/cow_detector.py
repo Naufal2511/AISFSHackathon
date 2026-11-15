@@ -80,8 +80,9 @@ class CowDetector:
         self.model = YOLO(model_path)
         # Ultralytics does not pick the Apple GPU by default (it falls back to CPU).
         import torch
-        self.device = ("cuda:0" if torch.cuda.is_available()
-                       else "mps" if torch.backends.mps.is_available() else "cpu")
+        from ..device import pick_device
+        d = pick_device()
+        self.device = "cuda:0" if d == "cuda" else d
 
         # Resolve target classes from the model's own label map. COCO weights call the
         # class "cow" (id 19); the fine-tuned Angus weights have a single class

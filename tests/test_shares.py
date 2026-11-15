@@ -127,3 +127,20 @@ def test_minute_activity_gets_wall_time(tmp_path):
     from src.risk.data import load_activity                         # Level 2 reads it on the right clock
     la = load_activity(tmp_path / "out" / "activity.csv")
     assert la.minute.item() == int((pd.Timestamp("2026-11-08 16:00") - pd.Timestamp("1970-01-01")).total_seconds())
+
+
+def test_missing_clips_are_found_per_window():
+    plan = {"shares": {"a": {"clips": ["Event20261107095500006.Avi", "Event20261107100000006.Avi", "Event20261107100500017.Avi"]},
+                       "b": {"clips": ["Event20261107120000003.Avi"]}}}
+    have = {"event20261107100000006.avi"}
+    # 10:00-10:10 needs the clip running into 10:00 (09:55), the 10:00 one and cam2's 10:05; not the 12:00 one
+    assert run_share.missing_for_window(plan, have, "2026-11-07 10:00", "2026-11-07 10:10") == \
+        ["Event20261107095500006.Avi", "Event20261107100500017.Avi"]
+    assert run_share.missing_for_window(plan, have | {"event20261107095500006.avi", "event20261107100500017.avi"},
+                                        "2026-11-07 10:00", "2026-11-07 10:10") == []
+
+
+def test_device_override(monkeypatch):
+    from src.device import pick_device
+    monkeypatch.setenv("PEN6_DEVICE", "cpu")
+    assert pick_device() == "cpu"
