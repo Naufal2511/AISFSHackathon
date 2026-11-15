@@ -82,8 +82,13 @@ def last_json(path: Path, key: str = "by_reason") -> dict:
         except ValueError:
             i += 1
             continue
-        if isinstance(obj, dict) and key in obj:
-            out = obj
+        if isinstance(obj, dict):
+            # the summary may nest its counts one level down (brd_agent: {"by_reason_this_run", "store_status": {...}})
+            inner = [v for v in obj.values() if isinstance(v, dict) and key in v]
+            if key in obj:
+                out = obj
+            elif inner:
+                out = {**inner[0], **obj}
         i = end
 
 
