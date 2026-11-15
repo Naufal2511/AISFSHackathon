@@ -131,9 +131,21 @@ def world_positions(rec: pd.DataFrame, transformer, center_cams=("cam2",)) -> pd
 
 
 class IdentityResolver:
+    # thresholds written in seconds but compared against COUNTS of sampled seconds: at 1 fps a sample is a second;
+    # at 1 frame / 5 s the same count would mean 5x the time, so they are converted to samples
+    COUNT_KEYS = ("min_track_obs", "min_overlap", "animal_min_s_two_cams", "animal_min_s_one_cam", "min_identity_obs",
+                  "attach_min_overlap", "attach_min_obs")
+
     def __init__(self, cfg: Optional[Dict] = None):
         self.c = {**DEFAULTS, **(cfg or {})}
-        self.report: Dict = {}
+        step = float(self.c.get("sample_step", 1) or 1)
+        self.c["conflict_min_n"] = self.c["conflict_min_s"]
+        if step > 1:
+            for k in self.COUNT_KEYS:
+                if k in self.c:
+                    self.c[k] = max(2, int(np.ceil(self.c[k] / step)))
+            self.c["conflict_min_n"] = max(1, int(np.ceil(self.c["conflict_min_s"] / step)))
+        self.report: Dict = {"sample_step_s": step}
 
     # ------------------------------------------------------------------ building blocks
     def _split_points(self, g: pd.DataFrame) -> np.ndarray:
@@ -296,7 +308,7 @@ class IdentityResolver:
                 if A.t1 < B.t0 or B.t1 < A.t0:
                     continue
                 if A.cam == B.cam:
-                    if len(np.intersect1d(A.secs, B.secs)) > c["conflict_min_s"]:  # proof of 2 animals
+                    if len(np.intersect1d(A.secs, B.secs)) > c["conflict_min_n"]:  # proof of 2 animals
                         # (merges are still blocked by ANY overlap via the per-camera occupancy check)
                         cannot.add((a, b)); cannot.add((b, a))
                     continue
@@ -453,7 +465,7 @@ class IdentityResolver:
                 return False
             return True
         bigs = [x for x in order if cl[x].n >= c["min_identity_obs"] and supported(x)]
-        adj = {x: {y for y in bigs if y != x and conflict(x, y, c["conflict_min_s"])} for x in bigs}
+        adj = {x: {y for y in bigs if y != x and conflict(x, y, c["conflict_min_n"])} for x in bigs}
         clique = max_clique(adj)
         # quality order: confirmed by >= 2 cameras first, then longest (a cam1-only fragment
         # must not take a slot from a real cow); pen_size = herd size from anchors when known

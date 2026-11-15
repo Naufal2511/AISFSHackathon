@@ -64,7 +64,9 @@ def main():
 
     import yaml
     cam_pos = {k: v.get("mount_position_estimated") for k, v in yaml.safe_load(open("configs/cameras.yaml"))["cameras"].items()}
-    res = IdentityResolver({"pen_size": a.pen_size, "cam_pos": cam_pos})
+    from src.behavior.fusion import sampling_step
+    step = sampling_step(rec.t.round().astype("int64").to_numpy())     # 1 at 1 fps, 5 at 1 frame / 5 s
+    res = IdentityResolver({"pen_size": a.pen_size, "cam_pos": cam_pos, "sample_step": step})
     mapping = res.resolve(rec, None if emb is None else embed)
 
     key = list(res.row_key.reindex(rec.index))   # (camera, track piece) per row: tracks split at ID switches

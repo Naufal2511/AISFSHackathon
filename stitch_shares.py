@@ -50,6 +50,8 @@ def find_chunks(root: Path) -> list[dict]:
     out = []
     for man in sorted(root.glob("*/*/pipeline_manifest.json")):
         run = man.parent
+        if run.parent.name == "_smoke":       # run_share.py smoke tests are not part of the 48 h
+            continue
         m = json.loads(man.read_text(encoding="utf-8"))
         st = json.loads((run / "pipeline_state.json").read_text(encoding="utf-8")).get("steps", {}) \
             if (run / "pipeline_state.json").exists() else m.get("steps", {})

@@ -115,6 +115,13 @@ def main():
         keep = tl[["cow_id", "sec", "behavior", "confidence", "evidence"] + [k for k in pmap if k in tl]].rename(
             columns={"behavior": "behavior_fused", "confidence": "beh_conf_fused", "evidence": "beh_evidence", **pmap})
         s = s.merge(keep, how="left", on=["cow_id", "sec"])
+        # sparse sampling (e.g. 1 frame / 5 s): the per-second state holds each sampled label until the next sample
+        from src.behavior.fusion import sampling_step
+        step = sampling_step(keep.sec.to_numpy())
+        if step > 1:
+            s = s.sort_values(["cow_id", "sec"])
+            cols = [c for c in keep.columns if c not in ("cow_id", "sec")]
+            s[cols] = s.groupby("cow_id")[cols].ffill(limit=step - 1)
         s["model"] = a.behavior_model
     anom = []
     for r in an.itertuples():

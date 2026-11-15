@@ -273,6 +273,10 @@ def step_agent(a, cfg, run: Run, env) -> dict:
     base, s2 = _dbcli(a, cfg, run)
     cmd = base + ["run", "--backend", "video", "--video-root", run.input, "--vlm", a.vlm,
                   "--trace-dir", run.traces, "--workers", a.workers] + list(a.agent_args)
+    per_h = cfg.get("stage2", {}).get("max_agent_runs_per_hour")
+    if per_h and "--max-agent-runs" not in a.agent_args and a.start and a.end:
+        hours = (datetime.fromisoformat(a.end.replace(" ", "T")) - datetime.fromisoformat(a.start.replace(" ", "T"))).total_seconds() / 3600
+        cmd += ["--max-agent-runs", max(10, int(round(per_h * hours)))]     # predictable TAMU load per chunk
     _run_cmd("agent", cmd, s2, _s2_env(env, s2, cfg), run.logs / "4_agent.log", a.quiet)
     return {"traces": str(run.traces)}
 

@@ -20,7 +20,8 @@ cameras:
 
 stage1:
   detector: models/angus_det_hprc_m1280.pt   # fine-tuned YOLO26m (Git LFS); main.py's default
-  fps: 1.0          # frames per second sampled for tracking (the data contract is 1 s resolution)
+  fps: 0.2          # frames per second sampled for tracking: 1 frame every 5 s (the brief allows sampling).
+                    # Behavior is smoothed on the same 5 s grid and held per second in the contract.
   imgsz: 1280       # detector input size (main.py default; 640 loses far-field cows on 4K)
   herd_size: 10     # identity cap passed to run_level1.py --pen-size (the pen holds at most 10)
   id_agent: true    # supervisor agent on identity flags only (duplicate_id, id_jump, extra_cow, cow_missing, 30-min audit)
@@ -35,3 +36,6 @@ stage2:
   vlm: auto         # auto = brd_agent/.env if present, else TAMU (TAMU_API_KEY in the repo .env); mock = no API calls
   tamu_profile: tamu_luna   # configs/agent.yaml profile used for stage 2 when brd_agent/.env is absent
   workers: 8        # cows verified in parallel (threads; the time is spent waiting on the VLM and on ffmpeg)
+  max_agent_runs_per_hour: 120   # full BRD-agent runs per hour of footage (10 cows = 600 cow-minutes/h, so ~20%);
+                                 # the rest keep the rule-checked stage 1 label. Night sends every minute to the
+                                 # agent otherwise (10 min of night = 70 runs, ~620k TAMU tokens).

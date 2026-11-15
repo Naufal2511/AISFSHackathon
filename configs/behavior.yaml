@@ -2,7 +2,8 @@
 # Every threshold here is a physical/biological quantity, so it can be defended to the judges.
 
 timeline:
-  step_sec: 1.0              # internal resolution of the per-cow timeline
+  step_sec: auto             # internal resolution of the per-cow timeline: auto = the sampling interval (1 s at
+                             # 1 fps, 5 s at 0.2 fps), so sparse sampling is not mistaken for unseen gaps
   gap_fill_sec: 45           # unseen gaps shorter than this inherit the surrounding state (HMM bridges them)
   minute_majority_min: 0.5   # a minute's label is "mixed" evidence below this share (still reported)
 

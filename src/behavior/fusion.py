@@ -212,12 +212,22 @@ def _viterbi(E: np.ndarray, A: np.ndarray, pi: np.ndarray) -> np.ndarray:
     return path
 
 
+def sampling_step(secs) -> int:
+    """Seconds between samples (the tracker's 1/fps): the most common positive difference, at least 1."""
+    d = np.diff(np.unique(np.asarray(secs, dtype=np.int64)))
+    d = d[(d > 0) & (d <= 60)]
+    if not len(d):
+        return 1
+    v, c = np.unique(d, return_counts=True)
+    return max(1, int(v[c.argmax()]))
+
+
 def smooth_cow(fused_cow: pd.DataFrame, cfg: Dict, session_gap_sec: int = 300, temperature: float = 0.6) -> pd.DataFrame:
     """Builds a dense 1-s timeline for one cow and decodes it with the HMM."""
     tl = cfg["timeline"]
-    step = int(tl["step_sec"])
     fused_cow = fused_cow.sort_values("sec")
     secs = fused_cow["sec"].to_numpy()
+    step = sampling_step(secs) if str(tl.get("step_sec", "auto")) == "auto" else int(float(tl["step_sec"]))
     probs = behavior_probabilities(fused_cow, cfg.get("learned_model", {}).get("gates")) ** temperature  # correlated frames -> temper evidence
     fused_cow = fused_cow.assign(emission=np.where(learned_mask(fused_cow), "learned", "heuristic"))
     A = transition_matrix(cfg, step)

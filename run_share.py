@@ -200,6 +200,86 @@ def pack(who: str) -> Path:
     return out
 
 
+def smoke_test(a, share: dict, minutes: int = 5) -> dict:
+    """5 minutes from the start of this share through the WHOLE pipeline (tracking, identity agent, assets, BRD agent,
+    export), then checks the outputs. Separate folder (outputs/shares/_smoke/), never stitched."""
+    root = SHARES / "_smoke"
+    name = f"{a.who}_smoke"
+    run = root / name
+    res_p = run / "smoke_result.json"
+    if res_p.exists():
+        prev = json.loads(res_p.read_text(encoding="utf-8"))
+        if prev.get("ok"):
+            print(f"\nsmoke test already passed on {prev.get('time')} ({prev.get('minutes_per_footage_minute')} min per minute "
+                  f"of footage); delete {run.relative_to(REPO)} to redo it")
+            return prev
+    s = datetime.strptime(share["start"], FMT)
+    e = s + timedelta(minutes=minutes)
+    print(f"\n== smoke test: {minutes} minutes of {a.who}'s share ({s:%Y-%m-%d %H:%M} -> {e:%H:%M}), full pipeline, real TAMU")
+    print("   takes about 10-20 minutes; every step prints when it finishes")
+    cmd = [sys.executable, "run_pipeline.py", "--videos", a.videos, "--name", name, "--out-root", str(root),
+           "--start", s.strftime(FMT), "--end", e.strftime(FMT), "--until", "export", "--quiet", "--from", "prepare"]
+    if a.ffmpeg_dir:
+        cmd += ["--ffmpeg-dir", a.ffmpeg_dir]
+    if a.vlm:
+        cmd += ["--vlm", a.vlm]
+    t = time.time()
+    p = subprocess.run(cmd, cwd=REPO)
+    took = time.time() - t
+    checks, ok = [], p.returncode == 0
+    def chk(cond, text, fix=""):
+        nonlocal ok
+        checks.append({"ok": bool(cond), "check": text, "fix": fix})
+        ok = ok and bool(cond)
+        print(f"   {'✔' if cond else '✖'} {text}" + ("" if cond or not fix else f"\n       FIX: {fix}"))
+    print("\n== smoke test results")
+    chk(p.returncode == 0, f"pipeline finished (exit {p.returncode})", f"read the newest log in {run / 'logs'}")
+    fin = run / "final"
+    import pandas as pd
+    if (fin / "activity.csv").exists():
+        b = pd.read_csv(fin / "activity.csv")
+        m = pd.read_csv(fin / "activity_minute.csv")
+        win = m[(pd.to_datetime(m.minute_start) >= s) & (pd.to_datetime(m.minute_start) < e)]
+        cows = int(win[win.basis != "not_visible"].cow_id.nunique())
+        chk(cows >= 5, f"cows identified and labelled: {cows} (pen of 10)",
+            "too few cows: check this window's clips cover all 3 cameras; tell the team before running the share")
+        rep_p = run / "stage1" / "level1" / "identity" / "identity_report.json"
+        if rep_p.exists():
+            share_id = float(json.loads(rep_p.read_text(encoding="utf-8")).get("assigned_box_share") or 0)
+            chk(share_id >= 0.6, f"boxes given a cow ID: {share_id:.0%}",
+                "identity is failing on this laptop: stop and tell the team (do not run the share)")
+        seen = win.basis.value_counts().to_dict()
+        chk(sum(v for k, v in seen.items() if k != "not_visible") > 0, f"labelled cow-minutes by basis: {seen}")
+        chk(set(b.columns) >= {"cow_id", "start_time", "end_time", "behavior", "basis"}, f"activity.csv: {len(b)} bouts, brief format")
+        chk((fin / "time_budgets.csv").exists(), "time_budgets.csv written")
+    else:
+        chk(False, "final/activity.csv written", f"read {run / 'logs'}")
+    idsum = run / "stage1" / "level1" / "agent" / "agent_summary.json"
+    if idsum.exists():
+        j = json.loads(idsum.read_text(encoding="utf-8"))
+        chk("tamu" in str(j.get("backend", "")).lower() or "chat-api" in str(j.get("backend", "")),
+            f"identity agent on TAMU: {j.get('investigations')} cases, {j.get('vlm_calls')} calls", "TAMU_API_KEY in .env")
+    s2 = (run / "logs" / "4_agent.log")
+    if s2.exists():
+        txt = s2.read_text(encoding="utf-8", errors="replace")
+        n_err = txt.count("error_fallback")
+        chk("gpt" in txt or "protected." in txt or a.vlm == "mock", "BRD agent called TAMU", "TAMU_API_KEY in .env; delete brd_agent/.env")
+        chk(n_err == 0, f"BRD agent errors: {n_err}", f"see {s2}")
+    per_min = took / 60 / minutes
+    share_min = (datetime.strptime(share["end"], FMT) - datetime.strptime(share["start"], FMT)).total_seconds() / 60
+    res = {"ok": ok, "time": datetime.now().isoformat(timespec="seconds"), "seconds": round(took),
+           "minutes_per_footage_minute": round(per_min, 2), "checks": checks}
+    run.mkdir(parents=True, exist_ok=True)
+    res_p.write_text(json.dumps(res, indent=1), encoding="utf-8")
+    print(f"\n   took {took / 60:.1f} min for {minutes} min of footage ({per_min:.2f} min per minute).")
+    print(f"   rough estimate for the whole share ({share_min / 60:.1f} h of wall clock): "
+          f"{per_min * share_min / 60:.1f} h with 1 chunk at a time, ~{per_min * share_min / 60 / 1.4:.1f} h with 2 "
+          f"(long chunks amortise start-up, so usually less)")
+    print(f"   {'SMOKE TEST PASSED' if ok else 'SMOKE TEST FAILED: fix the lines marked ✖ and run again'}")
+    print(f"   look at it: python scripts/run_viewer.py --run {run.relative_to(REPO)}   (then open {run.relative_to(REPO)}/viewer.html)")
+    return res
+
+
 def _ask(prompt: str, default: str | None = None) -> str:
     v = input(f"{prompt}{f' [{default}]' if default else ''}: ").strip()
     return v or (default or "")
@@ -221,6 +301,9 @@ def main(argv=None) -> int:
     ap.add_argument("--pack", action="store_true", help="zip this laptop's results for stitch_shares.py and exit")
     ap.add_argument("--dry-run", action="store_true", help="print the chunks and exit")
     ap.add_argument("--yes", action="store_true", help="no confirmation prompt")
+    ap.add_argument("--skip-checks", action="store_true", help="do not run check_setup.py first (not recommended)")
+    ap.add_argument("--no-smoke", action="store_true", help="skip the 5-minute smoke test (only after it passed once)")
+    ap.add_argument("--smoke-only", action="store_true", help="run the checks and the 5-minute smoke test, then stop")
     a = ap.parse_args(argv)
     os.chdir(REPO)
     interactive = sys.stdin.isatty() and not a.yes
@@ -263,7 +346,27 @@ def main(argv=None) -> int:
     if missing:
         print(f"WARNING: {len(missing)} of {len(share['clips'])} clips of {a.who}'s share are not in {a.videos} "
               f"(first: {missing[:3]}). Those minutes will be empty.")
+    if not a.skip_checks:
+        from check_setup import run_checks
+        print()
+        rep = run_checks(a.who, a.videos, a.ffmpeg_dir)
+        if rep.failed:
+            print("\nFix the FAIL lines above, then run this command again. Nothing was started.")
+            return 1
+        if interactive and _ask("\ncontinue? (y/n)", "y").lower() not in ("y", "yes"):
+            return 0
     hw = hardware()
+    if not a.no_smoke:
+        res = smoke_test(a, share)
+        if not res.get("ok"):
+            return 1
+        if a.smoke_only:
+            return 0
+        if interactive and _ask(f"\nsmoke test passed. Continue with {a.who}'s full share? (y/n)", "y").lower() not in ("y", "yes"):
+            return 0
+    if interactive and a.chunk is None:
+        v = _ask("chunk length in hours (2 or 4)", str(int(a.chunk_hours)) if a.chunk_hours in (2, 4) else "4")
+        a.chunk_hours = float(v) if v in ("2", "4", "2.0", "4.0") else a.chunk_hours
     if a.parallel is None:
         a.parallel = hw["suggested_parallel"]
         if interactive:
