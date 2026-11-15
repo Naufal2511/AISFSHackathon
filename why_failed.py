@@ -25,6 +25,7 @@ REPO = Path(__file__).resolve().parent
 SHARES = REPO / "outputs" / "shares"
 STEP_LOG = {"track": "1_track.log", "level1": "2_level1.log", "assets": "2b_assets.log", "import": "3_import.log",
             "agent": "4_agent.log", "export": "5_export.log", "level2": "6_level2.log"}
+EXTRA_LOG = {"level1": "stage1/level1/level1_log.txt"}
 # Only used when the process cannot be checked (HPRC login node, no psutil): a 'running' step whose log has been
 # silent this long is probably dead. A quiet log alone proves nothing: level1's behavior model prints nothing for
 # ~40 min (c01: 39 min with the GPU to itself, longer while other chunks track).
@@ -66,6 +67,9 @@ CAUSES = [
     (r"could not be broadcast together with shapes \(\d+,\) \(\d+,\)",
      "a tracking bug in code older than commit 4124414 (appearance vectors of different lengths)",
      "git pull, then rerun the same command"),
+    (r"apply_id_corrections|invalid literal for int\(\) with base 10: 't\d+",
+     "identity-agent bug in older code: the model named a track as 't250/t251' and the code expected one number",
+     "git pull (the fix reads such track ids), then rerun the same command"),
     (r"steps in a row failed",
      "tracking skipped too many seconds in a row: something is really broken (see the errors below)",
      "read the step_errors.log lines below; fix that cause; rerun (it resumes from the checkpoint)"),
@@ -210,6 +214,9 @@ def report_run(run: Path, chunk_log: Path | None = None) -> bool:
         return bool(done)
     name, s, log = bad
     lines = tail_lines(log)
+    inner = run / EXTRA_LOG.get(name, "-")     # level1's sub-steps write their tracebacks here, not in 2_level1.log
+    if inner.is_file():
+        lines += [f"----- {inner.relative_to(run)}"] + tail_lines(inner, 400, latest=False)
     text = "\n".join([s.get("error", "")] + lines[-300:])
     if chunk_log:
         text += "\n" + "\n".join(tail_lines(chunk_log, 60))

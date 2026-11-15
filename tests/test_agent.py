@@ -203,3 +203,32 @@ class TestToolImages(unittest.TestCase):
         a, b = np.zeros((88, 100, 3), np.uint8), np.zeros((256, 300, 3), np.uint8)
         self.assertEqual(hcat([a, b]).shape, (256, 408, 3))
         self.assertEqual(vcat([a, b]).shape, (344, 300, 3))
+
+
+class TrackIdFromModel(unittest.TestCase):
+    """The identity agent's track_id comes from the model: nooh_training_c02 crashed on int("t250/t251")."""
+
+    def test_track_ids_parsing(self):
+        from src.agent.loop import track_ids
+        self.assertEqual(track_ids(250), [250])
+        self.assertEqual(track_ids(250.0), [250])
+        self.assertEqual(track_ids("t250"), [250])
+        self.assertEqual(track_ids("t250/t251"), [250, 251])
+        self.assertEqual(track_ids("track ?"), [])
+        self.assertEqual(track_ids(float("nan")), [])
+        self.assertEqual(track_ids(None), [])
+
+    def test_odd_track_ids_never_stop_the_run(self):
+        r = rec_rows()
+        corr = pd.DataFrame([
+            dict(decision="uncertain", camera="cam1", track_id="t2/t3", t0_epoch=T0, t1_epoch=T0 + 10),
+            dict(decision="uncertain", camera="cam1", track_id="track ?", t0_epoch=T0, t1_epoch=T0 + 10),
+            dict(decision="relabel", camera="cam1", track_id="t4/t5", new_cow_id="COW_09", t0_epoch=T0, t1_epoch=T0 + 10),
+            dict(decision="relabel", camera="cam1", track_id="t6", new_cow_id="COW_10", t0_epoch=T0 + 20, t1_epoch=T0 + 30),
+        ])
+        out = apply_id_corrections(r, corr)
+        win = out.t <= T0 + 10
+        self.assertEqual(out[out.local_track_id.isin([2, 3]) & win].global_cow_id.isna().sum(), 22)   # both tracks
+        self.assertEqual(out.global_cow_id.isna().sum(), 22)                     # the unreadable one touched nothing
+        self.assertTrue((out[(out.local_track_id == 4) & win].global_cow_id == "COW_04").all())   # 2-track relabel skipped
+        self.assertTrue((out[(out.local_track_id == 6) & out.t.between(T0 + 20, T0 + 30)].global_cow_id == "COW_10").all())

@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import time
 from concurrent.futures import ThreadPoolExecutor
 from typing import Dict, List, Optional
@@ -369,31 +370,55 @@ def render_trace(tr: Dict, hms) -> str:
 
 
 # ---------------------------------------------------------------------- corrections
+def track_ids(v) -> list[int]:
+    """The agent's track_id as integers. It comes from the model, so it is not always one number: 250, 250.0,
+    "250", "t250", or two tracks at once, "t250/t251" (nooh_training_c02 crashed on int("t250/t251")).
+    Nothing usable -> []."""
+    if v is None or isinstance(v, bool):
+        return []
+    if isinstance(v, (int, np.integer)):
+        return [int(v)]
+    if isinstance(v, (float, np.floating)):
+        return [int(v)] if np.isfinite(v) and float(v).is_integer() else []
+    return [int(x) for x in re.findall(r"\d+", str(v))]
+
+
 def apply_id_corrections(rec: pd.DataFrame, corr: pd.DataFrame) -> pd.DataFrame:
     """relabel -> new ID on that track/time; uncertain -> ID removed (counted as not visible
-    rather than credited to a possibly wrong cow)."""
+    rather than credited to a possibly wrong cow). A correction whose track id cannot be read is skipped, never
+    allowed to stop the run; a relabel naming several tracks is skipped (one ID on two tracks could be a duplicate)."""
     out = rec.copy()
     out["agent_action"] = ""
     if corr is None or corr.empty:
         return out
+    skipped = 0
     for c in corr.itertuples():
         t0 = getattr(c, "t0_epoch", np.nan)
         t1 = getattr(c, "t1_epoch", np.nan)
         if pd.isna(t0) or pd.isna(t1):
             continue
+        tids = track_ids(getattr(c, "track_id", None))
         if c.decision == "relabel" and pd.notna(getattr(c, "track_id", np.nan)):
-            m = (out.camera_id == c.camera) & (out.local_track_id == int(c.track_id)) & out.t.between(t0, t1)
+            if len(tids) != 1:
+                skipped += 1
+                continue
+            m = (out.camera_id == c.camera) & (out.local_track_id == tids[0]) & out.t.between(t0, t1)
             out.loc[m, "global_cow_id"] = c.new_cow_id
             out.loc[m, "agent_action"] = "relabel"
         elif c.decision == "uncertain":
-            if pd.notna(getattr(c, "track_id", np.nan)) and isinstance(getattr(c, "camera", None), str):
-                m = (out.camera_id == c.camera) & (out.local_track_id == int(c.track_id)) & out.t.between(t0, t1)
+            if tids and isinstance(getattr(c, "camera", None), str):
+                m = (out.camera_id == c.camera) & out.local_track_id.isin(tids) & out.t.between(t0, t1)
+            elif pd.notna(getattr(c, "track_id", np.nan)) and not isinstance(getattr(c, "cow_id", None), str):
+                skipped += 1
+                continue
             elif isinstance(getattr(c, "cow_id", None), str):
                 m = (out.global_cow_id == c.cow_id) & out.t.between(t0, t1)
             else:
                 continue
             out.loc[m, "global_cow_id"] = np.nan
             out.loc[m, "agent_action"] = "uncertain"
+    if skipped:
+        print(f"[AGENT] {skipped} correction(s) skipped: track id not usable (see corrections.csv)")
     return out
 
 
