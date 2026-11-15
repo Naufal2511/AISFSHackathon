@@ -18,6 +18,16 @@ from .evidence import crop, label, tile
 from .memory import Memory
 
 
+def _fit(im: np.ndarray, cell: int) -> np.ndarray:
+    """Letterbox a crop into a cell x cell square, so the label drawn on top is never cut off by a narrow crop."""
+    s = cell / max(im.shape[:2])
+    r = cv2.resize(im, (max(1, int(im.shape[1] * s)), max(1, int(im.shape[0] * s))))
+    out = np.zeros((cell, cell, 3), np.uint8)
+    y, x = (cell - r.shape[0]) // 2, (cell - r.shape[1]) // 2
+    out[y:y + r.shape[0], x:x + r.shape[1]] = r
+    return out
+
+
 def build_sheet(t: float, rec: pd.DataFrame, frames, memory: Memory, embedder, out_dir: str,
                 cameras=("cam1", "cam2", "cam3"), tol: float = 30.0) -> Tuple[str, List[Dict], np.ndarray]:
     os.makedirs(out_dir, exist_ok=True)
@@ -49,7 +59,7 @@ def build_sheet(t: float, rec: pd.DataFrame, frames, memory: Memory, embedder, o
             best = sim[0] if sim else (None, None)
             tag = f"{cam} t{int(r.local_track_id)}" + (f" sim {own:.2f}" if own is not None else "")
             ok = best[0] in (None, cid)
-            cells.append(label(crop(fr, bb, pad=0.05, size=cell), tag, (255, 255, 255) if ok else (0, 0, 255)))
+            cells.append(label(_fit(crop(fr, bb, pad=0.05, size=cell), cell), tag, (255, 255, 255) if ok else (0, 0, 255)))
             row.update({f"{cam}_seen": True, f"{cam}_track": int(r.local_track_id),
                         f"{cam}_sim_own": None if own is None else round(own, 3),
                         f"{cam}_best": best[0], f"{cam}_best_sim": None if best[1] is None else round(best[1], 3)})
