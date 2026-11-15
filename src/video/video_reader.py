@@ -65,7 +65,8 @@ class FrameReader:
         """Losslessly remuxes GHEC / proprietary AVI to standard MP4 container via stream copy."""
         import subprocess
         base_name = os.path.splitext(os.path.basename(video_path))[0]
-        out_mp4 = f"/tmp/remux_{base_name}.mp4"
+        from .clip_sequence import REMUX_DIR
+        out_mp4 = os.path.join(REMUX_DIR, f"remux_{base_name}.mp4")
         if os.path.exists(out_mp4) and os.path.getsize(out_mp4) > 1000:
             return out_mp4
 

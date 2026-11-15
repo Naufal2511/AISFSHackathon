@@ -36,3 +36,7 @@ __pycache__/
 # --- Model weights (stored with Git LFS) ---
 !models/*.pt
 !models/behavior/*.pt
+
+# --- brd_agent (stage 2): real tracking sample = event data; local runs / caches ---
+brd_agent/examples/tracking_sample/
+brd_agent/.pytest_cache/

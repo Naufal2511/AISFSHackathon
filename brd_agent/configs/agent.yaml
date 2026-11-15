@@ -1,0 +1,77 @@
+prompt_version: v3
+planner: llm              # llm | rules  (rules = deterministic plan from the tier-1 confusion pair; saves 1 VLM call)
+blind_first_look: true    # hypothesis prompt does NOT see the tier-1 guess (reduces anchoring)
+critique_below: 0.70      # run critic when hypothesis confidence is below this
+max_images: 6             # images attached to one VLM call
+budget:
+  max_tool_calls: 8
+  max_vlm_calls: 5        # plan + hypothesis + needs-round hypothesis + critique + revised hypothesis
+gate:
+  conf_threshold: 0.60
+  entropy_threshold: 1.20
+  pair_gap: 0.25
+  rare_conf: 0.75
+  min_id_conf: 0.60
+  night_vis: 0.40
+  night_conf: 0.75          # stricter confidence needed to keep YOLO's label at night
+  abstain_vis: 0.08
+verifier:
+  min_bunk_frac_feeding: 0.30
+  min_waterer_frac_drinking: 0.10
+  walk_speed_px_s: 20.0     # ASSUMPTION: depends on working resolution; calibrate on labeled data
+  still_speed_px_s: 6.0
+  min_visible: 0.15
+  premature_abstain_vis: 0.60
+  rumination_min_jaw: 0.35  # ASSUMPTION: heuristic jaw-motion threshold; calibrate
+  rumination_hz: [0.6, 1.4] # ASSUMPTION: cud-chewing band; verify against labeled bursts
+  min_exemplar_sim: 0.50
+  min_id_conf: 0.60
+  soft_penalty: 0.75        # confidence multiplier per soft failure
+  bout_break_min: 8         # ASSUMPTION: bouts this long count as 'established'; leaving one is flagged softly
+vlm:                        # provider-independent settings; key/model/URL come from .env (USE_LOCAL_VLM switch)
+  temperature: 0.0          # local provider only (OpenAI: OPENAI_TEMPERATURE)
+  max_tokens: 600           # local provider only (OpenAI: OPENAI_MAX_COMPLETION_TOKENS)
+  timeout_s: 120
+  max_image_side: 768
+  cache_dir: cache/vlm
+history:                    # same-cow, short-window context from the store (minutes CSV) (no Day-1 or herd priors)
+  enabled: true
+  lookback_min: 30
+  bout_lookback_min: 180
+  since_lookback_min: 240
+  lookahead_min: 2          # next-minute TIER-1 guesses (offline only); set 0 for live operation
+night:                      # footage taken in the dark / with infrared lighting
+  brightness_thresh: 70     # ASSUMPTION: mean luminance below this = night; tune on your frames (night is measured from the frame)
+  ir_saturation_thresh: 0.04  # ASSUMPTION: near-grayscale frames look infrared
+  max_confidence: 0.85      # cap on final confidence for night minutes
+  min_visible: 0.30         # stricter visibility floor at night
+  clahe_clip: 3.0
+  gamma: 0.6
+  needs_measurement: [grooming, drinking, social_interaction]   # fine labels that need a measured cue at night
+verify:                     # how YOLO's results are verified
+  audit_rate: 0.05          # share of confident minutes re-checked by the full agent (random but deterministic)
+  night_audit_rate: 0.25
+  audit_seed: 13
+  verify_all: false         # true = every minute goes through the full agent (most thorough, ~10x the VLM cost)
+  find_missing: true        # try to recover cow-minutes YOLO produced nothing for
+  rumination_screen: true   # jaw-motion check on confident standing/lying minutes (ruminating is the commonest hidden YOLO miss)
+  screen_seconds: 20
+  expected_cows: 10
+calm:                       # skip the VLM for cows that are not doing anything (tracking input only)
+  enabled: true
+  min_stability: 0.98       # share of seconds in the minute with the same label
+  min_conf: 0.90            # lowest fused per-second confidence
+  min_obs_frac: 0.95        # share of seconds observed (not gap-filled / not visible)
+  max_speed_p90: 0.25       # m/s
+  min_id_conf: 0.80
+  recheck_every_min: 10     # one verified minute (the anchor) per calm bout, then re-verify at least this often
+  labels: [lying, standing, feeding]
+video:
+  camera_alias: {cam1: front, cam2: top, cam3: back}   # tracking camera id -> slot (cam2 = Front Camera 2 / bunk is stored in the 'top' slot)
+  root: null                # folder with Event*.Avi files (one sub-folder per camera)
+  camera_map: null          # e.g. {Cam1: back, Cam2: front, Cam3: top}; default maps sorted sub-folders to back, front, top
+  pen_map: null             # YAML with feed_bunk / waterer / resting polygons per camera (needed for zone checks)
+  record_hz: null           # null = infer from the YOLO records
+  day_origin: midnight      # midnight | first_file_start
+  head_frac: 0.35           # ASSUMPTION: head = top 35% of the cow box
+  recovered_visibility: 0.5

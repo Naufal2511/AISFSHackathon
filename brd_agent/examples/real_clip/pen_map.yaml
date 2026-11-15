@@ -1,0 +1,6 @@
+# Pixel polygons in the NATIVE 4000x3000 frame of the camera, per camera. ROUGH, hand-placed for the sample clip:
+# redraw them on a frame from each real camera. Cow centres inside a polygon count as being in that zone.
+back:
+  feed_bunk: [[2780, 780], [3050, 780], [3050, 1000], [2780, 1000]]
+  waterer: []
+  resting: [[1700, 600], [2300, 600], [2300, 1000], [1700, 1000]]

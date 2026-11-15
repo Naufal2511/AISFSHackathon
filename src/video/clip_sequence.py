@@ -24,6 +24,7 @@ import math
 import os
 import re
 import subprocess
+import tempfile
 import threading
 from dataclasses import dataclass
 from datetime import datetime
@@ -34,7 +35,11 @@ import numpy as np
 
 EVENT_RE = re.compile(r"Event(\d{14})")
 VIDEO_EXTS = (".avi", ".mp4", ".mkv", ".mov")
-REMUX_DIR = "/tmp"
+# Remuxed MP4 copies of the HEVC AVIs. /tmp on Mac/Linux (unchanged); on Windows "/tmp" means C:/tmp, which usually
+# does not exist (every remux then fails and OpenCV cannot open the clips), so use the system temp folder there.
+# PEN6_REMUX_DIR overrides both (run_pipeline.py points it at a per-run cache so later steps reuse the remuxes).
+REMUX_DIR = os.environ.get("PEN6_REMUX_DIR") or ("/tmp" if os.name != "nt" else tempfile.gettempdir())
+os.makedirs(REMUX_DIR, exist_ok=True)
 
 
 def parse_event_time(name: str) -> Optional[datetime]:
@@ -129,7 +134,7 @@ class ClipSequenceReader:
         wall_end: Union[None, str, datetime] = None,
         emit_gaps: bool = False,
         max_gap_sec: float = 10.0,
-        keep_remux: bool = False,
+        keep_remux: Optional[bool] = None,
         max_clip_sec: float = 900.0,
     ):
         self.all_clips = list_clips(source)
@@ -149,7 +154,8 @@ class ClipSequenceReader:
         self.target_fps = target_fps
         self.emit_gaps = emit_gaps
         self.max_gap_sec = max_gap_sec
-        self.keep_remux = keep_remux
+        # None = PEN6_KEEP_REMUX env (run_pipeline.py sets 1 so identity / rumination / stage 2 reuse the remuxes)
+        self.keep_remux = keep_remux if keep_remux is not None else os.environ.get("PEN6_KEEP_REMUX") == "1"
 
         t0 = max(0.0, start_sec)
         if self.wall_start is not None:

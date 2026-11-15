@@ -46,7 +46,8 @@ class FrameStore:
         m = EVENT_RE.search(source_video)
         p = self.index.get(m.group(0)) if m else None
         if p is None:
-            p = os.path.join("/tmp", source_video)
+            from ..video.clip_sequence import REMUX_DIR
+            p = os.path.join(REMUX_DIR, source_video)
             return p if os.path.exists(p) else None
         return readable_path(p)[0]
 

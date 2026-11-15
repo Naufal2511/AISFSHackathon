@@ -1,0 +1,37 @@
+# Single source of truth for behavior labels. Injected into prompts AND used by the verifier/gate.
+# Edit definitions here; every teammate labels from this file. Bump the prompt version when this changes.
+classes:
+  lying:
+    definition: "Body recumbent (sternum/flank on ground, legs folded), head up or resting, NOT chewing cud."
+    confusers: [ruminating_lying, other_not_visible]
+  standing:
+    definition: "Upright on all four legs, little or no displacement over the minute, not eating, drinking or chewing cud."
+    confusers: [feeding, ruminating_standing, walking]
+  walking:
+    definition: "Upright and moving: sustained displacement of roughly one body length or more within the minute."
+    confusers: [standing]
+  feeding:
+    definition: "Head over/in the feed bunk (head point inside the bunk polygon), muzzle at feed or swallowing; the cow is at the bunk."
+    confusers: [standing, social_interaction]
+  drinking:
+    definition: "Muzzle at the waterer (head point in the waterer polygon), head lowered to water."
+    confusers: [standing]
+  ruminating_lying:
+    definition: "Lying AND rhythmic jaw cycling (about 1 cycle/s, cud chewing) with a relaxed head."
+    confusers: [lying]
+  ruminating_standing:
+    definition: "Standing AND rhythmic jaw cycling (about 1 cycle/s) with a relaxed head."
+    confusers: [standing]
+  grooming:
+    definition: "Licking own body, scratching or rubbing on pen fixtures; head turned to flank/legs or rubbing on an object."
+    confusers: [standing, other_not_visible]
+  social_interaction:
+    definition: "Physical contact with another cow: licking, head-butting, pushing, mounting, displacing from the bunk."
+    confusers: [standing, feeding]
+  other_not_visible:
+    definition: "Cow not identifiable or too occluded/dark to classify, or behavior not covered above. PREFERRED over guessing."
+    confusers: []
+tie_break_rules:
+  - "Dominant behavior = the one occupying the largest share of the minute."
+  - "If rumination (jaw cycling) is confirmed, rumination label wins over lying/standing."
+  - "If the cow is at the bunk with head down for most of the minute, feeding wins over standing."

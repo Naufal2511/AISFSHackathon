@@ -1,0 +1,11 @@
+cow_id,ear_tag,distinguishing_features,seen_in_sample_clip
+C01,unknown,large black cow; no visible tag from this angle,yes
+C02,red/pink tag (left ear),black; partly hidden behind C01,yes
+C03,red/pink tag,black; behind C02,yes
+C04,yellow tag,WHITE FACE BLAZE (easy to recognise),yes
+C05,yellow tag,black; lying in the pen centre,yes
+C06,unknown,black; at left edge of frame near the fence,yes
+C07,white tag,black; at the feeder,yes
+C08,,,no (not in view during the sample)
+C09,,,no
+C10,,,no

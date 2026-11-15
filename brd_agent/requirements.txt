@@ -1,0 +1,9 @@
+pydantic>=2.5
+pyyaml
+pillow
+numpy
+requests
+opencv-python-headless
+pytest
+# optional, only to run your own YOLO weights as the missed-cow detector:
+# ultralytics

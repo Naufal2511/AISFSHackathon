@@ -1,0 +1,4 @@
+cow_id,day,minute,tier1_top,speed_px_s,posture,vis_back,vis_front,vis_top,id_conf,is_night,zone_feed_bunk,zone_waterer,zone_resting,zone_open
+C01,1,0,lying:0.95;standing:0.03,0.4,lying,0.7,0.5,0.9,0.97,1,0,0,0.9,0.1
+C01,1,1,lying:0.52;ruminating_lying:0.38,0.4,lying,0.7,0.5,0.9,0.96,1,0,0,0.9,0.1
+C01,1,2,standing:0.41;feeding:0.33;walking:0.10,3.1,standing,0.3,0.8,0.6,0.90,1,0.55,0,0,0.45
