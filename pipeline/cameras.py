@@ -144,9 +144,31 @@ def link_inputs(clips: list[ClipInfo], dest: str | Path) -> dict:
             os.link(c.path, out)
             stats["linked"] += 1
         except OSError:
-            shutil.copy2(c.path, out)
-            stats["copied"] += 1
+            try:                                    # other volume (external drive): a symlink costs no disk either
+                os.symlink(c.path, out)
+                stats["symlinked"] = stats.get("symlinked", 0) + 1
+            except OSError:                         # e.g. Windows without symlink rights
+                shutil.copy2(c.path, out)
+                stats["copied"] += 1
     return stats
+
+
+def clips_in_window(clips: list[ClipInfo], start: Optional[str], end: Optional[str],
+                    max_clip_sec: float = 900.0) -> list[ClipInfo]:
+    """Only the clips a wall-clock window can touch (a clip that starts up to max_clip_sec before `start` may still
+    cover it). Keeps chunked runs from linking, or worse copying, all 48 h of footage."""
+    from datetime import datetime, timedelta
+    p = lambda v: datetime.fromisoformat(str(v).replace(" ", "T")) if v else None
+    t0, t1 = p(start), p(end)
+    out = []
+    for c in clips:
+        cs = datetime.fromisoformat(c.start)
+        if t0 is not None and cs < t0 - timedelta(seconds=max_clip_sec):
+            continue
+        if t1 is not None and cs >= t1:
+            continue
+        out.append(c)
+    return out
 
 
 def summary(clips: list[ClipInfo]) -> dict:

@@ -58,6 +58,7 @@ def main(argv=None):
             p.add_argument("--yolo", required=True)
     p = sub.add_parser("import-tracking", help="tracking pipeline output: observations.csv + cow_state.csv")
     p.add_argument("--observations", required=True); p.add_argument("--cow-state", required=True); p.add_argument("--video-root")
+    p.add_argument("--frames", help="stage 1 assets_raw/frames.csv: per-frame daylight flag, so night is known without decoding")
     sub.add_parser("status")
     p = sub.add_parser("export"); p.add_argument("--out", default="outputs/level1")
     sub.add_parser("eval")
@@ -116,7 +117,7 @@ def main(argv=None):
     db = Store(dbp)
     if a.cmd == "import-tracking":
         from .ingest import import_tracking
-        print(json.dumps(import_tracking(db, a.observations, a.cow_state, cfg), indent=1, default=str))
+        print(json.dumps(import_tracking(db, a.observations, a.cow_state, cfg, frames=a.frames), indent=1, default=str))
         db.close(); return
     if a.cmd in ("import-yolo", "aggregate"):
         from .video import VideoIndex

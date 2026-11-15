@@ -5,15 +5,19 @@
 Stages (each step is the existing, unchanged entry point, run as a subprocess):
   prepare   sort clips into cameras, hard-link them into <run>/input/cam1..cam3
   track     stage 1  main.py                      -> stage1/tracking/tracking_records.csv
-  level1    stage 1  scripts/run_level1.py --skip-agent
-                     (identity, world state, anchors, behavior, contract export)
+  level1    stage 1  scripts/run_level1.py --id-agent
+                     (identity, world state, anchors, identity agent (ID flags only), behavior, contract export)
                                                   -> stage1/level1/contract/{observations,cow_state}.csv
+  assets    stage 1  scripts/build_risk_assets.py  -> stage1/level1/assets/ (gallery, motion, breathing, clips)
   import    stage 2  brd_agent dbcli import-tracking   -> stage2/store/
   agent     stage 2  brd_agent dbcli run --backend video -> verified cow-minutes + traces
   export    stage 2  brd_agent dbcli export           -> final/{activity,activity_minute,actions}.csv
+                     + stage1/level1/final/activity.csv (verified minutes with wall time, read by Level 2)
+  level2    BRD risk scripts/run_level2.py         -> level2/{brd_risk.csv,index.html,cards/}
 
 Resumable: finished steps are recorded in <run>/pipeline_state.json and skipped next time (same --name).
---from STEP reruns STEP and everything after it. Stage 1's own supervisor agent is not run: stage 2 replaces it.
+--from STEP reruns STEP and everything after it. Stage 1's supervisor agent runs on identity flags only; stage 2 owns
+behavior, so nothing is checked twice.
 """
 from __future__ import annotations
 
@@ -32,7 +36,7 @@ import yaml
 from . import cameras as camlib
 
 REPO = Path(__file__).resolve().parent.parent
-STEPS = ["prepare", "track", "level1", "import", "agent", "export"]
+STEPS = ["prepare", "track", "level1", "assets", "import", "agent", "export", "level2"]
 FINAL_FILES = ["activity.csv", "activity_minute.csv", "actions.csv"]
 
 
@@ -124,8 +128,10 @@ def preflight(a, cfg: dict, run: Run, env: dict) -> None:
     s2 = REPO / cfg["stage2"]["dir"]
     if not (s2 / "src" / "brd_agent" / "dbcli.py").exists():
         errs.append(f"stage 2 package not found at {s2}")
-    if a.vlm != "mock" and not (s2 / ".env").exists():
-        errs.append(f"{s2 / '.env'} is missing (copy .env.example and set the VLM provider), or use --vlm mock")
+    if a.vlm != "mock" and not (s2 / ".env").exists() and not _tamu_for_stage2(cfg):
+        errs.append(f"no VLM for stage 2: put TAMU_API_KEY in {REPO / '.env'} (or create {s2 / '.env'}), or use --vlm mock")
+    if a.id_agent and str(a.id_backend).startswith("tamu") and not (os.environ.get("TAMU_API_KEY") or _root_env().get("TAMU_API_KEY")):
+        errs.append(f"the identity agent uses {a.id_backend}: put TAMU_API_KEY in {REPO / '.env'}, or pass --no-id-agent")
     mods = ["numpy", "cv2", "yaml", "pandas", "pydantic", "PIL"]
     if a.first_step <= STEPS.index("level1"):
         mods += ["torch", "ultralytics", "scipy", "sklearn", "tabulate"]
@@ -143,6 +149,10 @@ def preflight(a, cfg: dict, run: Run, env: dict) -> None:
 # ----------------------------------------------------------------------------------------------- steps
 def step_prepare(a, cfg, run: Run, env) -> dict:
     clips = camlib.assign_cameras(a.videos, cfg["cameras"])
+    if a.start or a.end:
+        clips = camlib.clips_in_window(clips, a.start, a.end)
+        if not clips:
+            raise camlib.CameraError(f"no clip in {a.videos} covers the window {a.start} .. {a.end}")
     res = {} if a.no_camera_check else camlib.check_resolutions(clips, cfg["cameras"].get("expected_resolution", {}))
     stats = camlib.link_inputs(clips, run.input)
     (run.root / "clips.json").write_text(json.dumps(camlib.as_dicts(clips), indent=1), encoding="utf-8")
@@ -180,11 +190,28 @@ def step_track(a, cfg, run: Run, env) -> dict:
 
 def step_level1(a, cfg, run: Run, env) -> dict:
     cmd = [a.python, "scripts/run_level1.py", "--records", run.tracking / "tracking_records.csv",
-           "--out", run.level1, "--video-root", run.input, "--pen-size", a.herd_size, "--skip-agent"]
+           "--out", run.level1, "--video-root", run.input, "--pen-size", a.herd_size]
+    # identity supervisor (ID flags only) before behavior; without it, still build the memory cards (no VLM),
+    # which stitch_shares.py uses to give a cow the same COW_xx in every chunk
+    cmd += ["--id-agent", "--backend", a.id_backend] if a.id_agent else ["--id-cards"]
     _run_cmd("level1", cmd, REPO, env, run.logs / "2_level1.log", a.quiet)
     for f in ("observations.csv", "cow_state.csv"):
         _need_file(run.contract / f, f"stage 1 contract {f}")
     return {"observations": str(run.contract / "observations.csv"), "cow_state": str(run.contract / "cow_state.csv")}
+
+
+def step_assets(a, cfg, run: Run, env) -> dict:
+    if not (run.tracking / "assets_raw" / "frames.csv").exists():
+        print("   no stage 1 assets_raw/ (tracking ran with --no-assets): skipped")
+        return {"skipped": True}
+    cmd = [a.python, "scripts/build_risk_assets.py", "--raw", run.tracking, "--run", run.level1, "--video-root", run.input]
+    acfg = cfg.get("assets", {})
+    if not acfg.get("breathing", True):
+        cmd.append("--skip-breathing")
+    if not acfg.get("clips", True):
+        cmd.append("--skip-clips")
+    _run_cmd("assets", cmd, REPO, env, run.logs / "2b_assets.log", a.quiet)
+    return {"assets": str(run.level1 / "assets")}
 
 
 def _dbcli(a, cfg, run: Run) -> tuple[list, Path]:
@@ -192,8 +219,37 @@ def _dbcli(a, cfg, run: Run) -> tuple[list, Path]:
     return [a.python, "-m", "brd_agent.dbcli", "--env", s2 / ".env", "--store", run.store], s2
 
 
-def _s2_env(env: dict, s2: Path) -> dict:
-    return {**env, "PYTHONPATH": str(s2 / "src") + os.pathsep + env.get("PYTHONPATH", "")}
+def _root_env() -> dict:
+    out = {}
+    p = REPO / ".env"
+    if p.exists():
+        for line in p.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                k, v = line.split("=", 1)
+                out[k.strip()] = v.strip().strip('"').strip("'")
+    return out
+
+
+def _tamu_for_stage2(cfg: dict) -> dict:
+    """Stage 2 speaks the OpenAI API; point it at TAMU with the repo's TAMU_API_KEY (same key as stage 1 / Level 2)
+    when brd_agent/.env does not choose a provider itself. Real environment variables still win."""
+    key = os.environ.get("TAMU_API_KEY") or _root_env().get("TAMU_API_KEY")
+    if not key:
+        return {}
+    prof = cfg.get("stage2", {}).get("tamu_profile", "tamu_luna")
+    acfg = yaml.safe_load((REPO / "configs" / "agent.yaml").read_text(encoding="utf-8"))
+    p = acfg.get(prof) or {}
+    return {"USE_LOCAL_VLM": "false", "OPENAI_API_KEY": key, "OPENAI_BASE_URL": p.get("base_url", "https://chat-api.tamu.ai/openai"),
+            "OPENAI_MODEL": p.get("model", "protected.gpt-5.6-luna"), "OPENAI_TEMPERATURE": "",
+            "OPENAI_MAX_COMPLETION_TOKENS": str(p.get("max_tokens", 2500))}
+
+
+def _s2_env(env: dict, s2: Path, cfg: dict | None = None) -> dict:
+    out = {**env, "PYTHONPATH": str(s2 / "src") + os.pathsep + env.get("PYTHONPATH", "")}
+    if cfg is not None and not (s2 / ".env").exists():
+        out = {**_tamu_for_stage2(cfg), **{k: v for k, v in out.items()}}
+    return out
 
 
 def step_import(a, cfg, run: Run, env) -> dict:
@@ -202,6 +258,9 @@ def step_import(a, cfg, run: Run, env) -> dict:
         shutil.rmtree(run.store)   # import is not idempotent: (re)build the store from the current contract
     cmd = base + ["import-tracking", "--observations", run.contract / "observations.csv",
                   "--cow-state", run.contract / "cow_state.csv", "--video-root", run.input]
+    frames = run.tracking / "assets_raw" / "frames.csv"
+    if frames.exists():
+        cmd += ["--frames", frames]       # day/night already measured on every tracked frame
     _run_cmd("import", cmd, s2, _s2_env(env, s2), run.logs / "3_import.log", a.quiet)
     return {"store": str(run.store)}
 
@@ -210,7 +269,7 @@ def step_agent(a, cfg, run: Run, env) -> dict:
     base, s2 = _dbcli(a, cfg, run)
     cmd = base + ["run", "--backend", "video", "--video-root", run.input, "--vlm", a.vlm,
                   "--trace-dir", run.traces, "--workers", a.workers] + list(a.agent_args)
-    _run_cmd("agent", cmd, s2, _s2_env(env, s2), run.logs / "4_agent.log", a.quiet)
+    _run_cmd("agent", cmd, s2, _s2_env(env, s2, cfg), run.logs / "4_agent.log", a.quiet)
     return {"traces": str(run.traces)}
 
 
@@ -219,11 +278,38 @@ def step_export(a, cfg, run: Run, env) -> dict:
     _run_cmd("export", base + ["export", "--out", run.final], s2, _s2_env(env, s2), run.logs / "5_export.log", a.quiet)
     for f in FINAL_FILES:
         _need_file(run.final / f, f"final {f}")
-    return {f: str(run.final / f) for f in FINAL_FILES}
+    n = minute_activity_with_wall_time(run.final / "activity_minute.csv", run.store / "meta.json",
+                                       run.level1 / "final" / "activity.csv")
+    out = {f: str(run.final / f) for f in FINAL_FILES}
+    out["level2_activity"] = f"{run.level1 / 'final' / 'activity.csv'} ({n} cow-minutes)"
+    return out
 
 
-STEP_FN = {"prepare": step_prepare, "track": step_track, "level1": step_level1,
-           "import": step_import, "agent": step_agent, "export": step_export}
+def minute_activity_with_wall_time(minute_csv: Path, meta_json: Path, out_csv: Path) -> int:
+    """brd_agent indexes minutes as (day, minute of day) from its clock origin; Level 2 (src/risk/data.py) and the
+    stitcher need wall time. Writes the verified minutes with `minute_start` where Pen6Run.activity('best') finds them."""
+    import pandas as pd
+    origin = json.loads(Path(meta_json).read_text(encoding="utf-8")).get("clock_origin")
+    if not origin:
+        raise RuntimeError(f"{meta_json} has no clock_origin")
+    df = pd.read_csv(minute_csv)
+    df["minute_start"] = pd.Timestamp(origin) + pd.to_timedelta((df["day"] - 1) * 1440 + df["minute"], unit="min")
+    df["minute_start"] = df["minute_start"].dt.strftime("%Y-%m-%dT%H:%M:%S")
+    out_csv.parent.mkdir(parents=True, exist_ok=True)
+    df.to_csv(out_csv, index=False)
+    return len(df)
+
+
+def step_level2(a, cfg, run: Run, env) -> dict:
+    cmd = [a.python, "scripts/run_level2.py", "--runs", run.level1, "--out", run.root / "level2", "--video-root", run.input]
+    if a.level2_skip_agent:
+        cmd.append("--skip-agent")
+    _run_cmd("level2", cmd, REPO, env, run.logs / "6_level2.log", a.quiet)
+    return {"brd_risk": str(run.root / "level2" / "brd_risk.csv")}
+
+
+STEP_FN = {"prepare": step_prepare, "track": step_track, "level1": step_level1, "assets": step_assets,
+           "import": step_import, "agent": step_agent, "export": step_export, "level2": step_level2}
 
 
 # ----------------------------------------------------------------------------------------------- main
@@ -246,11 +332,15 @@ def parse_args(argv=None):
                                        "default: a fresh one inside the run")
     g.add_argument("--render-video", action="store_true", help="also render stage 1's dashboard video (slow)")
     g.add_argument("--no-camera-check", action="store_true", help="skip the per-camera resolution check")
+    g.add_argument("--no-id-agent", dest="id_agent", action="store_false", default=None,
+                   help="skip the identity supervisor agent (memory cards are still built, no VLM)")
+    g.add_argument("--id-backend", help="identity agent backend (configs/agent.yaml profile), default stage1.id_agent_backend")
     g = ap.add_argument_group("stage 2")
     g.add_argument("--vlm", choices=["auto", "mock"])
     g.add_argument("--workers", type=int)
     g.add_argument("--agent-args", nargs=argparse.REMAINDER, default=[],
                    help="passed to `dbcli run` unchanged, e.g. --agent-args --max-agent-runs 500 --audit-rate 0.1 (keep last)")
+    g.add_argument("--level2-skip-agent", action="store_true", help="Level 2 behavior score only (no TAMU risk agent)")
     g = ap.add_argument_group("runtime")
     g.add_argument("--python", default=sys.executable, help="interpreter for both stages (default: this one)")
     g.add_argument("--ffmpeg-dir", help="folder with a working ffmpeg/ffprobe, prepended to PATH")
@@ -277,6 +367,8 @@ def main(argv=None) -> int:
     a.herd_size = a.herd_size or s1.get("herd_size", 8)
     a.vlm = a.vlm or s2c.get("vlm", "auto")
     a.workers = a.workers or s2c.get("workers", 1)
+    a.id_agent = s1.get("id_agent", True) if a.id_agent is None else a.id_agent
+    a.id_backend = a.id_backend or s1.get("id_agent_backend", "tamu_luna")
     cfg.setdefault("stage2", {}).setdefault("dir", "brd_agent")
 
     root = Path(a.out_root)
@@ -306,6 +398,7 @@ def main(argv=None) -> int:
     print(f"  videos: {a.videos}")
     print(f"  stage 1: detector={a.detector} fps={a.fps} imgsz={a.imgsz} herd={a.herd_size}"
           f"{' window=' + str(a.start) + '..' + str(a.end) if a.start or a.end else ''}")
+    print(f"  identity agent: {a.id_backend if a.id_agent else 'off (memory cards only)'}")
     print(f"  stage 2: vlm={a.vlm} workers={a.workers} {' '.join(a.agent_args)}")
     print(f"  steps:  {' -> '.join(todo) if todo else '(all done; use --from STEP to redo)'}")
     if a.dry_run:
@@ -342,12 +435,12 @@ def main(argv=None) -> int:
         run.save_state(state)
         print(f"   ok in {time.time() - t:.0f} s", flush=True)
 
-    finished = all(done.get(s, {}).get("status") == "ok" for s in STEPS)
+    finished = all(done.get(s, {}).get("status") == "ok" for s in STEPS[:last + 1])
     if finished and not a.keep_cache and run.remux.exists():
         shutil.rmtree(run.remux, ignore_errors=True)
     manifest = {"run": str(run.root), "videos": a.videos, "finished": finished, "updated": _now(),
                 "settings": {k: getattr(a, k) for k in ("detector", "fps", "imgsz", "herd_size", "vlm", "workers",
-                                                        "start", "end", "id_gallery", "agent_args")},
+                                                        "start", "end", "id_gallery", "agent_args", "id_agent", "id_backend")},
                 "git_commit": subprocess.run(["git", "rev-parse", "--short", "HEAD"], capture_output=True,
                                              text=True, cwd=REPO).stdout.strip() or None,
                 "steps": done,

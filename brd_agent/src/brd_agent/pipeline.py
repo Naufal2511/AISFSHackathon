@@ -110,6 +110,12 @@ def run_db(store_dir: str, cfg: AgentConfig, backend_factory: Callable[[], DataB
     if db.get_meta("speed_unit") == "m_s":          # tracking input: speeds are metric, so use the metric thresholds
         cfg = cfg.model_copy(deep=True)
         cfg.verifier.walk_speed_px_s, cfg.verifier.still_speed_px_s = cfg.verifier.walk_speed_m_s, cfg.verifier.still_speed_m_s
+    if db.get_meta("stage1_rumination") and cfg.verify.rumination_screen:
+        # stage 1 already scored rumination per second; the 20 s jaw-motion burst per resting minute would redo it
+        # (and is the slowest step of stage 2). Disagreements still reach the agent through the gate / audits.
+        cfg = cfg.model_copy(deep=True)
+        cfg.verify.rumination_screen = False
+    night_known = db.get_meta("night_source") == "stage1_frames"
     cows = cows or db.cows()
     if rerun:
         db.reset_agent(cows, days)
@@ -149,10 +155,16 @@ def run_db(store_dir: str, cfg: AgentConfig, backend_factory: Callable[[], DataB
                 else:
                     night_act = None
                     cam, st = (None, None)
-                    try:
-                        cam, st = night.scene_stats(backend, brief.cow_id, brief.day, brief.minute, brief.visible_frac, cfg.night)
-                    except Exception:
-                        pass
+                    if night_known and row.get("is_night") is not None:
+                        # stage 1 measured it on every tracked frame: no decode needed
+                        night_act = {"actor": "verifier", "action": "night_check", "args": {"source": "stage1_frames"},
+                                     "reason": "day/night from stage 1's per-frame colour check (IR frames are grey)",
+                                     "outcome": f"night={brief.is_night}", "source": "assets_raw/frames.csv"}
+                    else:
+                        try:
+                            cam, st = night.scene_stats(backend, brief.cow_id, brief.day, brief.minute, brief.visible_frac, cfg.night)
+                        except Exception:
+                            pass
                     was_night = brief.is_night
                     if st and st["is_night"] and not brief.is_night:
                         brief = brief.model_copy(update={"is_night": True})

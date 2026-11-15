@@ -59,7 +59,26 @@ def _slots(obs: list[dict], alias: dict[str, str]) -> dict[str, str]:
     return out
 
 
-def import_tracking(db: Store, observations: str | Path, cow_state: str | Path, cfg: AgentConfig, index=None) -> dict:
+def _night_by_minute(frames: str | Path, clock) -> dict[tuple[int, int], int]:
+    """Stage 1 already decided day/night for every frame it tracked (assets_raw/frames.csv, `daylight` = colour
+    frame, not IR). Minute is night when most of its frames, over all cameras, are not daylight."""
+    from datetime import datetime, timedelta
+    ep = datetime(1970, 1, 1)
+    tot: Counter = Counter()
+    dark: Counter = Counter()
+    with open(frames, newline="", encoding="utf-8-sig") as f:
+        for r in csv.DictReader(f):
+            w = _f(r.get("wall_t"))
+            if w is None:
+                continue
+            k = clock.to_dm(ep + timedelta(seconds=w))
+            tot[k] += 1
+            dark[k] += str(r.get("daylight", "")).strip().lower() not in ("1", "true")
+    return {k: int(dark[k] * 2 > n) for k, n in tot.items() if n}
+
+
+def import_tracking(db: Store, observations: str | Path, cow_state: str | Path, cfg: AgentConfig, index=None,
+                    frames: str | Path | None = None) -> dict:
     obs, st = _read(observations), _read(cow_state)
     if not st:
         return {"rows": 0, "error": "cow_state file is empty"}
@@ -72,6 +91,10 @@ def import_tracking(db: Store, observations: str | Path, cow_state: str | Path, 
     db.set_meta("file_camera", file_cam)
     db.set_meta("camera_names", cam_names)
     db.set_meta("speed_unit", "m_s")
+    # stage 1 classified rumination itself (DINOv2 classifier + jaw probe): the stage 2 jaw-motion screen would redo it
+    db.set_meta("stage1_rumination", any((_f(r.get("p_rum_lying")) or 0) > 0 or (_f(r.get("p_rum_standing")) or 0) > 0 for r in st))
+    night = _night_by_minute(frames, clock) if frames and Path(frames).exists() else {}
+    db.set_meta("night_source", "stage1_frames" if night else "frame_check")
 
     # ---- per-second fused state, indexed
     by_cow_sec: dict[tuple[str, str], dict] = {}
@@ -160,7 +183,7 @@ def import_tracking(db: Store, observations: str | Path, cow_state: str | Path, 
             cand = [o for o in o_rows if o["camera"] == best] or o_rows
             centre = clock.to_dt(day, minute, 0.0)
             src = min(cand, key=lambda o: abs((ts(o["abs_time"]) - centre).total_seconds()))
-        rows.append({"cow_id": cow, "day": day, "minute": minute, "t_abs": t_abs(day, minute), "is_night": None,
+        rows.append({"cow_id": cow, "day": day, "minute": minute, "t_abs": t_abs(day, minute), "is_night": night.get((day, minute)),
                      "tier1_top_json": json.dumps(top), "tier1_label": top[0][0], "tier1_conf": top[0][1], "tier1_entropy": entropy_of(top),
                      "zone_feed_bunk": zc.get("zone_feed_bunk", 0) / n, "zone_waterer": None, "zone_resting": zc.get("zone_resting", 0) / n,
                      "zone_open": zc.get("zone_open", 0) / n, "speed_px_s": round(float(np.mean(spd)), 4), "posture": None,
@@ -181,7 +204,9 @@ def import_tracking(db: Store, observations: str | Path, cow_state: str | Path, 
     missing = [{"cow_id": c, "day": d, "minute": m, "t_abs": t_abs(d, m), "task": "find_missing", "yolo_flags": "no_yolo_record"}
                for c in cows for d, m in window if (c, d, m) not in groups]
     res = {"cows": cows, "minutes_with_state": len(rows), "boxes_added": n_added, "unidentified_boxes": unid,
-           "cameras": {sl: cam_names.get(sl) for sl in sorted(cam_names)}, "speed_unit": "m_s", "flags": dict(flag_count)}
+           "cameras": {sl: cam_names.get(sl) for sl in sorted(cam_names)}, "speed_unit": "m_s", "flags": dict(flag_count),
+           "night_minutes_from_stage1": sum(night.values()) if night else None,
+           "stage1_rumination": db.get_meta("stage1_rumination")}
     db.init_rows(cows, sorted({r["day"] for r in rows}), MIN_PER_DAY)
     res["rows"] = db.upsert_minute_records(rows, "minutes", "tracking_state", str(cow_state), 0, extra)["rows"]
     if missing:

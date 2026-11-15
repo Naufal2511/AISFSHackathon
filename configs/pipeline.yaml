@@ -1,4 +1,4 @@
-# End-to-end pipeline (run_pipeline.py): videos -> stage 1 (tracking + identity + behavior) -> stage 2 (brd_agent) -> CSVs.
+# End-to-end pipeline (run_pipeline.py): videos -> stage 1 (tracking + identity + behavior) -> stage 2 (brd_agent) -> CSVs -> Level 2.
 # Every value can be overridden on the command line; see `python run_pipeline.py --help`.
 
 cameras:
@@ -22,9 +22,16 @@ stage1:
   detector: models/angus_det_hprc_m1280.pt   # fine-tuned YOLO26m (Git LFS); main.py's default
   fps: 1.0          # frames per second sampled for tracking (the data contract is 1 s resolution)
   imgsz: 1280       # detector input size (main.py default; 640 loses far-field cows on 4K)
-  herd_size: 8      # identity cap passed to run_level1.py --pen-size (its default)
+  herd_size: 10     # identity cap passed to run_level1.py --pen-size (the pen holds at most 10)
+  id_agent: true    # supervisor agent on identity flags only (duplicate_id, id_jump, extra_cow, cow_missing, 30-min audit)
+  id_agent_backend: tamu_luna   # configs/agent.yaml profile; needs TAMU_API_KEY in .env
+
+assets:             # Level 2 risk assets (scripts/build_risk_assets.py), built while the remuxed clips are still cached
+  breathing: true   # breaths/min from still close windows (decodes short windows at native fps)
+  clips: true       # one short low-res clip per cow every few hours (risk cards)
 
 stage2:
   dir: brd_agent    # the agent package (its own configs/, prompts, .env)
-  vlm: auto         # auto = provider from brd_agent/.env ; mock = no API calls (plumbing check)
-  workers: 1
+  vlm: auto         # auto = brd_agent/.env if present, else TAMU (TAMU_API_KEY in the repo .env); mock = no API calls
+  tamu_profile: tamu_luna   # configs/agent.yaml profile used for stage 2 when brd_agent/.env is absent
+  workers: 8        # cows verified in parallel (threads; the time is spent waiting on the VLM and on ffmpeg)
