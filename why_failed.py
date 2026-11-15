@@ -14,7 +14,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
+import shutil
 import sys
 import time
 from pathlib import Path
@@ -23,7 +25,41 @@ REPO = Path(__file__).resolve().parent
 SHARES = REPO / "outputs" / "shares"
 STEP_LOG = {"track": "1_track.log", "level1": "2_level1.log", "assets": "2b_assets.log", "import": "3_import.log",
             "agent": "4_agent.log", "export": "5_export.log", "level2": "6_level2.log"}
-STALE_MIN = 20  # a 'running' step whose log has not changed for this long is not running any more
+# Only used when the process cannot be checked (HPRC login node, no psutil): a 'running' step whose log has been
+# silent this long is probably dead. A quiet log alone proves nothing: level1's behavior model prints nothing for
+# ~40 min (c01: 39 min with the GPU to itself, longer while other chunks track).
+STALE_MIN = 60
+GONE = ("the process is gone without an error in its log: the terminal was closed, the laptop slept or shut down, "
+        "or the OS killed it (out of memory)",
+        "rerun the same command; keep the laptop awake (caffeinate -dims ... on a Mac, Sleep: Never on Windows); "
+        "if it keeps happening, run fewer chunks at once")
+UNSEEN = ("the log has been silent for a long time and this machine cannot see the process (HPRC login node, or "
+          "psutil missing)",
+          "HPRC: squeue -u $USER (job still listed = still running: wait), sacct -j <jobid> for how it ended; "
+          "otherwise rerun the same command")
+
+
+def alive(run: Path) -> list[int] | None:
+    """PIDs of processes on THIS machine working on the run: its folder (every step's command has it) or
+    run_pipeline.py's --name <run> in the command line. None when that cannot be checked: no psutil (it comes with
+    ultralytics), or a cluster login node (squeue present), where the job runs on another node."""
+    if shutil.which("squeue"):
+        return None
+    try:
+        import psutil
+    except ImportError:
+        return None
+    norm = (lambda t: t.lower()) if os.name == "nt" else (lambda t: t)
+    pat = re.compile(re.escape(norm(str(run.resolve()))) + r"([\\/\s\"']|$)|--name " + re.escape(norm(run.name)) + r"(\s|$)")
+    pids = []
+    try:
+        for p in psutil.process_iter(["pid", "cmdline"]):
+            cmd = norm(" ".join(p.info.get("cmdline") or []))
+            if p.info["pid"] != os.getpid() and pat.search(cmd):
+                pids.append(p.info["pid"])
+    except Exception:  # noqa: BLE001  (a process list we cannot read is "cannot check", not "dead")
+        return None
+    return pids
 
 # (pattern in the error/traceback, likely cause, fix): first match wins, so specific patterns come first
 CAUSES = [
@@ -136,15 +172,24 @@ def report_run(run: Path, chunk_log: Path | None = None) -> bool:
                 print(f"   LIKELY CAUSE: {d[0]}\n   FIX:          {d[1]}")
         return False
     steps = json.loads(st_p.read_text(encoding="utf-8")).get("steps", {})
-    bad = None
+    live = alive(run) if any(s.get("status") == "running" for s in steps.values()) else None
+    bad, stopped = None, None
     for name, s in steps.items():
         status = s.get("status", "?")
         log = run / "logs" / STEP_LOG.get(name, f"{name}.log")
-        if status == "running" and age_min(log) > STALE_MIN:
-            status = f"INTERRUPTED (log silent for {age_min(log):.0f} min)"
-            bad = bad or (name, s, log)
+        quiet = age_min(log)
+        if status == "running" and live:
+            status = f"running (process {live[0]} alive; log updated {quiet:.0f} min ago)"
+        elif status == "running" and live == []:
+            status = "INTERRUPTED (no process for this chunk on this machine)"
+            if bad is None:
+                bad, stopped = (name, s, log), GONE
+        elif status == "running" and quiet > STALE_MIN:
+            status = f"INTERRUPTED? (log silent for {quiet:.0f} min; the process cannot be checked here)"
+            if bad is None:
+                bad, stopped = (name, s, log), UNSEEN
         elif status == "running":
-            status = f"running (log updated {age_min(log):.0f} min ago)"
+            status = f"running (log updated {quiet:.0f} min ago)"
         elif status == "failed":
             status = "FAILED"
             bad = bad or (name, s, log)
@@ -174,7 +219,7 @@ def report_run(run: Path, chunk_log: Path | None = None) -> bool:
     tb = last_traceback(lines)
     if tb:
         print("   traceback / last error lines:\n      " + "\n      ".join(l[:220] for l in tb))
-    d = diagnose(text + "\n" + "\n".join(excs))
+    d = diagnose(text + "\n" + "\n".join(excs)) or stopped
     if d:
         print(f"\n   LIKELY CAUSE: {d[0]}\n   FIX:          {d[1]}")
     else:

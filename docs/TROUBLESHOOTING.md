@@ -20,6 +20,12 @@ THEN:         rerun the same command
 Most of the time that is all you need. The rest of this page is for when it says "not a known one", or you want
 to look yourself.
 
+**A quiet log is not a dead step.** `running (process N alive; log updated 40 min ago)` is normal: level1's behavior
+model prints nothing until it is done (~40 min per 4 h chunk, longer while other chunks track on the same GPU).
+Do not stop or rerun it. `INTERRUPTED (no process for this chunk on this machine)` means it really is gone.
+On the HPRC login node the job's process is on another node and cannot be seen: there a step is only marked
+`INTERRUPTED?` after 60 silent minutes, and `squeue -u $USER` is the real answer.
+
 ## 2. After the fix: rerun the same command
 
 `python run_share.py` (same answers) or the same `run_pipeline.py` line. Nothing done is redone:
@@ -62,7 +68,7 @@ where it happened. Lines under `.venv/` or `site-packages/` are libraries; the f
 | You see (in the log / traceback) | Cause | Fix |
 |---|---|---|
 | `operands could not be broadcast together with shapes (384,) (420,)` | tracking bug in code before `4124414` | `git pull`, rerun |
-| `KeyboardInterrupt`, `Killed: 9`, step INTERRUPTED | stopped: Ctrl+C, terminal closed, laptop slept, or out of memory | rerun; `caffeinate -dims python run_share.py` (Mac), Sleep: Never (Windows); if `Killed` repeats: `--parallel 1` |
+| `KeyboardInterrupt`, `Killed: 9`, step INTERRUPTED (no process) | stopped: Ctrl+C, terminal closed, laptop slept, or out of memory | rerun; `caffeinate -dims python run_share.py` (Mac), Sleep: Never (Windows); if `Killed` repeats: `--parallel 1` |
 | `out of memory`, `MPS backend out of memory`, `MemoryError` | RAM / GPU memory | fewer chunks at once (`--parallel 1`), close other apps |
 | `No space left on device` | disk full | delete `cache/remux/` of finished chunks and old `outputs/pipeline/` runs; need ≥ 30 GB free |
 | `401`, `403`, `error code: 1010`, `Forbidden` from TAMU | key wrong or expired | fix `TAMU_API_KEY` in `.env` (no quotes or spaces), then `python check_setup.py --who <you> --videos <clips>` |
