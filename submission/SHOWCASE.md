@@ -105,6 +105,8 @@ temperature and examine them before any treatment. risk is a ranking index, not 
 
 ![Risk card for COW_02: what to do, why, indicator chart against the herd](showcase/l2_card_cow02.png)
 
+The full cards as images (clips, sign checks, evidence and sources): [COW_02](level2/cards/COW_02_card.jpg) · [COW_01](level2/cards/COW_01_card.jpg) · [COW_10](level2/cards/COW_10_card.jpg)
+
 **Video evidence on the risk cards** (2–3 clips per top-3 cow). **[`level2/EVIDENCE.md`](level2/EVIDENCE.md) explains each cow's result with every clip, its day, time and camera.** The strongest one for COW_02: the 8 Nov 16:28 feed rush, where 6 of 10 cows feed while she lies alone in the alley, 11.6 m from the nearest herdmate. Click the still to open the clip:
 
 [![8 Nov 16:28 feed rush: COW_02 lies alone while the herd feeds (click for the clip)](showcase/l2_feed_rush_cow02.jpg)](level2/cards/clips/COW_02_3_feed_rush_8nov_1628.mp4)

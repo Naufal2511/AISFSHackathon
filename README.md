@@ -33,6 +33,14 @@ Computer vision measures. Tool-using agents check that record. Code checks the a
 - **Risk is an index for ranking cows, not a probability.** A herd-typical cow scores about 0.10.
 - ***In the top 3 in*** is the share of 200 resamples (in 30-min blocks) in which a cow stays in the top 3. It shows how stable her rank is.
 
+**Each flagged cow has a one-page risk card** with what to do, the reasons, her behavior against the herd, clips, the sign checks and the sources. Click a card to open it in full:
+
+<p>
+<a href="submission/level2/cards/COW_02_card.jpg"><img src="submission/level2/cards/COW_02_card_top.jpg" width="32%" alt="Risk card for COW_02 (rank 1): click for the full card"></a>
+<a href="submission/level2/cards/COW_01_card.jpg"><img src="submission/level2/cards/COW_01_card_top.jpg" width="32%" alt="Risk card for COW_01 (rank 2): click for the full card"></a>
+<a href="submission/level2/cards/COW_10_card.jpg"><img src="submission/level2/cards/COW_10_card_top.jpg" width="32%" alt="Risk card for COW_10 (rank 3): click for the full card"></a>
+</p>
+
 **Level 1 and Level 3 in one line each:**
 - **Level 1:** 28,800 cow-minutes labelled (10 cows × 48 h), each with its basis, in 4,858 behavior bouts. No camera saw the cow in 30.4 % of those minutes. These are reported as not visible, never guessed.
 - **Level 3:**
@@ -80,18 +88,18 @@ Every deliverable the brief asks for, and where it is. The results are in [`subm
 | Required | File |
 |---|---|
 | `brd_risk.csv`: cow ID, risk 0–1, rank, top reasons | [`submission/level2/brd_risk.csv`](submission/level2/brd_risk.csv) |
-| A one-page risk card for each top-3 cow, with 2–3 clips | [`COW_02.html`](submission/level2/cards/COW_02.html) · [`COW_01.html`](submission/level2/cards/COW_01.html) · [`COW_10.html`](submission/level2/cards/COW_10.html) |
+| A one-page risk card for each top-3 cow, with 2–3 clips | [COW_02 card](submission/level2/cards/COW_02_card.jpg) · [COW_01 card](submission/level2/cards/COW_01_card.jpg) · [COW_10 card](submission/level2/cards/COW_10_card.jpg) (full-page images; with playable clips: `cards/COW_*.html`, after download) |
 | The decision clips, cow by cow, with day, time and camera | [`EVIDENCE.md`](submission/level2/EVIDENCE.md) (the clips are in [`cards/clips/`](submission/level2/cards/clips/)) |
 | The images behind each decision: all 86 the agent looked at, each linked to the sign verdict it supports | [`IMAGE_EVIDENCE.md`](submission/level2/IMAGE_EVIDENCE.md) (one row per image: [`image_index.csv`](submission/level2/evidence/image_index.csv)) |
-| Visualization tool | [`level2/index.html`](submission/level2/index.html) (ranking, stability, cards) · [`stitched/viewer.html`](submission/stitched/viewer.html) (48 h ethogram, camera joins, time budgets) |
+| Visualization tool | [Ranking page](submission/showcase/l2_ranking.png) (ranking, stability, cards) · [48 h viewer](submission/showcase/l1_ethogram_48h.png) (ethogram, plus [the joins between chunks](submission/showcase/l1_joins.png) and [time budgets](submission/showcase/l1_time_budgets.png)). These are screenshots; the interactive pages are `level2/index.html` and `stitched/viewer.html`, after download |
 | The risk agent's reasoning and every piece of evidence it cited | [`agent/traces/`](submission/level2/agent/traces/) · [`evidence/`](submission/level2/evidence/) |
 
 ### Level 3 · live early warning
 
 | Shown | File |
 |---|---|
-| Live alerts on one 5-min clip, end to end | [`level3/clip_1600/report.html`](submission/level3/clip_1600/report.html) |
-| Three Day 2 hours replayed as if live | [`level3/day2_replay/report.html`](submission/level3/day2_replay/report.html) |
+| Live alerts on one 5-min clip, end to end | [Evidence report](submission/showcase/l3_report_top.png) · [every crop checked](submission/showcase/l3_crops.png) · [every cow in the window](submission/showcase/l3_cows.png) (screenshots; interactive: `level3/clip_1600/report.html`, after download) |
+| Three Day 2 hours replayed as if live | [COW_10's alert card](submission/showcase/l3_alert_cow10.png) · [live dashboard](submission/showcase/l3_dashboard.png) (screenshots; interactive: `level3/day2_replay/report.html`, after download) |
 | Alert cards, dashboard and simulated emails: what each folder holds | [`level3/README.md`](submission/level3/README.md) |
 
 ### Code and disclosure
@@ -367,7 +375,7 @@ python scripts/stitched_viewer.py                   # -> outputs/stitched/viewer
 | Level 3 sign check | Gemini 3.5 Flash and **Claude Opus 4.8** (TAMU) | Checks ears, head carriage and nasal discharge on close crops | Each flag gets a second look and a measurement check (tracker speed, posture) |
 | Benchmarked, not used | Claude Sonnet 5, local Qwen2.5-VL 7B | Compared on the same 8 identity cases (speed, and whether the first answer passed the self-check) | |
 
-**Building it:** we wrote the code with **Claude Code** (Anthropic's coding agent, running Claude Opus models) as a pair programmer. 60 of our 64 commits (merges not counted) are co-authored by Claude. It helped with:
+**Building it:** we wrote the code with **Claude Code** (Anthropic's coding agent, running Claude Opus models) as a pair programmer. 61 of our 65 commits (merges not counted) are co-authored by Claude. It helped with:
 - the pipeline, agents, stitching and viewers;
 - debugging the 48 h runs;
 - the technical brief's layout and wording;

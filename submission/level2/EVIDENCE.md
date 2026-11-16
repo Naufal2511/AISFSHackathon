@@ -88,7 +88,8 @@ clean standing head view on the next pen ride to rule out nasal or eye discharge
 | [`evidence/`](evidence/) | `facts.jsonl` (every fact the agent cited), `img/` (every frame crop it looked at) and `image_index.csv` (one row per image: cow, camera, time, what cites it) |
 | [`agent/traces/`](agent/traces/) | the risk agent's tool calls, findings and self-check, per cow |
 | [`risk_meta.json`](risk_meta.json) | time span, runs used, model, and the source camera and time of each clip |
-| `index.html`, `cards/COW_*.html` | the interactive ranking and the one-page risk cards (open after download) |
+| [`cards/COW_02_card.jpg`](cards/COW_02_card.jpg), [`COW_01_card.jpg`](cards/COW_01_card.jpg), [`COW_10_card.jpg`](cards/COW_10_card.jpg) | the one-page risk cards as full-page images (readable on GitHub) |
+| `index.html`, `cards/COW_*.html` | the interactive ranking and risk cards, with playable clips (open after download) |
 
 Method: [`docs/LEVEL2_METHOD.md`](../../docs/LEVEL2_METHOD.md). The clips' cameras and times come from
 `risk_meta.json`; the feed-rush clip is from the same stitched run (8 Nov 16:28–16:30).
