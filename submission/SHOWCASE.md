@@ -109,10 +109,8 @@ temperature and examine them before any treatment. risk is a ranking index, not 
 
 [![8 Nov 16:28 feed rush: COW_02 lies alone while the herd feeds (click for the clip)](showcase/l2_feed_rush_cow02.jpg)](level2/cards/clips/COW_02_3_feed_rush_8nov_1628.mp4)
 
-Clips: COW_02 [1](level2/cards/clips/COW_02_1.mp4) · [2](level2/cards/clips/COW_02_2.mp4) · [feed rush](level2/cards/clips/COW_02_3_feed_rush_8nov_1628.mp4) · COW_01 [1](level2/cards/clips/COW_01_1.mp4) · [2](level2/cards/clips/COW_01_2.mp4) · COW_10 [1](level2/cards/clips/COW_10_1.mp4) · [2](level2/cards/clips/COW_10_2.mp4)
-
-Files: [`level2/brd_risk.csv`](level2/brd_risk.csv) · [`indicators.csv`](level2/indicators.csv) ·
-[`contributions.csv`](level2/contributions.csv) · risk cards with clips: `level2/cards/COW_02.html`, `COW_01.html`,
+Files: [`level2/brd_risk.csv`](level2/brd_risk.csv) · [`level2/README.md`](level2/README.md) · [`indicators.csv`](level2/indicators.csv) ·
+[`contributions.csv`](level2/contributions.csv) · **Decision clips:** COW_02 ([`clip 1`](level2/cards/clips/COW_02_1.mp4), [`clip 2`](level2/cards/clips/COW_02_2.mp4), [`feed rush`](level2/cards/clips/COW_02_3_feed_rush_8nov_1628.mp4)), COW_01 ([`clip 1`](level2/cards/clips/COW_01_1.mp4), [`clip 2`](level2/cards/clips/COW_01_2.mp4)), COW_10 ([`clip 1`](level2/cards/clips/COW_10_1.mp4), [`clip 2`](level2/cards/clips/COW_10_2.mp4)) · risk cards: `level2/cards/COW_02.html`, `COW_01.html`,
 `COW_10.html` (open after download) · method: [`docs/LEVEL2_METHOD.md`](../docs/LEVEL2_METHOD.md)
 
 ---

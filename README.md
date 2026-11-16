@@ -61,7 +61,8 @@ Every deliverable the brief asks for, and where it is:
 | ↳ which cow each trace is after stitching | [`traces/README.md`](submission/stitched/final/traces/README.md) |
 | **Level 2:** `brd_risk.csv` (cow ID, risk 0–1, rank, top reasons) | [`submission/level2/brd_risk.csv`](submission/level2/brd_risk.csv) |
 | **Level 2:** visualization tool | [`submission/level2/index.html`](submission/level2/index.html) (ranking, stability, cards) and [`submission/stitched/viewer.html`](submission/stitched/viewer.html) (48 h ethogram, camera joins, time budgets) |
-| **Level 2:** one-page risk card per top-3 cow, with 2–3 clips | [`COW_02.html`](submission/level2/cards/COW_02.html) · [`COW_01.html`](submission/level2/cards/COW_01.html) · [`COW_10.html`](submission/level2/cards/COW_10.html); clips in [`cards/clips/`](submission/level2/cards/clips/) |
+| **Level 2:** one-page risk card per top-3 cow, with 2–3 clips | [`COW_02.html`](submission/level2/cards/COW_02.html) · [`COW_01.html`](submission/level2/cards/COW_01.html) · [`COW_10.html`](submission/level2/cards/COW_10.html) |
+| ↳ relevant decision evidence clips (top 3 cows) | [`submission/level2/cards/clips/`](submission/level2/cards/clips/) (COW_02: [clip 1](submission/level2/cards/clips/COW_02_1.mp4), [clip 2](submission/level2/cards/clips/COW_02_2.mp4), [8 Nov 16:28 feed rush](submission/level2/cards/clips/COW_02_3_feed_rush_8nov_1628.mp4); COW_01: [clip 1](submission/level2/cards/clips/COW_01_1.mp4), [clip 2](submission/level2/cards/clips/COW_01_2.mp4); COW_10: [clip 1](submission/level2/cards/clips/COW_10_1.mp4), [clip 2](submission/level2/cards/clips/COW_10_2.mp4)) |
 | ↳ the ranking explained cow by cow, every clip with its day, time and camera (readable on GitHub) | [`submission/level2/EVIDENCE.md`](submission/level2/EVIDENCE.md) |
 | ↳ the risk agent's reasoning and every piece of evidence it cited | [`submission/level2/agent/traces/`](submission/level2/agent/traces/) · [`evidence/`](submission/level2/evidence/) |
 | **Level 3:** live alert on one 5-min clip, end to end | [`submission/level3/clip_1600/report.html`](submission/level3/clip_1600/report.html) |
@@ -73,7 +74,7 @@ Every deliverable the brief asks for, and where it is:
 
 **Viewing the HTML pages:** GitHub shows HTML files as source code. Read [`submission/SHOWCASE.md`](submission/SHOWCASE.md) or [`SHOWCASE.pdf`](submission/SHOWCASE.pdf) here, or clone/download the repository and open `submission/index.html` in a browser (or run `python serve_showcase.py` and open http://localhost:8000).
 
-> **Event data:** the footage, frames and results stay within the event. Keep this repository private. Apart from the submission video and the Level 2 evidence clips (`submission/level2/cards/clips/`), video clips are not in the repository; the commands below regenerate them.
+> **Event data:** the footage, frames and results stay within the event. Keep this repository private. Apart from the submission video and the Level 2 decision evidence clips (`submission/level2/cards/clips/`), video clips are not in the repository; the commands below regenerate them.
 
 ---
 

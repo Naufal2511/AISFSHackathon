@@ -58,3 +58,6 @@ submission/**/*.avi
 # --- The team's submission video (the one video kept in the repository) ---
 !docs/media/*.mp4
 !docs/media/*.jpg
+
+# --- Level 2 BRD decision evidence clips (relevant risk clips for top-3 cows) ---
+!submission/level2/cards/clips/*.mp4
