@@ -1,4 +1,5 @@
 # Agentic Vision for Angus Behavior and BRD Risk
+## Team 404 - Naufal, Afeef, Nooh
 
 **Merck–TAMU AISFS Hackathon 2026 · Pen 6 · 10 Angus cattle · 3 cameras · 48 h**
 
