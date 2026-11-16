@@ -1,341 +1,239 @@
-# Multi-Camera Angus Cattle Detection, Segmentation, and Tracking System
-## Merck–TAMU Animal Science Hackathon 2026: Agentic Vision for Angus Behavior and BRD Prediction
+# Agentic Vision for Angus Behavior and BRD Risk
 
-This is our submission for the AISFS TAMU Hackathon.
+**Merck–TAMU AISFS Hackathon 2026 · Pen 6 · 10 Angus cattle · 3 cameras · 48 h**
 
-> Event data (videos, frames, labels, model outputs) is not in this repository: it must stay within the event.
+This repository turns the pen's raw camera clips into:
 
----
+| Level | What you get | Produced by |
+|---|---|---|
+| **1. Watch the cows** | `activity.csv`: what every cow did, every minute, with the same ID across cameras and days. Also time budgets, 30-minute ID-check sheets, and agent reasoning traces. | `run_pipeline.py` |
+| **2. Predict BRD risk** | `brd_risk.csv` (risk 0–1, rank, top reasons), an interactive ranking page, and a risk card with video evidence for each of the top 3 cows | `run_pipeline.py` (step `level2`) |
+| **3. Early warning** | Live risk update and alerts with a video clip for a new clip or a watched folder, plus simulated emails | `live_watch.py` |
 
-## Executive Summary & Architecture Overview
+**Our results are already in [`submission/`](submission/README.md). Open these first:**
+- `submission/level2/index.html`: the ranking
+- `submission/stitched/viewer.html`: the 48 h ethogram
+- `submission/level3/clip_1600/report.html`: one live window, end to end
 
-Phase 1 of the **Agentic Vision for Angus Behavior and BRD Prediction** platform delivers an end-to-end multi-camera computer vision pipeline designed for research feedlots (Pen 6 at Texas A&M Animal Science Feedlot). The system detects, segments, and tracks 10 Angus cattle across three fixed cameras under varying daylight and infrared nighttime illumination, handling real-world occlusions, perspective distortions, and multi-view identity fusion.
+**The approach is in [`docs/TECHNICAL_BRIEF.pdf`](docs/TECHNICAL_BRIEF.pdf).**
 
-```
-                           +------------------------------------------------+
-                           |  Raw Video / Image Sequences (Cam 1, 2, 3)     |
-                           +------------------------------------------------+
-                                                   |
-                                                   v
-                           +------------------------------------------------+
-                           |  Adaptive Preprocessing (CLAHE LAB / Denoise)  |
-                           +------------------------------------------------+
-                                                   |
-                                                   v
-                           +------------------------------------------------+
-                           |  YOLO11 Instance Segmentation & Pen ROI Filter |
-                           +------------------------------------------------+
-                                                   |
-                                                   v
-                           +------------------------------------------------+
-                           |  Within-Camera ByteTrack Multi-Object Tracking |
-                           +------------------------------------------------+
-                                                   |
-                                                   v
-                           +------------------------------------------------+
-                           |  Homography Ground-Plane Projection (Meters)   |
-                           +------------------------------------------------+
-                                                   |
-                                                   v
-                           +------------------------------------------------+
-                           |  Multi-Modal Cross-Camera Global Identity      |
-                           |  (Spatial Proximity + Visual ReID + Time Sync) |
-                           +------------------------------------------------+
-                                                   |
-                  +--------------------------------+-------------------------------+
-                  |                                                                |
-                  v                                                                v
-+------------------------------------+                         +---------------------------------------+
-|  Synchronized 4-Panel Dashboard    |                         |  Structured Tracking Records (CSV/PQ) |
-|  [Cam 1] [Cam 2] / [Cam 3] [2D Map]|                         |  & Global Cow Registry Summary        |
-+------------------------------------+                         +---------------------------------------+
-```
+> **Event data:** the footage, frames and results stay within the event. Keep this repository private. Video clips are not in the repository; the commands below regenerate them.
 
 ---
 
-## Model Selection & Empirical Benchmark
+## 1. Quick start
 
-We investigated and benchmarked multiple perception candidates on actual Pen 6 daytime and nighttime Angus cattle frames:
+You need the footage the way the organizers shared it (`Day 1/Cam 01/Event*.Avi`, …) and, for the agents, a TAMU AI Chat API key.
 
-| Model Architecture | Weights File | Latency (ms) | Throughput (FPS) | Mean Detected Cows/Frame | Mean Confidence | 50GB Estimated Runtime (1 FPS) | Assessment |
-| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
-| **YOLO26-XL-Seg (Default Max-Accuracy)** | `yolo26x-seg.pt` | **237.5 ms** | **4.2 FPS** | **5.00** | **0.622** | **~11.4 hrs** | **Highest Confidence SOTA**: Highest precision and confidence on Angus cattle; best for offline high-fidelity tracking & ground-truth generation. |
-| **YOLO26-Medium-Seg (Balanced High-Recall)** | `yolo26m-seg.pt` | **104.9 ms** | **9.5 FPS** | **5.17** | **0.607** | **~5.0 hrs** | **Highest Recall**: Captures the most cattle per frame (5.17) with 2.3x faster inference than XL. |
-| **YOLO26-Small-Seg (Real-Time Deployment)** | `yolo26s-seg.pt` | **50.4 ms** | **19.8 FPS** | **3.83** | **0.559** | **~2.4 hrs** | **Real-Time Edge**: Fast, low memory footprint, ideal for live 15+ FPS streaming. |
-| **YOLO26-Nano-Seg (Edge)** | `yolo26n-seg.pt` | 39.4 ms | 25.4 FPS | 2.50 | 0.361 | ~1.9 hrs | Lightweight, but drops cattle along the distant back fence. |
-| **YOLO11-Small-Seg** | `yolo11s-seg.pt` | 45.4 ms | 22.0 FPS | 3.83 | 0.495 | ~2.2 hrs | Previous generation baseline. |
-| **YOLOv8-Small-Seg** | `yolov8s-seg.pt` | 49.0 ms | 20.4 FPS | 1.83 | 0.609 | ~2.4 hrs | Legacy baseline; lower recall in night shadows. |
+### Option A: Docker (recommended)
 
-### Architectural Comparison: XL vs. Medium vs. Small
-- **YOLO26-XL (`yolo26x-seg.pt`, 136 MB)**: Features 392 layers and 59M parameters. Achieves the highest individual detection confidence (**0.622**) and tightest segmentation boundary delineation, especially on black Angus cows lying down in dark pen corners.
-- **YOLO26-Medium (`yolo26m-seg.pt`, 52 MB)**: Features 280 layers and 22M parameters. Achieved the highest empirical recall (**5.17 cows detected per frame**) while running at over 2x the speed of XL.
-- **YOLO26-Small (`yolo26s-seg.pt`, 22 MB)**: Features 260 layers and 10M parameters. Designed for high-throughput live video inference where processing speed is critical.
+```bash
+git clone <this repository> pen6 && cd pen6
+git lfs install && git lfs pull                 # model weights (models/*.pt, ~170 MB)
+cp .env.example .env                            # then put your key in it: TAMU_API_KEY=...
+docker build -t pen6 .                          # CPU image, ~4 GB
+```
+
+NVIDIA GPU (much faster tracking), on Linux with the NVIDIA Container Toolkit:
+
+```bash
+docker build -t pen6 --build-arg BASE=pytorch/pytorch:2.5.1-cuda12.4-cudnn9-runtime .
+# then add --gpus all to every docker run below
+```
+
+Every command in sections 3–5 runs inside the container. Mount the footage read-only at `/videos` and keep the results on your machine:
+
+```bash
+docker run --rm -it --env-file .env \
+  -v "/path/to/footage:/videos:ro" -v "$PWD/outputs:/app/outputs" \
+  pen6 <command>
+```
+
+### Option B: Python on your machine
+
+Requirements: Python 3.10–3.12, `ffmpeg` with HEVC decoding (macOS `brew install ffmpeg`; Ubuntu `apt install ffmpeg`), and Git LFS.
+
+```bash
+git clone <this repository> pen6 && cd pen6
+git lfs install && git lfs pull
+python3.12 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt -r brd_agent/requirements.txt      # exact tested versions: requirements-lock.txt
+cp .env.example .env                                                 # TAMU_API_KEY=...
+```
+
+The models run on an NVIDIA GPU (CUDA) if there is one, else the Apple GPU (MPS), else the CPU. Set `PEN6_DEVICE=cpu` to force the CPU.
 
 ---
 
-## Repository Structure
+## 2. Check before you run (1 minute, nothing is processed)
 
+```bash
+python run_pipeline.py --videos "/videos/Day 2" --name check --dry-run
 ```
-.
-├── configs/
-│   ├── cameras.yaml         # Multi-camera positions, orientations, homography calibration points
-│   ├── pen_layout.yaml      # Pen 6 metric dimensions, zones, and camera-specific 2D ROI polygons
-│   ├── tracking.yaml        # ByteTrack thresholds, buffer sizes, and cross-camera weights
-│   └── models.yaml          # Detector parameters, ReID extractor, and preprocessing profiles
-├── input/
-│   ├── cam1/                # Front Overview camera frames (Day & Night)
-│   ├── cam2/                # Top Feed Bunk camera frames (Day & Night)
-│   └── cam3/                # Back Overview camera frames (Day & Night)
-├── src/
-│   ├── video/
-│   │   ├── video_metadata.py    # Metadata inspection and 50GB computational resource budgeting
-│   │   ├── video_reader.py      # Subsampled frame generator supporting files and folders
-│   │   └── synchronization.py   # Multi-camera temporal alignment
-│   ├── calibration/
-│   │   ├── pen_boundary.py      # Polygonal ROI containment and exclusion filtering
-│   │   ├── camera_calibration.py# Planar homography estimation from known landmarks
-│   │   ├── coordinate_transform.py # Projective transform between image pixels and ground meters
-│   │   └── zone_mapping.py      # Classifies coordinates into Feeding, Drinking, and Resting zones
-│   ├── detection/
-│   │   ├── preprocessing.py     # Day/night illumination assessment & adaptive CLAHE
-│   │   ├── cow_detector.py      # YOLO26 perception wrapper with pen filtering & occlusion scoring
-│   │   ├── cow_segmenter.py     # Instance mask extraction, RDP polygon simplification & RLE
-│   │   ├── clinical_visibility.py # Optical resolution & BRD facial sign feasibility assessment
-│   │   └── clinical_head_detector.py # Anatomical bovine head cropper & Wisconsin BRD clinical scoring
-│   ├── tracking/
-│   │   ├── local_tracker.py     # 2-stage ByteTrack with Kalman box state prediction
-│   │   ├── reidentification.py  # DINOv2 / ResNet50 appearance feature embedding extractor
-│   │   ├── appearance_gallery.py# Multi-view visual gallery per cow identity
-│   │   ├── global_identity.py   # Cross-camera identity fusion & Global Cow Registry (COW_01-10)
-│   │   └── consensus_protocol.py# Lyapunov-stable distributed agreement protocol across camera views
-│   ├── dataset/
-│   │   ├── frame_extractor.py   # Stratified keyframe extractor for 48h day/night videos
-│   │   └── dataset_builder.py   # Auto-labeler generating YOLO polygon annotations & dataset.yaml
-│   ├── visualization/
-│   │   ├── annotation.py        # Bounding box, segmentation mask, track pills, and ROI overlay
-│   │   ├── pen_visualization.py # 2D metric bird's-eye map with real-time cow markers
-│   │   └── tracking_dashboard.py# 4-panel synchronized dashboard generator
-│   ├── storage/
-│   │   ├── database.py          # Structured tracking record schema
-│   │   └── export.py            # CSV, Parquet, and JSON exporters
-│   ├── evaluation/
-│   │   ├── detection_metrics.py # Detection summary and occlusion distribution
-│   │   ├── tracking_metrics.py  # Track stability, duration, and fragmentation index
-│   │   └── evaluation_report.py # Automated Markdown and JSON evaluation report generator
-│   └── pipeline/
-│       ├── single_camera.py     # End-to-end single camera pipeline
-│       └── multi_camera.py      # Synchronized multi-camera pipeline with Lyapunov consensus
-├── tests/                       # Complete automated unit test suite (16 tests)
-├── outputs/                     # Generated videos, records, dashboard snapshots, and reports
-├── main.py                      # Unified CLI entrypoint
-├── train.py                     # YOLO26 fine-tuning and dataset preparation pipeline
-├── requirements.txt             # Pinned project dependencies
-└── README.md                    # Comprehensive documentation
-```
+
+This prints which camera each clip was assigned to and the plan. Cameras are recognised from the `Cam 0N` folder, or from the 3 digits after the timestamp in the file name (`006` = cam1 front, `017` = cam2 bunk/top, `003` = cam3 back). The first clip's resolution is then checked. A clip that cannot be placed stops the run; it is never guessed.
 
 ---
 
-## Installation & Setup
+## 3. Level 3 on a clip you choose (the judges' clip)
+
+Pass **one camera's file** of a 5-minute window. The same window from the other two cameras is found next to it (`Cam 01/02/03`).
 
 ```bash
-# 1. Clone repository and navigate to workspace
-cd /path/to/aisfsHackathon
-
-# 2. Create virtual environment
-python3 -m venv .venv
-source .venv/bin/activate
-
-# 3. Install dependencies
-pip install -r requirements.txt
+python live_watch.py --clip "/videos/Day 2/Cam 01/Event20261108142130006.Avi"
 ```
+
+For that window it:
+1. tracks the cows and maps them to the 48 h IDs;
+2. compares each cow with the herd in the same window;
+3. checks close crops for drooping ears, a low head and nasal discharge (VLM). Every flag gets a second look and a measurement check;
+4. updates each cow's risk, starting from the 48 h Level 2 result, and sends alerts with a 12 s clip.
+
+| Output (in `outputs/live/`) | What it is |
+|---|---|
+| `index.html` | Live dashboard: tier and risk per cow, trend, alert feed |
+| `alerts/<cow>_<time>.html` + clip, frame, crops | The alert a pen rider gets: what to do, the evidence, why |
+| `outbox/*.eml` | Simulated alert emails and the daily BRD report (never sent) |
+| `report.html`, `risk_history.csv`, `state.json`, `windows.jsonl`, `live.log` | Every decision with its evidence |
+
+Ranch mode watches the folder the cameras write to and processes each new window as it completes:
+
+```bash
+python live_watch.py --watch /videos --poll 30
+```
+
+Useful flags:
+- `--verify`: also runs the stage 2 behavior agent on the window.
+- `--no-signs`: skips the VLM sign check.
+- `--reset`: starts again from the 48 h baseline.
+
+Settings: `configs/live.yaml`. Method: [`docs/LEVEL3_LIVE.md`](docs/LEVEL3_LIVE.md).
 
 ---
 
-## Usage Guide
+## 4. Levels 1 and 2 on any footage
 
-### 1. Multi-Camera Synchronized Execution (Default)
-Processes Front (Cam 1), Top (Cam 2), and Back (Cam 3) camera inputs simultaneously, performs cross-camera identity fusion, and generates a 4-panel dashboard video and structured CSV/Parquet records:
+One command takes a folder of clips (any length) to the Level 1 and Level 2 deliverables:
+
 ```bash
-python main.py --front input/cam1 --top input/cam2 --back input/cam3 --model yolo26s-seg.pt
+python run_pipeline.py --videos "/videos/Day 2" --name d2_afternoon \
+    --start "2026-11-08 14:00" --end "2026-11-08 16:00"     # optional time window
 ```
 
-### 2. Single-Camera Execution
-Run on a single camera stream independently:
+| Step | What happens | Output (in `outputs/pipeline/<name>/`) |
+|---|---|---|
+| `prepare` | sort clips into cameras (links, no copies) | `input/cam1..cam3/` |
+| `track` | fine-tuned YOLO26 detector + ByteTrack per camera, 1 frame/s | `stage1/tracking/` |
+| `level1` | identity by cross-camera agreement, world state, identity agent, behavior model | `stage1/level1/` (+ `agent/id_checks/`, the 30-min ID sheets) |
+| `assets` | breathing, sudden movements, feed events, evidence clips | `stage1/level1/assets/` |
+| `import` / `agent` / `export` | stage 2 behavior agent re-checks flagged minutes on the video | `final/activity.csv`, `activity_minute.csv`, `time_budgets.csv`, `actions.csv`, `traces/` |
+| `level2` | 13 BRD indicators vs the herd, risk agent, risk cards | `level2/brd_risk.csv`, `index.html`, `cards/` |
+
+- **Resuming:** runs resume after an interruption. The same `--name` skips finished steps, and `--from STEP` redoes a step and everything after it.
+- **Logs:** each step's log is in `logs/`. `python why_failed.py` says which step stopped and why ([`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md)).
+- **Viewer:** `python scripts/run_viewer.py --run outputs/pipeline/<name>` makes an interactive `viewer.html`.
+- **`basis` column:** every row of `activity.csv` says how it is known: `verified` (an agent looked at the frames), `observed`, `unverified`, `estimated` or `not_visible`.
+
+**Running time:** 5 minutes of 3-camera footage took about 12 min on a MacBook (Apple GPU):
+
+| Step | Time |
+|---|---|
+| tracking | 4 min |
+| identity + behavior | 5 min |
+| assets | 1 min |
+| behavior agent | 2 min |
+
+An NVIDIA GPU is several times faster. For the full 48 h, see section 5.
+
+### Without an API key
+
+Everything still runs on rules and the local models; only the agents are switched off:
+
 ```bash
-python main.py --camera front --video input/cam1
-python main.py --camera back --video input/cam3
-python main.py --camera top --video input/cam2
-```
-
-### 3. Video Metadata Inspection & Computational Budgeting
-Estimates processing runtime, frame counts, and storage for the 50 GB / 48-hour dataset:
-```bash
-python main.py --inspect --fps 1.0
-```
-Output:
-```
-Total Video: 50.0 GB | 48.0 Hours
-Native Frames (15 FPS): 2,592,000 frames
-Sampling Target: 1.0 FPS (15.0x downsample)
-Processed Frames: 172,800 frames
-Estimated GPU Runtime: ~1.37 hours
-Estimated Output CSV Size: ~197.8 MB
-```
-
-### 4. Candidate Model Benchmarking
-Benchmarks candidate models on actual day and night Angus frames:
-```bash
-python main.py --benchmark
-```
-
-### 5. Dataset Extraction & YOLO26 Fine-Tuning
-Extract stratified keyframes across the 48-hour day/night video feeds, auto-generate YOLO segmentation polygon annotations, and fine-tune YOLO26:
-```bash
-# Extract keyframes and build data/training/dataset.yaml
-python train.py --prepare-data --stride-seconds 60
-
-# Fine-tune YOLO26-Medium on Pen 6 Angus cattle (freezing backbone)
-python train.py --epochs 30 --batch 8 --model yolo26m-seg.pt
-```
-
-### 6. Running the Automated Test Suite
-```bash
-python -m unittest discover tests
+python run_pipeline.py --videos /videos/... --name test --vlm mock --no-id-agent --level2-skip-agent
+python live_watch.py --clip /videos/.../Event....Avi --no-signs     # live_watch drops the identity agent itself when no key is set
 ```
 
 ---
 
-## Cow Identity (tracklet-level, unique, persistent)
+## 5. Reproducing the 48 h results in `submission/`
 
-`src/tracking/tracklet_identity.py` (default; `--legacy-identity` restores the old greedy matcher).
-
-1. **Tracklet embeddings.** Each ByteTrack track keeps a running embedding: DINOv2 ViT-S/14 plus a coat descriptor (white markings, brown tint, coloured ear tags), because generic embeddings barely separate black Angus.
-2. **Unique assignment.** For each camera and step, a Hungarian assignment of tracks to `COW_01…10` with cost = appearance distance to the cow's prototype + distance to where that cow is right now in another camera (or was last seen) + a stickiness bonus for the current ID. Physically impossible jumps (> 3 m/s) are blocked, and each cow is used at most once per camera per frame. Tracks with no acceptable match stay unassigned instead of guessing.
-3. **Prototype updates.** A cow's prototype is updated only from assignments that are clearly better than the next-best cow.
-4. **Saved gallery.** `--id-gallery` (default `outputs/id_gallery.npz`) is loaded at start and saved at the end, so `COW_xx` stays the same animal across clips and days. Delete it to start fresh.
-
-cam3 positions are not used for identity until its metric calibration is verified against the official pen map.
-
-**Day 1 07:19 clip, 180 s, cam1 + cam3:** 0 duplicate IDs per frame (previously two boxes could share an ID); the distinctive white-faced steer keeps one ID across the clip; 4 of 22 tracks changed ID once.
-
-## Level 1 Behavior Classification (10 official classes)
-
-`classify_behavior.py` turns `tracking_records.csv` (one or many runs) into a per-cow behavior
-time series using **only** the official classes: `lying, standing, walking, feeding, drinking,
-ruminating (lying), ruminating (standing), grooming, social interaction, other / not visible`.
-
-### How it works (`src/behavior/`)
-
-| Stage | File | What it does |
-| :--- | :--- | :--- |
-| Cues | `features.py` | Per detection: **posture** from a self-calibrated *standing-height model* (expected standing bbox height vs. image row, fitted per camera from the upper envelope of all tracks; no labels needed; lying ≈ 0.5–0.6× standing height), **motion** in m/s using that standing height (~1.4 m) as the pixel ruler (works the same from any viewing angle and isn't thrown off by far-field homography error), **zones** (feeding apron, waterer distance, cam2 head-over-trough overlap), **grooming** (bbox-width oscillation while the ground contact is still), **social** (nearest-neighbour world distance + same-camera bbox contact, excluding the bunk). |
-| Fusion | `fusion.py` | Merges all cameras' observations of a cow in each second, weighting each by detection quality × how much that camera is trusted for that cue (cam2 for feeding, cam1/cam3 for posture), then a factorised model gives P(10 classes). |
-| Temporal | `fusion.py` | Sticky HMM with biologically-set mean bout durations (lying 30 min, feeding 7 min, walking 20 s …) and damped impossible jumps (lying→walking). Forward-backward gives posteriors (confidence), Viterbi gives the labels. Short unseen gaps (≤45 s) are bridged; longer ones become `other / not visible`. |
-| Rumination | `rumination.py` | **Measured, not guessed**: for still bouts ≥2 min it decodes a 12 s native-fps snippet and looks for a jaw-motion spectral peak at 0.75–1.6 Hz (45–95 chews/min). Opt-in (`--probe-rumination`); also usable as an agent tool. |
-| Appearance (optional) | `appearance.py` | Frozen DINOv2 ViT-S/14 (already used for ReID) + logistic-regression probe, fused as a product-of-experts. Trained on event crops you correct + public datasets. |
-| Export | `export.py` | `activity.csv`, `behavior_bouts.csv`, `time_budgets.csv`, `behavior_timeline_1s.csv`, `behavior_review_queue.csv`, `behavior_summary.json`. |
-
-Every second is tagged with **evidence**: `observed` (direct geometric measurement),
-`observed_chewing`, `estimated_heuristic` (grooming/social until a visual check), `estimated_gap_fill`,
-`not_visible`, or `no_video` (minutes with no recording). This separates what the system
-observed from what it estimated, as the brief requires. Rumination is **never** assigned
-without chewing evidence or the learned expert, so lying/standing time includes unconfirmed rumination.
-
-### Commands
+48 h × 3 cameras of 4K footage is split into chunks, run in parallel, and stitched.
 
 ```bash
-# 1. tracking (per clip / overlapping clip set) -> tracking_records.csv
-python main.py --front "input/Day 1/Cam 01/Event20261107071945006.Avi" \
-  --back "input/Day 1/Cam 03/Event20261107071935003.Avi" --top /nonexistent \
-  --model runs/segment/runs/angus_train/angus_yolo26m-seg-4/weights/best.pt \
-  --fps 1 --no-video --output-dir outputs/run_d1_0719
-
-# 2. behavior for every run, every minute of both days
-python classify_behavior.py --records "outputs/run_*/tracking_records.csv" \
-  --full-days 2026-11-07 2026-11-08 --out outputs/behavior
-
-# optional: measured rumination + learned appearance expert
-python classify_behavior.py --records "outputs/run_*/tracking_records.csv" --video-root input \
-  --probe-rumination --appearance-model models/behavior_probe.joblib --out outputs/behavior
-
-# optional: train the appearance probe (crops pre-sorted by the geometric model; fix wrong folders)
-python train_behavior_probe.py export-crops --records "outputs/run_*/tracking_records.csv" --video-root input
-python train_behavior_probe.py train --event-crops data/behavior_crops \
-  --cvb-ava <CVB_in_AVA_format csv> --cvb-frames <raw_frames dir> --cvb-pattern "{video_id}/{frame:05d}.jpg"
+# 1. plan: split the footage into shares (all on one machine here)
+python run_share.py --plan-only --layout all-laptops --videos /videos
+# 2. run each share's chunks (resumable; repeat for each --who)
+python run_share.py --who naufal_training --videos /videos --yes
+python run_share.py --who afeef_training  --videos /videos --yes
+python run_share.py --who nooh_training   --videos /videos --yes
+# 3. join the chunks into one 48 h result and run Level 2 on it
+python stitch_shares.py --videos /videos            # -> outputs/stitched/ (final/, level2/, id_map.csv)
+python scripts/stitched_viewer.py                   # -> outputs/stitched/viewer.html
 ```
 
-All thresholds live in `configs/behavior.yaml` and are physical quantities (m/s, m, Hz, s).
+Each chunk also tracks the 2 minutes before its window. The stitcher joins cow IDs where neighbouring chunks saw the same boxes in the same frames. Uncertain joins are listed in `id_map.csv` and can be overridden with `--id-map overrides.yaml`.
 
-### External data and models
-
-| Resource | Use | Licence |
-| :--- | :--- | :--- |
-| DINOv2 ViT-S/14 (`facebookresearch/dinov2`, torch.hub) | frozen crop embedding for ReID + behavior probe | Apache-2.0 |
-| CVB: Cattle Visual Behaviors (CSIRO, arXiv:2305.16555, doi:10.25919/3g3t-p068) | optional probe training: 8 Angus, 11 classes incl. ruminating-lying/standing, grooming | CC BY-NC-SA 4.0 (non-commercial) |
-| CBVD-5 (Kaggle `fandaoerji/cbvd-5cow-behavior-video-dataset`) | optional probe training: standing, lying, feeding, drinking, rumination | CC0 |
-| Ultralytics YOLO26 | detection / segmentation | AGPL-3.0 |
-
-Class mappings are in `src/behavior/taxonomy.py`. External data is capped per class so it
-cannot swamp event crops, and probe accuracy is reported on held-out **event** crops only.
-
-### What this can and cannot support
-- Lying / standing / walking / feeding / drinking are measured from geometry and are reliable when a cow is tracked with a stable `global_cow_id`.
-- Rumination needs the chew probe (or the learned expert); at 1 fps it is invisible.
-- Grooming and social interaction are heuristic cues. They go into `behavior_review_queue.csv` for the agent (VLM) to verify visually.
-- Behavior accuracy is capped by identity accuracy. A wrong `global_cow_id` puts the right behavior on the wrong cow.
-
-## Level 3: Live Early Warning
-
-`live_watch.py` watches new video, updates every cow's BRD risk and sends an alert with video evidence that a pen
-rider can act on. Full design, speed and limits: [docs/LEVEL3_LIVE.md](docs/LEVEL3_LIVE.md).
-
-```bash
-python live_watch.py --clip "<videos>/Day 2/Cam 01/Event20261108142130006.Avi"   # the judges' clip (finds the other cameras' files)
-python live_watch.py --watch "<videos>"                                          # ranch mode: every new 5-min window
-python live_watch.py --baseline                                                  # only the alerts from the 48 h BRD risk
-```
-
-On start it turns the 48 h Level 2 ranking into alert tiers: **Pull and examine** (a confirmed visible sign), **Check
-on the next pen ride** (top 3 with a stable rank: COW_02, COW_01, COW_10), **Watch list**, and Normal. Push tiers get a
-card with Level 2's reasons and clips. Each live window then re-evaluates every tier.
-
-Per window it runs the pipeline (stage 1 tracking, identity, behavior, close crops). It then keeps the 48 h cow ids
-(tracking seeded from the last Day 2 chunk's appearance gallery), compares each cow with the herd in the same window,
-and checks close crops for **drooping ears, head carried low and nasal discharge** (VLM + a pixel check, then a
-confirming second look next to a herdmate). It updates the risk, using the 48 h Level 2 score as the prior, and writes
-an alert card with a 12 s clip, the crops and a plain action line. Dashboard: `outputs/live/index.html`. Optional
-delivery: `LIVE_WEBHOOK_URL` (Slack, Teams or ntfy). Clinical signs need `TAMU_API_KEY` in `.env`.
-
-## Output Data Schema
-
-Structured tracking records are exported to `outputs/tracking_records.csv` and `outputs/tracking_records.parquet` following the exact schema:
-
-| Column Name | Data Type | Description |
-| :--- | :--- | :--- |
-| `timestamp` | `float` | Elapsed video timestamp in seconds |
-| `camera_id` | `string` | Camera identifier (`cam1`, `cam2`, `cam3`) |
-| `frame_number` | `int` | Sequential frame index |
-| `local_track_id` | `int` | Within-camera ByteTrack ID |
-| `global_cow_id` | `string` | Associated global identity (`COW_01` to `COW_10`) |
-| `bbox_x1`, `bbox_y1`, `bbox_x2`, `bbox_y2` | `float` | Bounding box coordinates in pixels |
-| `center_x`, `center_y` | `float` | 2D bounding box center in pixels |
-| `detection_confidence` | `float` | YOLO11 perception confidence score [0.0 - 1.0] |
-| `tracking_confidence` | `float` | Filtered tracking stability score [0.0 - 1.0] |
-| `segmentation_mask_reference` | `string` | Reference to compact polygon mask |
-| `visibility_status` | `string` | `VISIBLE`, `PARTIALLY_OCCLUDED`, `HEAVILY_OCCLUDED` |
-| `occlusion_status` | `string` | Fractional overlap with neighboring cattle [0.0 - 1.0] |
-| `identity_confidence` | `float` | Cross-camera identity association confidence |
-| `world_x`, `world_y` | `float` | Calibrated ground-plane coordinates in Pen 6 meters |
-| `discharge_inspection_feasible` | `bool` | True if bovine head has >= 120px optical resolution for clinical inspection |
-| `best_clinical_camera` | `string` | Optimal camera viewpoint for BRD inspection (`cam2` when at feed bunk) |
-| `clip_10s_reference` | `string` | 10-second video snippet reference window |
-| `consensus_energy` | `float` | Inter-camera Lyapunov disagreement energy $V(k)$ |
+- **On a cluster:** we ran Day 2 as a Slurm GPU array job on TAMU HPRC: [`docs/HPRC_PIPELINE.md`](docs/HPRC_PIPELINE.md).
+- **On laptops:** [`docs/LAPTOP_SETUP.md`](docs/LAPTOP_SETUP.md).
+- **Level 3 baseline:** Level 3 starts from `submission/level2` (`configs/live.yaml: baseline`).
 
 ---
 
-## Future Extensibility: Preparing for Phase 2
+## 6. Models, versions and external resources
 
-Phase 1 outputs were engineered specifically to feed downstream behavior analysis and agentic VLM reasoning:
-1. **Feeding & Drinking Detection**: `world_x` and `world_y` automatically map into the metric `Feeding Zone` and `Drinking Zone` polygons, allowing instant computation of time spent at the bunk or waterer.
-2. **Resting & Rumination Analysis**: Cow bounding boxes, segmentation masks, and centroid stability indicate standing vs. lying postures.
-3. **Agentic VLM Integration**: Downstream LLM/VLM agents can query `tracking_records.csv` and `cow_identity_summary.json` with tools to retrieve video crops for any specific cow and timestamp (e.g. *"Show me all feeding events for COW_04 between 14:00 and 16:00"*).
+| What | Model / version | Where |
+|---|---|---|
+| Cow detector | YOLO26-m (Ultralytics 8.4.212), fine-tuned at 1280 px on 216 hand-labelled frames from this pen | `models/angus_det_hprc_m1280.pt` (Git LFS) |
+| Tracker | ByteTrack (Ultralytics), per camera | |
+| Cow appearance (identity tie-break, memory cards) | Meta DINOv2 ViT-S/14 via `torch.hub` (`facebookresearch/dinov2`) | downloaded on first use; baked into the Docker image |
+| Behavior classifier | DINOv2-S (`timm` `vit_small_patch14_dinov2.lvd142m`), last 4 blocks fine-tuned on our ~330 labelled clips + 9,269 CBVD-5 crops | `models/behavior/beh_finetuned.pt` (Git LFS), report in `models/behavior/ft_report.md` |
+| Identity agent, stage 2 behavior agent | GPT-5.6 Luna (`protected.gpt-5.6-luna`) via the TAMU AI Chat API | `configs/agent.yaml`, `configs/pipeline.yaml` |
+| Level 2 risk agent | Claude Opus 4.8 (`protected.Claude Opus 4.8`) via TAMU | `configs/risk.yaml` |
+| Level 3 sign check | Gemini 3.5 Flash and Claude Opus 4.8 via TAMU | `configs/live.yaml` |
+| Fallbacks | the same model on the OpenAI API (`OPENAI_API_KEY`), then local Qwen2.5-VL 7B through Ollama | `configs/agent.yaml` |
+
+**External data and code:**
+- CBVD-5 cattle behavior dataset (Kaggle, CC0)
+- COCO-pretrained YOLO26 weights (Ultralytics)
+- DINOv2 (Meta)
+- OpenCV, ffmpeg, Label Studio (local, for our labelling)
+- BRD literature for the indicator weights (sources in `configs/risk.yaml` and on every risk card)
+
+**Tested environment:** Python 3.12.15 with ffmpeg 9.0 on macOS (Apple GPU), and Linux on TAMU HPRC (NVIDIA GPUs). The Docker image uses Debian's ffmpeg. Exact package versions: `requirements-lock.txt`.
+
+**AI tools:** the agents above run through the TAMU AI Chat API. We used Claude Code as a coding assistant; the team reviewed every result.
+
+---
+
+## 7. Repository map
+
+```
+run_pipeline.py        videos -> Level 1 + Level 2 (one command, resumable)
+live_watch.py          Level 3 live early warning
+run_share.py           48 h in chunks;  stitch_shares.py  joins them
+main.py                stage 1 tracking (detector + ByteTrack)
+scripts/               run_level1.py, run_level2.py, viewers, calibration, anchors, identity tools
+src/                   detection, tracking, identity, world state, behavior, agents, risk, live
+brd_agent/             stage 2 behavior agent (verifies flagged cow-minutes on the video)
+pipeline/              camera sorting, step orchestration, deliverables
+configs/               cameras, pen layout, models, agents, risk weights and sources, live alert rules
+models/                fine-tuned detector and behavior model (Git LFS)
+submission/            our 48 h results (Levels 1–3), traces, ID-check sheets, evidence images
+docs/                  technical brief, method notes per level, setup and troubleshooting
+tests/                 pytest -q
+```
+
+Method notes:
+- pipeline: [`docs/PIPELINE.md`](docs/PIPELINE.md)
+- Level 2: [`docs/LEVEL2_METHOD.md`](docs/LEVEL2_METHOD.md)
+- Level 3: [`docs/LEVEL3_LIVE.md`](docs/LEVEL3_LIVE.md)
+- column definitions: [`docs/DATA_CONTRACT.md`](docs/DATA_CONTRACT.md)
+
+---
+
+## 8. What this can and cannot support
+
+- **Observed vs estimated:** every minute in `activity.csv` carries its basis. About 30 % of cow-minutes are not visible to any camera, and those are reported as such, never guessed.
+- **Risk score:** the BRD risk is a ranked suspicion index against the herd, not a diagnosis or a calibrated probability. 10 cows over 48 h, with no clinical outcomes, cannot validate a BRD model.
+- **Our 48 h call:** COW_02, COW_01 and COW_10 are early suspects on behavior (slower to the bunk, eat less), with no visible clinical sign confirmed. Confirm with temperature and examination.
