@@ -172,3 +172,26 @@ def test_device_override(monkeypatch):
     from src.device import pick_device
     monkeypatch.setenv("PEN6_DEVICE", "cpu")
     assert pick_device() == "cpu"
+
+
+def test_unplaced_cows_go_to_unplaced_ids_not_new_ones(tmp_path):
+    """Midnight join, Day 1 laptops -> Day 2 HPRC: prototypes of different lengths (420 vs 164), so appearance cannot
+    be compared. The pen is fixed: they are the known cows, placed by where they were across the join."""
+    rng = np.random.default_rng(3)
+    c1 = _chunk(tmp_path, "c01", "2026-11-07 10:00", "2026-11-07 11:00",
+                {"COW_01": rng.normal(size=16), "COW_02": rng.normal(size=16)})
+    c2 = _chunk(tmp_path, "c02", "2026-11-07 11:00", "2026-11-07 12:00",
+                {"COW_01": rng.normal(size=8), "COW_02": rng.normal(size=8)})
+    def obs(ch, rows, t0):
+        p = ch["dir"] / "stage1" / "level1" / "contract"
+        p.mkdir(parents=True, exist_ok=True)
+        secs = pd.date_range(t0, periods=120, freq="s").strftime("%Y-%m-%dT%H:%M:%S")
+        pd.DataFrame([{"wall_time": t, "camera": "cam1", "cow_id": c, "world_x": x, "world_y": y}
+                      for t in secs for c, x, y in rows]).to_csv(p / "observations.csv", index=False)
+    obs(c1, [("COW_01", 0.0, 0.0), ("COW_02", 10.0, 10.0)], "2026-11-07 10:57")
+    obs(c2, [("COW_01", 9.8, 10.3), ("COW_02", 0.3, 0.1)], "2026-11-07 11:00")      # numbered the other way round
+    m = stitch_shares.align_ids([c1, c2], 0.55, 0.05, {})
+    g = m[m.chunk == "c02"].set_index("local_id")
+    assert m.global_id.nunique() == 2                                   # no COW_03 / COW_04 invented
+    assert g.loc["COW_01", "global_id"] == "COW_02" and g.loc["COW_02", "global_id"] == "COW_01"
+    assert g.status.str.startswith("position").all()

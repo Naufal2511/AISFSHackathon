@@ -85,6 +85,29 @@ def _protos(chunk: dict) -> dict[str, np.ndarray]:
     return {k: z[k] / (np.linalg.norm(z[k]) + 1e-9) for k in z.files}
 
 
+_POS: dict = {}
+
+
+def positions(ch: dict, t0, t1, idmap: dict | None = None) -> pd.DataFrame:
+    """Median world position (m, any camera) per labelled cow in [t0, t1), ids mapped through idmap if given."""
+    key = str(ch["dir"])
+    if key not in _POS:
+        p = ch["dir"] / "stage1" / "level1" / "contract" / "observations.csv"
+        o = pd.read_csv(p, usecols=["wall_time", "cow_id", "world_x", "world_y"], low_memory=False) if p.exists() \
+            else pd.DataFrame(columns=["wall_time", "cow_id", "world_x", "world_y"])
+        o = o.dropna()
+        o["ts"] = pd.to_datetime(o.wall_time)
+        if len(_POS) >= 2:
+            _POS.pop(next(iter(_POS)))
+        _POS[key] = o
+    o = _POS[key]
+    w = o[(o.ts >= t0) & (o.ts < t1)]
+    pos = w.groupby(w.cow_id.astype(str))[["world_x", "world_y"]].median()
+    if idmap:
+        pos.index = [idmap.get(i, i) for i in pos.index]
+    return pos
+
+
 def _boxes(ch: dict, t0, t1) -> pd.DataFrame:
     p = ch["dir"] / "stage1" / "level1" / "contract" / "observations.csv"
     if not p.exists():
@@ -188,6 +211,32 @@ def align_ids(chunks: list[dict], min_sim: float, min_margin: float, overrides: 
                 second = np.sort(S[i])[-2] if S.shape[1] > 1 else -1.0
                 assign[todo[i]] = (gids[j], float(S[i, j]), float(S[i, j] - second))
         taken = set(ov.values()) | {g for g, _, _ in by_overlap.values()}
+        # The pen has a fixed herd: a cow that neither the overlap nor appearance places is one of the known cows not
+        # placed yet, not a new animal. Seen on the midnight join: HPRC's prototypes are 164-d, the laptops' 420-d,
+        # so appearance could not be compared and the old code invented COW_11..13. Left-over cows go to left-over ids
+        # by where they were just before / after the join (Hungarian on distance); with no position either, it is a
+        # guess (flagged). A new id only when every known id is taken.
+        forced: dict[str, tuple] = {}
+        if not first:
+            acc = {l for l in assign if assign[l][1] >= min_sim}
+            taken0 = taken | {assign[l][0] for l in acc}
+            left = [l for l in local if l not in ov and l not in by_overlap and l not in acc]
+            free = [g for g in sorted(bank) if g not in taken0]
+            if left and free:
+                C = np.full((len(left), len(free)), 50.0)
+                i_ch = chunks.index(ch)
+                before = prev or (chunks[i_ch - 1] if i_ch and chunks[i_ch - 1]["end"] >= ch["run_start"] - pd.Timedelta(minutes=5) else None)
+                if before is not None:
+                    J0, J = ch["run_start"], ch["start"]
+                    PA = positions(before, J0 - pd.Timedelta(minutes=5), J, maps.get(before["name"], {}))
+                    PB = positions(ch, J0, J + pd.Timedelta(minutes=5))
+                    for i, l in enumerate(left):
+                        for k, g in enumerate(free):
+                            if l in PB.index and g in PA.index:
+                                C[i, k] = float(np.hypot(*(PB.loc[l].values - PA.loc[g].values)))
+                ri, ci = linear_sum_assignment(C)
+                for i, k in zip(ri, ci):
+                    forced[left[i]] = (free[k], None if C[i, k] >= 50 else C[i, k])
         for l in local:
             if l in ov:
                 g, sim, mar, status = ov[l], None, None, "override"
@@ -196,6 +245,11 @@ def align_ids(chunks: list[dict], min_sim: float, min_margin: float, overrides: 
                 sim, mar = round(v / max(tot, 1), 3), None
                 status = (f"overlap ({v} boxes)" if v >= agree_share * tot
                           else f"overlap_split ({v} of {tot} boxes; cameras disagree)")
+            elif l in forced and not (l in assign and assign[l][1] >= min_sim and assign[l][0] not in taken):
+                g, d = forced[l]
+                sim, mar = (assign[l][1], assign[l][2]) if l in assign and assign[l][1] > -1 else (None, None)
+                status = (f"position ({d:.1f} m apart across the join)" if d is not None and d <= 3.0
+                          else "guess (no usable evidence: one of the cows not placed yet)")
             elif not pr:
                 g, sim, mar, status = (l if l not in taken else new_id(taken)), None, None, "no_cards"
             elif l in assign and assign[l][1] >= min_sim and assign[l][0] not in taken:
@@ -376,7 +430,7 @@ def main(argv=None) -> int:
     idmap = {c: dict(zip(g.local_id, g.global_id)) for c, g in idm.groupby("chunk")}
     for c in chunks:
         idmap.setdefault(c["name"], {})
-    flagged = idm[(idm.status.isin(["new", "low_margin"]) | idm.status.str.startswith("overlap_split"))
+    flagged = idm[(idm.status.isin(["new", "low_margin"]) | idm.status.str.startswith(("overlap_split", "position", "guess")))
                   & (idm.chunk != chunks[0]["name"])]
     print(f"ids: {idm.global_id.nunique()} cows; {len(flagged)} weak/new matches to check in {out / 'id_map.csv'}")
     if len(flagged):
