@@ -15,13 +15,15 @@ Computer vision measures. Tool-using agents check that record. Code checks the a
 
 **[▶ Submission video](https://youtu.be/a2jZN3BnDJE)** (5 min 39 s) &nbsp;·&nbsp; **[📄 Technical brief](docs/TECHNICAL_BRIEF.pdf)** (2 pages) &nbsp;·&nbsp; **[🖼 All results, with pictures](submission/SHOWCASE.md)**
 
-**Contents:** [Results](#results) · [Where to look](#where-to-look) · [Deliverables](#deliverables-checklist) · [How it works](#how-it-works) · [Limits](#what-the-results-can-and-cannot-support) · [Run it](#1-quick-start) · [Models](#6-models-versions-and-external-resources) · [AI tools](#7-ai-tools-and-how-we-used-claude) · [Repository map](#8-repository-map)
+**Contents:** [Results](#results) · [Where to look](#where-to-look) · [Deliverables](#deliverables-checklist) · [How it works](#how-it-works) · [Limits](#what-the-results-can-and-cannot-support) · [Future work](#future-work) · [Run it](#1-quick-start) · [Models](#6-models-versions-and-external-resources) · [AI tools](#7-ai-tools-and-how-we-used-claude) · [Repository map](#8-repository-map)
 
 ---
 
 ## Results
 
 **COW_02, COW_01 and COW_10 are early suspects, not sick cows.** Compared with the herd at the same hours, they are slower to reach the bunk after feeding, eat less and lie down more. The risk agent confirmed no visible clinical sign. Next step: take their temperatures and examine them.
+
+> **Who are they?** `COW_xx` are names our system gave the cows. **[Meet the three cows](submission/level2/EVIDENCE.md#meet-the-three-cows)** has their pictures, what sets each apart (COW_10 has a brownish back; COW_02 has pink and green ear tags; COW_01 is the glossiest black, with a yellow tag) and how to find them in the pen.
 
 | Rank | Cow | Risk | In the top 3 in | Confidence | Why, compared with the herd at the same hours |
 |:-:|---|--:|--:|:-:|---|
@@ -141,6 +143,12 @@ Method notes: [pipeline](docs/PIPELINE.md) · [Level 2](docs/LEVEL2_METHOD.md) �
 - **Identity across chunks is the weakest link.** A wrong join blurs the differences between cows more than it invents new ones. Uncertain joins are listed in `id_map.csv`.
 - **The risk score is a ranked suspicion index, not a diagnosis.** It is compared with the herd and is not a calibrated probability. Ten cows over 48 h, with no clinical outcomes, cannot validate a BRD model.
 - **Visible signs need close daylight views.** At night the alerts rely on behavior and say so. A camera cannot take a temperature, so a pen rider confirms.
+
+## Future work
+
+- **The pen manager names the cows, and the system tracks them by those names.** Today the system calls the cows `COW_01` to `COW_10`, names it chose itself, because the pen came with no list of tags. A pen rider then has to work out which animal `COW_02` is. ([EVIDENCE.md](submission/level2/EVIDENCE.md#meet-the-three-cows) does this by hand for the top three, from pictures and habits.) Next, the system will show the manager one picture per cow from its enrolment sheet. The manager types the name or ear-tag number they already use ("tag 214", "Daisy"), once. From then on, every chart, risk card and live alert uses that name, and the identity agent keeps it on the same animal across cameras and days. If the agent is unsure about a cow, it asks the manager again rather than guess. An alert would then read *"Tag 214 is slow to the bunk"* and could go straight to the pen.
+- **Read ear tags on camera** when a close daylight view allows it, to confirm the names the manager gave.
+- **Validate against clinical outcomes** (temperatures, pulls, treatments) across more pens and more weeks, so the risk index can be calibrated into a real probability.
 
 ---
 

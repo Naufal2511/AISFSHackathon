@@ -8,6 +8,58 @@ corner. Times are the cameras' clock.
 > The same clips play inside the risk cards: `cards/COW_02.html`, `COW_01.html`, `COW_10.html` (open them after
 > downloading the repo, or with `python serve_showcase.py`).
 
+## Meet the three cows
+
+`COW_02`, `COW_01` and `COW_10` are **names our system gave the cows**, not the pen's ear-tag numbers. The pen came
+with no list of tags, so the system enrolled each animal by how she looks and gave her a `COW_xx` name that stays the
+same across all three cameras and both days. All ten are black Angus, so below is what sets each of the three apart
+on camera, and how to find her in the pen. The tag numbers were never readable on camera, so **read the tag at the pen
+to confirm** before you take a temperature. (To fix this, see [future work](../../README.md#future-work): the pen
+manager names the cows once, and the system tracks them by those names.)
+
+In the annotated videos (the [feed-rush clip](cards/clips/COW_02_3_feed_rush_8nov_1628.mp4) and the submission video)
+each cow has her own box colour in every camera: **COW_02 red**, **COW_01 blue**, **COW_10 grey**.
+
+### COW_02 · rank 1 · "the late one"
+
+<a href="evidence/img/I0012.jpg"><img src="evidence/img/I0012.jpg" height="190" alt="COW_02 from above with a pink ear tag"></a> <a href="evidence/img/I0018.jpg"><img src="evidence/img/I0018.jpg" height="190" alt="COW_02 at the bunk with a green ear tag"></a> <a href="cards/clips/COW_02_2.jpg"><img src="cards/clips/COW_02_2.jpg" height="190" alt="COW_02 at dusk, closest view"></a>
+
+<sub>Left: 7 Nov 16:38, front camera, pink tag. Middle: 7 Nov 12:11, bunk camera, green tag. Right: 7 Nov 17:49, front camera at dusk (infrared), her closest view (yellow box).</sub>
+
+- **Looks:** all-black, medium build, no white markings. **Two ear tags seen on camera: a pink/red one and a green
+  one.**
+- **Habits:** she is **the last to come to the bunk** when feed arrives (27 min after the herd starts, against 19), and
+  walks the least of the three. In the 8 Nov 16:28 feed rush she lies alone in the alley, 11.6 m from the nearest cow,
+  while 6 of the 10 eat.
+- **To find her:** at feeding time, look for the black cow with a pink and a green tag who stays lying down, or who
+  arrives last.
+
+### COW_01 · rank 2 · "the light eater"
+
+<a href="cards/clips/COW_01_1.jpg"><img src="cards/clips/COW_01_1.jpg" height="190" alt="COW_01 at the bunk from the front camera"></a> <a href="evidence/img/I0031.jpg"><img src="evidence/img/I0031.jpg" height="190" alt="COW_01 at the bunk with a yellow ear tag"></a> <a href="evidence/img/I0022.jpg"><img src="evidence/img/I0022.jpg" height="190" alt="COW_01 from behind"></a>
+
+<sub>Left: 8 Nov 09:44, front camera, at the bunk (yellow box). Middle: 8 Nov 16:36, bunk camera, the cow on the right, yellow tag. Right: 7 Nov 16:26, front camera, from behind.</sub>
+
+- **Looks:** **solid, glossy jet-black coat with no brown tinge** (this is what tells her apart from COW_10), medium
+  build, no white markings. **A yellow ear tag was seen** at the bunk.
+- **Habits:** she stays with the herd (about 1.5 cows within 3 m, like the rest) and comes to the big feed rushes, but
+  her bunk visits are short (5.8 min, against 9.5) and she **lies down more than the herd** (57 %, against 51 %).
+- **To find her:** the deep-black cow with a yellow tag who leaves the bunk early and lies down soon after.
+
+### COW_10 · rank 3 · "the brownish one"
+
+<a href="cards/clips/COW_10_1.jpg"><img src="cards/clips/COW_10_1.jpg" height="190" alt="COW_10 standing, with a brownish back"></a> <a href="cards/clips/COW_10_2.jpg"><img src="cards/clips/COW_10_2.jpg" height="190" alt="COW_10 at the bunk, brownish back, red and blue tags"></a> <a href="evidence/img/I0005.jpg"><img src="evidence/img/I0005.jpg" height="190" alt="COW_10 at the bunk from the bunk camera"></a>
+
+<sub>Left: 7 Nov 16:39, front camera (yellow box). Middle: 8 Nov 16:32, bunk camera (yellow box), red and blue tags. Right: 8 Nov 14:43, bunk camera.</sub>
+
+- **Looks:** **the easiest of the three to spot. Her coat has a rusty-brown, sun-faded tinge over the back and
+  shoulders**, where the others are jet black. Medium build. **A red tag and a blue tag were seen** at the bunk.
+- **Habits:** she **spends about three times as long near the waterer** as a typical cow (10 min per hour, against 3),
+  has the longest lying bout in the pen (139 min, against 100), and makes short bunk visits (6.5 min, against 9.5).
+- **To find her:** the brownish-backed cow, often near the water trough or lying down for a long stretch.
+
+---
+
 ## The ranking
 
 | Rank | Cow | risk | in the top 3 in | confidence | seen | Why, against the herd at the same hours |
