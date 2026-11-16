@@ -1,0 +1,42 @@
+<!doctype html><html><head><meta charset="utf-8"></head><body>
+<!--COMMON-->
+<style>
+  #head { left:110px; top:70px; }
+  #bar { left:110px; top:270px; width:1700px; height:90px; display:flex; border-radius:10px; overflow:hidden; background:var(--panel); }
+  #bar div { height:100%; }
+  #leg { left:110px; top:380px; width:1700px; display:grid; grid-template-columns:repeat(5,1fr); gap:20px; }
+  .lg .v { font-size:38px; font-weight:700; }
+  .lg .k { font-size:19px; color:var(--soft); line-height:1.35; }
+  .lg .sw { width:18px; height:18px; border-radius:4px; display:inline-block; margin-right:8px; vertical-align:-2px; }
+  #tiles { left:110px; top:560px; width:820px; display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  .tile { padding:22px; }
+  .tile .v { font-size:48px; font-weight:700; color:var(--acc); }
+  .tile .k { font-size:19px; color:var(--soft); }
+  .tile.w .v { color:var(--warm); }
+  #csv { left:980px; top:560px; width:830px; padding:20px 24px; box-sizing:border-box; }
+  #csv .ttl { font-size:16px; font-weight:700; letter-spacing:2px; color:var(--acc); margin-bottom:8px; }
+  #csv .win { height:340px; overflow:hidden; }
+  #csv pre { margin:0; font-family:Menlo,monospace; font-size:15px; line-height:1.65; color:var(--soft); white-space:pre; }
+</style>
+<div class="abs" id="head"><div class="eyebrow">Level 1 result</div><div class="h1">Every cow, every minute, and how we know</div></div>
+<div class="abs" id="bar"></div>
+<div class="abs" id="leg"></div>
+<div class="abs" id="tiles"></div>
+<div class="abs card" id="csv"><div class="ttl">activity.csv · one row per behavior bout</div><div class="win"><pre id="rows"></pre></div></div>
+<script>
+const D = __DATA__;
+const bar = document.getElementById("bar"), segs = D.basis.map(b => { const d = document.createElement("div"); d.style.background = b[2]; bar.appendChild(d); return d; });
+document.getElementById("leg").innerHTML = D.basis.map(b => `<div class="lg"><div class="v num"><span class="sw" style="background:${b[2]}"></span>${b[1].toLocaleString()}</div><div class="k">${b[0]}</div></div>`).join("");
+document.getElementById("tiles").innerHTML = D.tiles.map(x => `<div class="card tile ${x[2] || ""}"><div class="v num">${x[0]}</div><div class="k">${x[1]}</div></div>`).join("");
+document.getElementById("rows").textContent = D.csv.join("\n");
+const legs = [...document.querySelectorAll(".lg")], tiles = [...document.querySelectorAll(".tile")];
+window.render = async function (t) {
+  show(document.getElementById("head"), at(t, 0.1, 0.6));
+  let acc = 0; D.basis.forEach((b, i) => { const a = at(t, 0.6 + 0.35 * i, 0.6); segs[i].style.width = (100 * a * b[1] / D.total) + "%"; show(legs[i], a); });
+  tiles.forEach((x, i) => show(x, at(t, DUR * (0.45 + 0.07 * i), 0.5)));
+  show(document.getElementById("csv"), at(t, DUR * 0.3, 0.6));
+  document.getElementById("rows").scrollTop = 0;
+  document.getElementById("rows").style.transform = `translateY(${-Math.max(0, t - DUR * 0.4) * 14}px)`;
+  fader(t);
+};
+</script></body></html>

@@ -1,0 +1,20 @@
+<!doctype html><html><head><meta charset="utf-8"></head><body>
+<!--COMMON-->
+<style>
+  #lines { left:110px; top:260px; }
+  #lines .h1 { font-size:92px; letter-spacing:-1.5px; margin-bottom:10px; }
+  #lines .h1:nth-child(2) { color:var(--warm); }
+  #lines .h1:nth-child(3) { color:var(--acc); }
+  #foot { left:110px; bottom:110px; font-size:24px; color:var(--soft); line-height:1.6; }
+  #foot b { color:var(--ink); }
+</style>
+<div class="abs" id="lines"><div class="h1">Measure first.</div><div class="h1">Check everything.</div><div class="h1">Say what you don't know.</div></div>
+<div class="abs" id="foot"><b>Naufal · Afeef · Nooh</b> · Merck–TAMU AISFS Hackathon 2026<br>Code, technical brief, activity.csv and brd_risk.csv in our repository</div>
+<script>
+const L = [...document.querySelectorAll("#lines .h1")];
+window.render = async function (t) {
+  L.forEach((l, i) => show(l, at(t, DUR * (0.08 + 0.28 * i), 0.5)));
+  show(document.getElementById("foot"), at(t, DUR * 0.75, 0.6));
+  fader(t);
+};
+</script></body></html>

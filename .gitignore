@@ -54,3 +54,7 @@ submission/**/*.mp4
 submission/**/*.avi
 # ...except the Level 2 evidence clips: the brief asks for 2-3 clips on each top-3 risk card (~33 MB)
 !submission/level2/cards/clips/*.mp4
+
+# --- The team's submission video (the one video kept in the repository) ---
+!docs/media/*.mp4
+!docs/media/*.jpg

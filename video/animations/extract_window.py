@@ -30,6 +30,7 @@ def main():
     ap.add_argument("--out", required=True)
     ap.add_argument("--videos", default="input")
     ap.add_argument("--speed", type=float, default=4)
+    ap.add_argument("--no-frames", action="store_true")
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
     t0 = int(dt.datetime.fromisoformat(a.start).timestamp())
@@ -65,6 +66,9 @@ def main():
     json.dump({"start": start, "n": n, "state": state, "vis": vis}, open(os.path.join(a.out, "world.json"), "w"))
     json.dump({str(k): v for k, v in boxes.items()}, open(os.path.join(a.out, "boxes.json"), "w"))
 
+    if a.no_frames:
+        print("window", start, n, "s (no frames)")
+        return
     fps_src = 30 / a.speed
     for cam, (_, off0, fname) in sorted(first.items()):
         path = glob.glob(os.path.join(a.videos, "**", fname), recursive=True)
