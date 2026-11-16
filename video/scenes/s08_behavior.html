@@ -1,0 +1,53 @@
+<!doctype html><html><head><meta charset="utf-8"></head><body>
+<!--COMMON-->
+<style>
+  #head { left:110px; top:70px; }
+  #grid { position:absolute; left:110px; top:250px; width:1060px; display:grid; grid-template-columns:repeat(6,1fr); gap:10px; }
+  .tile { position:relative; }
+  .tile img { width:100%; height:166px; object-fit:cover; border-radius:6px; display:block; background:#000; }
+  .tile span { position:absolute; left:6px; bottom:6px; font-size:13px; font-weight:700; color:#fff; background:rgba(24,33,43,.7); padding:2px 7px; border-radius:4px; letter-spacing:.5px; }
+  #right { left:1230px; top:250px; width:580px; }
+  .cls { display:flex; flex-wrap:wrap; gap:10px; margin-top:12px; }
+  .cls span { font-size:19px; font-weight:600; padding:7px 14px; border-radius:20px; background:var(--panel); }
+  .cls span.r { background:var(--warm-soft); color:var(--warm); }
+  #chew { margin-top:34px; padding:22px; }
+  #chew .t { font-size:24px; font-weight:700; }
+  #chew .s { font-size:19px; color:var(--soft); margin-top:4px; }
+  #fuse { margin-top:22px; font-size:22px; color:var(--soft); line-height:1.45; }
+  #fuse b { color:var(--ink); }
+  .stat { font-size:22px; color:var(--soft); margin-top:6px; }
+</style>
+<div class="abs" id="head"><div class="eyebrow">Behavior · Level 1</div><div class="h1">Labelled by us, checked by measurement</div></div>
+<div id="grid"></div>
+<div class="abs" id="right">
+  <div style="font-size:17px;font-weight:700;letter-spacing:2px;color:var(--acc)">10 BEHAVIOR CLASSES</div>
+  <div class="cls" id="cls"></div>
+  <div class="stat" id="stat"></div>
+  <div class="card" id="chew"><div class="t">Rumination = chewing, measured</div>
+    <div class="s">jaw-motion spectrum must peak at 55–75 movements / min</div>
+    <svg width="530" height="120" id="wave"></svg><div class="s" style="font-size:15px">illustration of the band check</div></div>
+  <div id="fuse">Cameras vote as <b>experts</b> (the bunk camera for feeding, not posture), then a <b>smoothing model</b> forbids impossible jumps such as lying → walking in one second.</div>
+</div>
+<script>
+const D = __DATA__;
+const CLS = ["lying","standing","walking","feeding","drinking","ruminating (lying)","ruminating (standing)","grooming","social interaction","other / not visible"];
+document.getElementById("cls").innerHTML = CLS.map(c => `<span class="${c.startsWith("rumin") ? "r" : ""}">${c}</span>`).join("");
+document.getElementById("stat").textContent = `${D.n_tasks} five-second clips · ${D.n_cams} cameras · day and IR night · + 9,269 public CBVD-5 crops`;
+const grid = document.getElementById("grid");
+const tiles = D.tiles.map(x => { const d = document.createElement("div"); d.className = "tile"; d.innerHTML = `<img src="${x.img}"><span>${x.tag}</span>`; grid.appendChild(d); return d; });
+const W = document.getElementById("wave");
+el("rect", { x: 0, y: 0, width: 530, height: 120, fill: "#f3f6f8", rx: 8 }, W);
+const wl = el("polyline", { fill: "none", stroke: "#a85a24", "stroke-width": 3 }, W);
+const badge = el("text", { x: 516, y: 26, "text-anchor": "end", "font-size": 17, "font-weight": 700, fill: "#2e8b6e" }, W);
+window.render = async function (t) {
+  show(document.getElementById("head"), at(t, 0.1, 0.6));
+  tiles.forEach((d, i) => { const a = at(t, 0.3 + 0.05 * i, 0.4); d.style.opacity = a; d.style.transform = `scale(${0.94 + 0.06 * a})`; });
+  show(document.getElementById("right"), at(t, 0.8, 0.6));
+  const ca = at(t, DUR * 0.45, 0.6); show(document.getElementById("chew"), ca);
+  const pts = []; for (let x = 0; x <= 530; x += 4) { const tt = x / 530 * 6 + t; pts.push(`${x},${60 + 30 * Math.sin(2 * Math.PI * 1.08 * tt) * Math.min(1, x / 60)}`); }
+  wl.setAttribute("points", pts.join(" ")); badge.textContent = ca > 0.9 ? "65 / min ✓ in band" : "";
+  show(document.getElementById("fuse"), at(t, DUR * 0.68, 0.6));
+  fader(t);
+  await imgsReady();
+};
+</script></body></html>

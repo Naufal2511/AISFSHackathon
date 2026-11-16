@@ -1,0 +1,8 @@
+{
+  "name": "pen6-video",
+  "private": true,
+  "description": "Renders the demo video scenes (headless Chrome via puppeteer-core)",
+  "dependencies": {
+    "puppeteer-core": "23.11.1"
+  }
+}

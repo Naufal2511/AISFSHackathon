@@ -1,0 +1,52 @@
+<!doctype html><html><head><meta charset="utf-8"></head><body>
+<!--COMMON-->
+<style>
+  #head { left:110px; top:70px; }
+  #log { left:110px; top:240px; width:1040px; }
+  .ln { display:grid; grid-template-columns:150px 1fr; gap:16px; padding:10px 0; border-bottom:1px solid var(--rule); font-size:19px; line-height:1.38; }
+  .ln .k { font-weight:700; color:var(--acc); font-size:16px; letter-spacing:1px; text-transform:uppercase; padding-top:3px; }
+  .ln.tool .k { color:var(--warm); }
+  .ln code { font-family:Menlo,monospace; font-size:17px; background:var(--panel); padding:1px 6px; border-radius:4px; }
+  .ln .why { color:var(--mute); }
+  #strip { left:110px; top:860px; width:1040px; display:grid; grid-template-columns:repeat(6,1fr); gap:8px; }
+  #strip img { width:100%; height:130px; object-fit:cover; border-radius:6px; background:#000; }
+  #dec { left:1220px; top:240px; width:590px; padding:26px; box-sizing:border-box; }
+  #dec .from { font-size:22px; color:var(--mute); }
+  #dec .from s { color:var(--bad); }
+  #dec .to { font-size:44px; font-weight:700; color:var(--acc); margin:4px 0; }
+  #dec .ev { font-size:19px; color:var(--soft); line-height:1.4; }
+  #rules { left:1220px; top:620px; width:590px; padding:26px; box-sizing:border-box; background:var(--ink); color:#fff; border-radius:12px; }
+  #rules .ttl { font-size:16px; font-weight:700; letter-spacing:2px; color:#f2b98a; margin-bottom:10px; }
+  #rules .r { font-size:20px; line-height:1.45; margin-bottom:8px; padding-left:28px; position:relative; }
+  #rules .r::before { content:"✓"; position:absolute; left:0; color:#7fd1b0; font-weight:700; }
+  #rules .r.last::before { content:"→"; color:#f2b98a; }
+</style>
+<div class="abs" id="head"><div class="eyebrow">Behavior agent · a real trace</div><div class="h1" id="ht"></div></div>
+<div class="abs" id="log"></div>
+<div class="abs" id="strip"></div>
+<div class="abs card" id="dec"></div>
+<div class="abs" id="rules"><div class="ttl">CODE CHECKS EVERY DECISION</div>
+  <div class="r">a correction needs ≥ 2 kinds of evidence</div>
+  <div class="r">rumination needs measured chewing</div>
+  <div class="r">feeding and drinking need a visual check</div>
+  <div class="r">no duplicate IDs, cited images must exist</div>
+  <div class="r last">fails twice → <b>"uncertain"</b>, never a silent guess</div></div>
+<script>
+const D = __DATA__;
+document.getElementById("ht").textContent = D.title;
+const lines = D.steps.map(s => { const d = document.createElement("div"); d.className = "ln" + (s.kind === "tool" ? " tool" : "");
+  d.innerHTML = `<div class="k">${s.label}</div><div>${s.html}</div>`; document.getElementById("log").appendChild(d); return d; });
+document.getElementById("strip").innerHTML = D.strip.map(s => `<img src="${s}">`).join("");
+document.getElementById("dec").innerHTML = `<div class="from">stage 1 said <s>${D.from}</s></div><div class="to">${D.to}</div><div class="ev">${D.evidence}</div>`;
+const rules = [...document.querySelectorAll("#rules .r")];
+window.render = async function (t) {
+  show(document.getElementById("head"), at(t, 0.1, 0.6));
+  lines.forEach((l, i) => show(l, at(t, DUR * (0.06 + 0.075 * i), 0.4)));
+  [...document.querySelectorAll("#strip img")].forEach((m, i) => show(m, at(t, DUR * (0.40 + 0.03 * i), 0.4)));
+  show(document.getElementById("dec"), at(t, DUR * 0.52, 0.6), 30);
+  show(document.getElementById("rules"), at(t, DUR * 0.64, 0.6), 30);
+  rules.forEach((r, i) => show(r, at(t, DUR * (0.68 + 0.05 * i), 0.4)));
+  fader(t);
+  await imgsReady();
+};
+</script></body></html>

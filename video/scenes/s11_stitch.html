@@ -1,0 +1,36 @@
+<!doctype html><html><head><meta charset="utf-8"></head><body>
+<!--COMMON-->
+<style>
+  #head { left:110px; top:70px; }
+  #tl { position:absolute; left:110px; top:300px; }
+  #stats { left:110px; top:700px; width:1700px; display:grid; grid-template-columns:repeat(4,1fr); gap:24px; }
+  .st { padding:22px; }
+  .st .v { font-size:46px; font-weight:700; }
+  .st .k { font-size:19px; color:var(--soft); line-height:1.35; }
+</style>
+<div class="abs" id="head"><div class="eyebrow">Running 48 hours</div><div class="h1">33 chunks in parallel, stitched by identical boxes</div></div>
+<svg id="tl" width="1700" height="360"></svg>
+<div class="abs" id="stats"></div>
+<script>
+const D = __DATA__;
+const svg = document.getElementById("tl"), W = 1700, H0 = 60;
+const t0 = D.t0, span = D.t1 - D.t0, X = s => W * (s - t0) / span;
+const WHO = { naufal_training: ["laptop 1", "#1f6f8b"], afeef_training: ["laptop 2", "#2e8b6e"], nooh_training: ["laptop 3", "#6b5ca5"], hprc_day2: ["TAMU HPRC · GPU array", "#a85a24"] };
+const rows = { naufal_training: 0, afeef_training: 1, nooh_training: 2, hprc_day2: 3 };
+Object.entries(rows).forEach(([w, r]) => el("text", { x: 0, y: H0 + r * 62 - 10, "font-size": 18, "font-weight": 700, fill: WHO[w][1] }, svg).textContent = WHO[w][0]);
+const blocks = D.chunks.map((c, i) => { const r = rows[c.who], g = el("g", {}, svg);
+  el("rect", { x: X(c.s), y: H0 + r * 62, width: Math.max(4, X(c.e) - X(c.s) - 2), height: 30, rx: 4, fill: WHO[c.who][1] }, g);
+  const ov = el("rect", { x: X(c.s) - 4, y: H0 + r * 62 - 4, width: 8, height: 38, rx: 3, fill: "#f2b98a" }, g);
+  return { g, ov, i }; });
+for (let h = 0; h <= 48; h += 6) { const x = W * h / 48; el("line", { x1: x, y1: 300, x2: x, y2: 312, stroke: "#18212b", "stroke-width": 2 }, svg);
+  el("text", { x, y: 336, "text-anchor": "middle", "font-size": 17, fill: "#7a8591" }, svg).textContent = h === 0 ? "7 Nov 00:00" : h === 24 ? "8 Nov 00:00" : h === 48 ? "9 Nov" : `+${h} h`; }
+el("line", { x1: 0, y1: 300, x2: W, y2: 300, stroke: "#18212b", "stroke-width": 2 }, svg);
+document.getElementById("stats").innerHTML = D.stats.map(s => `<div class="card st"><div class="v num" style="color:${s[2]}">${s[0]}</div><div class="k">${s[1]}</div></div>`).join("");
+const sts = [...document.querySelectorAll(".st")];
+window.render = async function (t) {
+  show(document.getElementById("head"), at(t, 0.1, 0.6));
+  blocks.forEach(b => { b.g.style.opacity = at(t, 0.4 + 0.06 * b.i, 0.3); b.ov.style.opacity = at(t, DUR * 0.45, 0.4) * (0.6 + 0.4 * Math.sin(t * 6)); });
+  sts.forEach((s, i) => show(s, at(t, DUR * (0.5 + 0.08 * i), 0.5)));
+  fader(t);
+};
+</script></body></html>

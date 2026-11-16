@@ -1,0 +1,126 @@
+<!doctype html><html><head><meta charset="utf-8"></head><body>
+<!--COMMON-->
+<style>
+  #head { left:110px; top:70px; }
+  .beat { position:absolute; left:0; top:0; width:1920px; height:1080px; }
+  .note { position:absolute; font-size:24px; color:var(--soft); }
+  .note b { color:var(--ink); }
+  .bars { position:absolute; width:500px; }
+  .bars .ttl { font-size:22px; font-weight:700; margin-bottom:8px; }
+  .bars .row { display:flex; align-items:flex-end; gap:8px; height:220px; border-bottom:2px solid var(--ink); }
+  .bars .b { flex:1; background:#9fb0c0; border-radius:4px 4px 0 0; }
+  .bars .lbl { display:flex; gap:8px; font-size:14px; color:var(--mute); margin-top:4px; }
+  .bars .lbl span { flex:1; text-align:center; }
+  #sheetBox { position:absolute; left:960px; top:230px; width:850px; height:800px; overflow:hidden; border-radius:10px; border:1px solid var(--rule); background:#000; }
+  #sheet { width:850px; display:block; }
+  #sheetTxt { position:absolute; left:110px; top:260px; width:760px; font-size:28px; line-height:1.5; color:var(--soft); }
+  #sheetTxt b { color:var(--ink); }
+</style>
+<div class="abs" id="head"><div class="eyebrow" id="eb">Identity</div><div class="h1" id="ht"></div></div>
+<!-- A: agreement -->
+<div class="beat" id="A"><svg id="svgA" width="1920" height="1080"></svg></div>
+<!-- B: consensus -->
+<div class="beat" id="B"><div id="barsWrap"></div><svg id="svgB" width="1920" height="1080" style="position:absolute;left:0;top:0"></svg></div>
+<!-- C: anchor -->
+<div class="beat" id="C"><svg id="svgC" width="1920" height="1080"></svg></div>
+<!-- D: sheet -->
+<div class="beat" id="D"><div id="sheetTxt">Every 30 minutes the identity agent builds an <b>ID-check sheet</b> for each camera: every cow's crop beside her memory card.<br><br>Low similarity or a clash flags a <b>suspect</b>; the agent checks at most two, then confirms or lists the mismatches.<br><br><span style="font-size:22px;color:var(--mute)">8 Nov 16:30 · the real sheet</span></div><div id="sheetBox"><img id="sheet" src="id_check.jpg"></div></div>
+<script>
+const D = __DATA__;
+const BEATS = [["A", 0, .30, "Same spot, same seconds: one cow"], ["B", .30, .62, "Camera beliefs pulled into agreement"],
+               ["C", .62, .85, "A cow standing clear: her ID is locked"], ["D", .85, 1.01, "Audited every 30 minutes"]];
+// ---------- A: must-link / cannot-link on a floor map ----------
+const A = document.getElementById("svgA"), S = 44, MX = 160, MY = 330;
+const P = (x, y) => [MX + y * S, MY + x * S];
+{ const [a, b] = P(0, 0), [c, d] = P(12, 30); el("rect", { x: a, y: b, width: c - a, height: d - b, fill: "#fff", stroke: "#18212b", "stroke-width": 3, rx: 6 }, A); }
+el("text", { x: MX, y: MY - 16, "font-size": 18, "font-weight": 700, fill: "#7a8591", "letter-spacing": 2 }, A).textContent = "PEN FLOOR · METRES";
+const path = t => [3 + 5 * t, 6 + 14 * t];          // a cow walking across the pen
+const gA = el("g", {}, A);
+// ---------- B: consensus run (pairwise exchange from consensus_protocol.py, gamma 0.25) ----------
+const CAMS = ["front", "bunk", "back"], G = 0.25;
+let p = D.beliefs.map(r => r.slice());
+const steps = [p.map(r => r.slice())], energy = [];
+const E = q => [[0, 1], [0, 2]].reduce((s, [a, b]) => s + q[a].reduce((u, v, k) => u + (v - q[b][k]) ** 2, 0), 0);
+energy.push(E(p));
+for (let k = 0; k < 8; k++) {
+  for (const [a, b] of [[0, 1], [0, 2]]) {   // front overlaps bunk and back
+    const d = p[b].map((v, i) => v - p[a][i]);
+    let na = p[a].map((v, i) => clamp(v + G * d[i])), nb = p[b].map((v, i) => clamp(v - G * d[i]));
+    const sa = na.reduce((x, y) => x + y), sb = nb.reduce((x, y) => x + y);
+    p[a] = na.map(v => v / sa); p[b] = nb.map(v => v / sb);
+  }
+  steps.push(p.map(r => r.slice())); energy.push(E(p));
+}
+const wrap = document.getElementById("barsWrap"), barEls = [];
+CAMS.forEach((c, i) => {
+  const w = document.createElement("div"); w.className = "bars"; w.style.left = (110 + i * 560) + "px"; w.style.top = "300px";
+  w.innerHTML = `<div class="ttl">${c} camera · one track</div><div class="row">${Array.from({ length: 10 }, () => '<div class="b"></div>').join("")}</div>
+    <div class="lbl">${Array.from({ length: 10 }, (_, k) => `<span>${String(k + 1).padStart(2, "0")}</span>`).join("")}</div>`;
+  wrap.appendChild(w); barEls.push([...w.querySelectorAll(".b")]);
+});
+const B = document.getElementById("svgB");
+const EX = 110, EY = 640, EW = 1660, EH = 260;
+el("text", { x: EX, y: EY - 14, "font-size": 20, "font-weight": 700, fill: "#18212b" }, B).textContent = "disagreement energy V = Σ ‖p_i − p_j‖²  (Lyapunov: can only fall)";
+el("line", { x1: EX, y1: EY + EH, x2: EX + EW, y2: EY + EH, stroke: "#18212b", "stroke-width": 2 }, B);
+const eLine = el("polyline", { fill: "none", stroke: "#a85a24", "stroke-width": 4 }, B);
+const eDot = el("circle", { r: 8, fill: "#a85a24" }, B);
+const bNote = el("text", { x: EX, y: EY + EH + 50, "font-size": 22, fill: "#3a4652" }, B);
+// ---------- C: anchor ----------
+const C = document.getElementById("svgC");
+{ const [a, b] = P(0, 0), [c, d] = P(12, 30); el("rect", { x: a, y: b, width: c - a, height: d - b, fill: "#fff", stroke: "#18212b", "stroke-width": 3, rx: 6 }, C); }
+const COL = {COW_01:"#1f77b4",COW_02:"#d62728",COW_03:"#2ca02c",COW_04:"#9467bd",COW_05:"#8c564b",COW_06:"#e377c2",COW_07:"#17becf",COW_08:"#bcbd22",COW_09:"#ff7f0e",COW_10:"#7f7f7f"};
+const cNodes = D.anchor.cows.map(c => { const [x, y] = P(c.x, c.y), g = el("g", {}, C);
+  const ring = el("circle", { cx: x, cy: y, r: 1.25 * S, fill: c.clear ? COL[c.id] : "#c9d0d7", "fill-opacity": c.clear ? .10 : .15, stroke: c.clear ? COL[c.id] : "#9aa4ae", "stroke-width": 2, "stroke-dasharray": "6 5" }, g);
+  el("circle", { cx: x, cy: y, r: 13, fill: COL[c.id], stroke: "#18212b", "stroke-width": 2.5 }, g);
+  el("text", { x: x, y: y - 22, "text-anchor": "middle", "font-size": 16, "font-weight": 700 }, g).textContent = c.id.replace("COW_", "");
+  const lock = el("g", { transform: `translate(${x + 14},${y + 8})`, display: c.clear ? "inline" : "none" }, g);
+  el("rect", { x: 0, y: 6, width: 18, height: 14, rx: 3, fill: "#0f5a6b" }, lock);
+  el("path", { d: "M4 6 V3 a5 5 0 0 1 10 0 V6", fill: "none", stroke: "#0f5a6b", "stroke-width": 2.5 }, lock);
+  return { g, ring, lock }; });
+const cNote = el("text", { x: MX, y: MY + 12 * S + 60, "font-size": 24, fill: "#3a4652" }, C);
+cNote.textContent = `real second · ${D.anchor.time} · ${D.anchor.n_clear} of ${D.anchor.n} cows clear (≥ 2.5 m from every other, seen) → ID locked · grey: too close, not used`;
+
+window.render = async function (t) {
+  const f = t / DUR;
+  let cur = BEATS.find(b => f >= b[1] && f < b[2]) || BEATS[3];
+  for (const b of BEATS) document.getElementById(b[0]).style.display = b === cur ? "block" : "none";
+  document.getElementById("ht").textContent = cur[3];
+  const lt = t - cur[1] * DUR, span = (cur[2] - cur[1]) * DUR;
+  show(document.getElementById("head"), at(lt, 0.05, 0.5));
+  if (cur[0] === "A") {
+    gA.innerHTML = "";
+    const u = clamp(lt / (span * 0.55));
+    // the two cameras' tracks (projected) arrive at the same spot together
+    const [fx, fy] = path(u), off = 0.9 * (1 - ease(u));
+    const pa = P(fx + off, fy - off), pb = P(fx - off, fy + off);
+    el("circle", { cx: pa[0], cy: pa[1], r: 15, fill: "#1f77b4" }, gA); el("text", { x: pa[0] + 20, y: pa[1] - 12, "font-size": 20, "font-weight": 700, fill: "#1f77b4" }, gA).textContent = "front cam · track 7";
+    el("circle", { cx: pb[0], cy: pb[1], r: 15, fill: "none", stroke: "#1f77b4", "stroke-width": 4 }, gA); el("text", { x: pb[0] + 20, y: pb[1] + 30, "font-size": 20, "font-weight": 700, fill: "#1f77b4" }, gA).textContent = "back cam · track 3";
+    if (u > 0.9) { el("line", { x1: pa[0], y1: pa[1], x2: pb[0], y2: pb[1], stroke: "#0f5a6b", "stroke-width": 6 }, gA);
+      el("text", { x: pa[0] - 40, y: pa[1] - 50, "font-size": 26, "font-weight": 700, fill: "#0f5a6b" }, gA).textContent = "must-link → one cow"; }
+    const v = at(lt, span * 0.55, 0.6);
+    if (v > 0) { const q1 = P(1.8, 22), q2 = P(1.8, 29);
+      el("circle", { cx: q1[0], cy: q1[1], r: 15, fill: "#ff7f0e", opacity: v }, gA); el("circle", { cx: q2[0], cy: q2[1], r: 15, fill: "#9467bd", opacity: v }, gA);
+      el("line", { x1: q1[0], y1: q1[1], x2: q2[0], y2: q2[1], stroke: "#b4413a", "stroke-width": 5, "stroke-dasharray": "10 8", opacity: v }, gA);
+      el("text", { x: q1[0] - 20, y: q1[1] + 60, "font-size": 26, "font-weight": 700, fill: "#b4413a", opacity: v }, gA).textContent = "seen together, far apart: cannot-link"; }
+  }
+  if (cur[0] === "B") {
+    const k = clamp((lt - 0.6) / (span - 1.4)) * (steps.length - 1), i = Math.floor(Math.min(k, steps.length - 1.001)), fr = k - i;
+    const q = steps[i].map((r, a) => r.map((v, b) => v + (steps[i + 1][a][b] - v) * fr));
+    const best = q[0].indexOf(Math.max(...q[0]));
+    barEls.forEach((bs, a) => bs.forEach((b, j) => { b.style.height = (200 * q[a][j] / 0.6) + "px"; b.style.background = j === best ? "#a85a24" : "#9fb0c0"; }));
+    const em = energy[0], pts = energy.slice(0, i + 2).map((e, j) => { const jj = j <= i ? j : i + fr, ee = j <= i ? e : energy[i] + (e - energy[i]) * fr;
+      return [EX + EW * jj / (energy.length - 1), EY + EH - EH * ee / em]; });
+    eLine.setAttribute("points", pts.map(p => p.join(",")).join(" ")); const last = pts[pts.length - 1]; eDot.setAttribute("cx", last[0]); eDot.setAttribute("cy", last[1]);
+    const agree = q.every(r => r.indexOf(Math.max(...r)) === best);
+    bNote.textContent = `step ${Math.min(8, Math.round(k))} of the consensus update (γ = 0.25, example beliefs) · ` + (agree ? `all three cameras agree: COW_${String(best + 1).padStart(2, "0")}` : "the cameras still disagree");
+  }
+  if (cur[0] === "C") {
+    cNodes.forEach((n, i) => { n.g.style.opacity = at(lt, 0.1 + 0.08 * i, 0.4); n.ring.style.opacity = at(lt, 1.2, 0.5); n.lock.style.opacity = at(lt, 2.0 + 0.05 * i, 0.3); });
+    cNote.style.opacity = at(lt, 1.6, 0.5);
+  }
+  if (cur[0] === "D") { show(document.getElementById("sheetBox"), at(lt, 0, 0.5)); show(document.getElementById("sheetTxt"), at(lt, 0.2, 0.5));
+    document.getElementById("sheet").style.transform = `translateY(${-clamp(lt / span) * (2125 - 800)}px)`; }
+  fader(t);
+  await imgsReady();
+};
+</script></body></html>
