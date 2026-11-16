@@ -8,6 +8,7 @@ This folder contains the complete Level 2 BRD screening results: `brd_risk.csv`,
 
 
 > Every clip with its day, time and camera, and each cow's result explained: [`EVIDENCE.md`](EVIDENCE.md).
+> Every still image behind each sign verdict (86, with the agent's reasoning): [`IMAGE_EVIDENCE.md`](IMAGE_EVIDENCE.md).
 
 ---
 
@@ -65,4 +66,5 @@ These 6 clips (104 frames / 12 seconds each, ~10 MB total) are the exact video c
 - [`features_hourly.csv`](features_hourly.csv) & [`features_summary.csv`](features_summary.csv): Hourly and aggregated sensor features across all 48 hours.
 - [`agent/traces/`](agent/traces/): Full JSON reasoning transcripts from Claude Opus 4.8 evaluating each cow.
 - [`evidence/facts.jsonl`](evidence/facts.jsonl): Chronological fact database queried by the reasoning agent.
+- [`IMAGE_EVIDENCE.md`](IMAGE_EVIDENCE.md) & [`evidence/image_index.csv`](evidence/image_index.csv): Each of the 86 images the agent looked at, linked to the decision it supports.
 - [`risk_meta.json`](risk_meta.json): Run metadata, model versions, time spans, and clip timestamps.

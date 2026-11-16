@@ -10,6 +10,7 @@ These files contain event data: the evidence crops, clips and trace images are c
 |---|---|
 | [`SHOWCASE.md`](SHOWCASE.md) | **Everything on one page, with pictures** (renders on GitHub); also as [`SHOWCASE.pdf`](SHOWCASE.pdf) |
 | [`level2/EVIDENCE.md`](level2/EVIDENCE.md) | **The BRD ranking explained cow by cow, with every video clip, its day, time and camera** |
+| [`level2/IMAGE_EVIDENCE.md`](level2/IMAGE_EVIDENCE.md) | **The 86 still images behind the decisions, each next to the sign verdict it supports** |
 | `index.html` | The same showcase with buttons to every full page (open in a browser after download) |
 | `level2/index.html` | BRD risk ranking with reasons, confidence and a card per flagged cow |
 | `level2/brd_risk.csv` | The same ranking as a table |

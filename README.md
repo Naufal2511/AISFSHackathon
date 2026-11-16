@@ -1,86 +1,150 @@
 # Agentic Vision for Angus Behavior and BRD Risk
-## Team 404 - Naufal, Afeef, Nooh
 
-**Merck–TAMU AISFS Hackathon 2026 · Pen 6 · 10 Angus cattle · 3 cameras · 48 h**
+**Team 404 · Naufal, Afeef, Nooh**<br>
+Merck–TAMU AISFS Hackathon 2026 · Pen 6 · 10 Angus cattle · 3 cameras · 48 h
 
-We watch 10 Angus cattle in Pen 6 through three cameras for 48 hours and turn the raw video into three things:
-1. **What every cow did, every minute**, with one ID per cow across cameras and days (Level 1).
-2. **A BRD risk ranking** a veterinarian can check, with reasons and video evidence (Level 2).
-3. **A live early-warning loop** that alerts a pen rider with a clip (Level 3).
+We turn 48 hours of raw video from three cameras into:
 
-> ### How to see our results and evidence
-> **Right here on GitHub (no download):**
-> 1. **[submission/SHOWCASE.md](submission/SHOWCASE.md)**: every result (Levels 1, 2 and 3) on one page, with pictures.
-> 2. **[submission/SHOWCASE.pdf](submission/SHOWCASE.pdf)**: the same showcase as a PDF (GitHub shows it in its viewer).
-> 3. **[submission/level2/EVIDENCE.md](submission/level2/EVIDENCE.md)**: the BRD risk ranking explained, cow by cow,
->    with **every video clip, its day, time and camera** (click a picture to play the clip).
-> 4. **[docs/TECHNICAL_BRIEF.pdf](docs/TECHNICAL_BRIEF.pdf)**: the 2-page technical brief.
-> 5. **[Submission video on YouTube](https://youtu.be/a2jZN3BnDJE)** (5 min 39 s).
->
-> **The full interactive pages** (`.html` files show as code on GitHub): download the repo (**Code → Download ZIP**) and
-> open **`submission/index.html`** in a browser, or run `python serve_showcase.py` (or the Docker image's default
-> command, section 1) and open **http://localhost:8000**.
+1. **Level 1 · what every cow did, every minute**, with one ID per cow across cameras and days.
+2. **Level 2 · a BRD risk ranking** that a veterinarian can check, with reasons and video evidence.
+3. **Level 3 · a live early-warning loop** that alerts a pen rider with a video clip.
 
-Deterministic computer vision measures; tool-using agents check that record; code checks the agents. Every number says whether it was observed, verified, estimated or not visible.
-
-**Our finding:** COW_02, COW_01 and COW_10 are **early suspects, not sick**. They are slower to the bunk after feeding and eat less than the herd at the same hours, but no visible clinical sign was confirmed. Next step: take their temperatures.
-
-**Our results are already in [`submission/`](submission/README.md). Open these first:**
-- [`submission/SHOWCASE.md`](submission/SHOWCASE.md): **every result on one page, with pictures, readable right here on GitHub** (`submission/index.html` is the same page with buttons to every full page, after download)
-- `submission/level2/index.html`: the ranking
-- `submission/stitched/viewer.html`: the 48 h ethogram
-- `submission/level3/clip_1600/report.html`: one live window, end to end
-
-## 🎬 Submission video (5 min 39 s)
+Computer vision measures. Tool-using agents check that record. Code checks the agents. Every number says whether it was observed, verified, estimated or not visible.
 
 [![Team 404 submission video: click to watch on YouTube](docs/media/team404_submission_video_poster.jpg)](https://youtu.be/a2jZN3BnDJE)
 
-**[▶ Watch on YouTube](https://youtu.be/a2jZN3BnDJE)** · a copy is also in this repository: [`docs/media/team404_submission_video.mp4`](docs/media/team404_submission_video.mp4) (54 MB; *View raw* / *Download* to play).
+**[▶ Submission video](https://youtu.be/a2jZN3BnDJE)** (5 min 39 s) &nbsp;·&nbsp; **[📄 Technical brief](docs/TECHNICAL_BRIEF.pdf)** (2 pages) &nbsp;·&nbsp; **[🖼 All results, with pictures](submission/SHOWCASE.md)**
 
-| | |
-|---|---|
-| 🎬 **Submission video** | [YouTube](https://youtu.be/a2jZN3BnDJE) · [`docs/media/team404_submission_video.mp4`](docs/media/team404_submission_video.mp4) |
-| 📄 **Technical brief** (2 pages) | [`docs/TECHNICAL_BRIEF.pdf`](docs/TECHNICAL_BRIEF.pdf) |
-| 📊 **All results** | [`submission/`](submission/README.md) |
-| ▶️ **Run it** | [section 1](#1-quick-start) (Docker or Python), then [Level 3 on any clip](#3-level-3-on-a-clip-you-choose-the-judges-clip) |
-
-## Submission at a glance
-
-Every deliverable the brief asks for, and where it is:
-
-| Required | File in this repository |
-|---|---|
-| **Level 1:** `activity.csv` (one row per behavior bout, every cow, every minute of both days) | [`submission/stitched/final/activity.csv`](submission/stitched/final/activity.csv) |
-| ↳ the same per minute, with confidence, basis and the agent's rationale | [`submission/stitched/final/activity_minute.csv`](submission/stitched/final/activity_minute.csv) |
-| **Level 1:** ID-check frames every 30 min on each camera (97 sheets, 48 h) | [`submission/stitched/id_checks/`](submission/stitched/id_checks/) |
-| ↳ how to read them: each sheet is a JPG + CSV per 30 min; `legend.csv` maps the chunk's IDs to the final `COW_01..10` | e.g. [`hprc_day2_c18/id_check_20261108_163000.jpg`](submission/stitched/id_checks/hprc_day2_c18/id_check_20261108_163000.jpg) |
-| **Level 1:** per-cow time budgets | [`submission/stitched/final/time_budgets.csv`](submission/stitched/final/time_budgets.csv) |
-| **Level 1:** agent reasoning trace, **success** | [`success_COW_02_d1_m0862.md`](submission/stitched/final/traces/success_COW_02_d1_m0862.md): stage 1 said drinking (0.69); the agent verified walking (0.96) |
-| **Level 1:** agent reasoning trace, **failure** | [`failure_COW_01_d1_m0813.md`](submission/stitched/final/traces/failure_COW_01_d1_m0813.md): a weak "standing" the agent could not settle, kept as unverified |
-| **Level 1:** agent reasoning trace, **night** | [`night_COW_05_d1_m1085.md`](submission/stitched/final/traces/night_COW_05_d1_m1085.md): infrared footage; the agent rejected "ruminating" and set not visible |
-| ↳ which cow each trace is after stitching | [`traces/README.md`](submission/stitched/final/traces/README.md) |
-| **Level 2:** `brd_risk.csv` (cow ID, risk 0–1, rank, top reasons) | [`submission/level2/brd_risk.csv`](submission/level2/brd_risk.csv) |
-| **Level 2:** visualization tool | [`submission/level2/index.html`](submission/level2/index.html) (ranking, stability, cards) and [`submission/stitched/viewer.html`](submission/stitched/viewer.html) (48 h ethogram, camera joins, time budgets) |
-| **Level 2:** one-page risk card per top-3 cow, with 2–3 clips | [`COW_02.html`](submission/level2/cards/COW_02.html) · [`COW_01.html`](submission/level2/cards/COW_01.html) · [`COW_10.html`](submission/level2/cards/COW_10.html) |
-| ↳ relevant decision evidence clips (top 3 cows) | [`submission/level2/cards/clips/`](submission/level2/cards/clips/) (COW_02: [clip 1](submission/level2/cards/clips/COW_02_1.mp4), [clip 2](submission/level2/cards/clips/COW_02_2.mp4), [8 Nov 16:28 feed rush](submission/level2/cards/clips/COW_02_3_feed_rush_8nov_1628.mp4); COW_01: [clip 1](submission/level2/cards/clips/COW_01_1.mp4), [clip 2](submission/level2/cards/clips/COW_01_2.mp4); COW_10: [clip 1](submission/level2/cards/clips/COW_10_1.mp4), [clip 2](submission/level2/cards/clips/COW_10_2.mp4)) |
-| ↳ the ranking explained cow by cow, every clip with its day, time and camera (readable on GitHub) | [`submission/level2/EVIDENCE.md`](submission/level2/EVIDENCE.md) |
-| ↳ the risk agent's reasoning and every piece of evidence it cited | [`submission/level2/agent/traces/`](submission/level2/agent/traces/) · [`evidence/`](submission/level2/evidence/) |
-| **Level 3:** live alert on one 5-min clip, end to end | [`submission/level3/clip_1600/report.html`](submission/level3/clip_1600/report.html) |
-| ↳ three Day 2 hours replayed as live | [`submission/level3/day2_replay/report.html`](submission/level3/day2_replay/report.html) |
-| **Code** that reproduces everything from raw video | sections [1–5](#1-quick-start) below |
-| **Models, versions, outside data and models** | [section 6](#6-models-versions-and-external-resources) |
-| **AI tools used** | [section 7](#7-ai-tools-and-how-we-used-claude) |
-| **Submission video** | [YouTube](https://youtu.be/a2jZN3BnDJE) · [`docs/media/team404_submission_video.mp4`](docs/media/team404_submission_video.mp4) |
-
-**Viewing the HTML pages:** GitHub shows HTML files as source code. Read [`submission/SHOWCASE.md`](submission/SHOWCASE.md) or [`SHOWCASE.pdf`](submission/SHOWCASE.pdf) here, or clone/download the repository and open `submission/index.html` in a browser (or run `python serve_showcase.py` and open http://localhost:8000).
-
-> **Event data:** the footage, frames and results stay within the event. Keep this repository private. Apart from the submission video and the Level 2 decision evidence clips (`submission/level2/cards/clips/`), video clips are not in the repository; the commands below regenerate them.
+**Contents:** [Results](#results) · [Where to look](#where-to-look) · [Deliverables](#deliverables-checklist) · [How it works](#how-it-works) · [Limits](#what-the-results-can-and-cannot-support) · [Run it](#1-quick-start) · [Models](#6-models-versions-and-external-resources) · [AI tools](#7-ai-tools-and-how-we-used-claude) · [Repository map](#8-repository-map)
 
 ---
 
+## Results
+
+**COW_02, COW_01 and COW_10 are early suspects, not sick cows.** Compared with the herd at the same hours, they are slower to reach the bunk after feeding, eat less and lie down more. The risk agent confirmed no visible clinical sign. Next step: take their temperatures and examine them.
+
+| Rank | Cow | Risk | In the top 3 in | Confidence | Why, compared with the herd at the same hours |
+|:-:|---|--:|--:|:-:|---|
+| 1 | **COW_02** | 0.37 | 92 % of resamples | high | 27 vs 19 min to reach the bunk after feed rushes · walks 87.5 vs 101 m/h · feeds 7 vs 10 % of the time |
+| 2 | **COW_01** | 0.33 | 67 % | medium | feeds 4 vs 8 % of the time · bunk visits 5.8 vs 9.5 min · lies 57 vs 51 % of the time |
+| 3 | **COW_10** | 0.26 | 88 % | high | bunk visits 6.5 vs 9.5 min · longest lying bout 139 vs 100 min |
+| 4–10 | the rest | 0.10–0.19 | ≤ 24 % | low | herd-typical |
+
+- **Risk is an index for ranking cows, not a probability.** A herd-typical cow scores about 0.10.
+- ***In the top 3 in*** is the share of 200 resamples (in 30-min blocks) in which a cow stays in the top 3. It shows how stable her rank is.
+
+**Level 1 and Level 3 in one line each:**
+- **Level 1:** 28,800 cow-minutes labelled (10 cows × 48 h), each with its basis, in 4,858 behavior bouts. No camera saw the cow in 30.4 % of those minutes. These are reported as not visible, never guessed.
+- **Level 3:**
+  - **Clip from 7 Nov, 16:00:** the sign check raised 4 flags, and every one was rejected by a measurement or a second look. No false alarm went out.
+  - **Day 2 replay:** COW_10 drew a behavior alert. She lay down 76 % of the time, against 22 % for the herd.
+
+---
+
+## Where to look
+
+Steps 1–4 open right here on GitHub, with no download. GitHub shows `.html` files as source code, so those pages come in step 5.
+
+| | Open | What you get |
+|:-:|---|---|
+| 1 | **[Submission video](https://youtu.be/a2jZN3BnDJE)** | The whole system in 5 min 39 s |
+| 2 | **[Technical brief](docs/TECHNICAL_BRIEF.pdf)** | Methods and results on 2 pages |
+| 3 | **[SHOWCASE.md](submission/SHOWCASE.md)** | Every result of Levels 1–3 on one page, with pictures (also as a [PDF](submission/SHOWCASE.pdf)) |
+| 4 | **[EVIDENCE.md](submission/level2/EVIDENCE.md)** | The BRD ranking explained cow by cow: every video clip with its day, time and camera (click a picture to play it). **[IMAGE_EVIDENCE.md](submission/level2/IMAGE_EVIDENCE.md)** shows the 86 still images behind each verdict. |
+| 5 | **`submission/index.html`** | The interactive pages. Download the repository (**Code → Download ZIP**) and open the file in a browser, or run `python serve_showcase.py` and open http://localhost:8000 |
+| 6 | **[Level 3 on your own clip](#3-level-3-on-a-clip-you-choose-the-judges-clip)** | `python live_watch.py --clip <any camera file>` |
+
+> **Event data:** the footage, frames and results stay within the event, so keep this repository private. The only video clips in the repository are the submission video and the Level 2 decision clips (`submission/level2/cards/clips/`). The commands below regenerate the rest.
+
+---
+
+## Deliverables checklist
+
+Every deliverable the brief asks for, and where it is. The results are in [`submission/`](submission/README.md).
+
+### Level 1 · behavior and identity
+
+| Required | File |
+|---|---|
+| `activity.csv`: one row per behavior bout, every cow, both days | [`submission/stitched/final/activity.csv`](submission/stitched/final/activity.csv) |
+| The same, per minute, with confidence, basis and the agent's rationale | [`submission/stitched/final/activity_minute.csv`](submission/stitched/final/activity_minute.csv) |
+| Per-cow time budgets | [`submission/stitched/final/time_budgets.csv`](submission/stitched/final/time_budgets.csv) |
+| ID-check frames every 30 min on each camera: 97 sheets, each a JPG plus a CSV. In each chunk's folder, `legend.csv` maps its IDs to `COW_01`–`COW_10` | [`submission/stitched/id_checks/`](submission/stitched/id_checks/) |
+| Agent reasoning trace, **success**: stage 1 said drinking (0.69); the agent verified walking (0.96) | [`success_COW_02_d1_m0862.md`](submission/stitched/final/traces/success_COW_02_d1_m0862.md) |
+| Agent reasoning trace, **failure**: a weak "standing" that the agent could not settle, kept as unverified | [`failure_COW_01_d1_m0813.md`](submission/stitched/final/traces/failure_COW_01_d1_m0813.md) |
+| Agent reasoning trace, **night**: infrared footage; the agent rejected "ruminating" and set the minute to not visible | [`night_COW_05_d1_m1085.md`](submission/stitched/final/traces/night_COW_05_d1_m1085.md) |
+| Which cow each trace is after stitching | [`traces/README.md`](submission/stitched/final/traces/README.md) |
+
+### Level 2 · BRD risk
+
+| Required | File |
+|---|---|
+| `brd_risk.csv`: cow ID, risk 0–1, rank, top reasons | [`submission/level2/brd_risk.csv`](submission/level2/brd_risk.csv) |
+| A one-page risk card for each top-3 cow, with 2–3 clips | [`COW_02.html`](submission/level2/cards/COW_02.html) · [`COW_01.html`](submission/level2/cards/COW_01.html) · [`COW_10.html`](submission/level2/cards/COW_10.html) |
+| The decision clips, cow by cow, with day, time and camera | [`EVIDENCE.md`](submission/level2/EVIDENCE.md) (the clips are in [`cards/clips/`](submission/level2/cards/clips/)) |
+| The images behind each decision: all 86 the agent looked at, each linked to the sign verdict it supports | [`IMAGE_EVIDENCE.md`](submission/level2/IMAGE_EVIDENCE.md) (one row per image: [`image_index.csv`](submission/level2/evidence/image_index.csv)) |
+| Visualization tool | [`level2/index.html`](submission/level2/index.html) (ranking, stability, cards) · [`stitched/viewer.html`](submission/stitched/viewer.html) (48 h ethogram, camera joins, time budgets) |
+| The risk agent's reasoning and every piece of evidence it cited | [`agent/traces/`](submission/level2/agent/traces/) · [`evidence/`](submission/level2/evidence/) |
+
+### Level 3 · live early warning
+
+| Shown | File |
+|---|---|
+| Live alerts on one 5-min clip, end to end | [`level3/clip_1600/report.html`](submission/level3/clip_1600/report.html) |
+| Three Day 2 hours replayed as if live | [`level3/day2_replay/report.html`](submission/level3/day2_replay/report.html) |
+| Alert cards, dashboard and simulated emails: what each folder holds | [`level3/README.md`](submission/level3/README.md) |
+
+### Code and disclosure
+
+| Required | Where |
+|---|---|
+| Code that reproduces everything from raw video | Sections [1–5](#1-quick-start) below |
+| Models, versions, and outside data and models | [Section 6](#6-models-versions-and-external-resources) |
+| AI tools used | [Section 7](#7-ai-tools-and-how-we-used-claude) |
+| Submission video | [YouTube](https://youtu.be/a2jZN3BnDJE) · a copy in the repository: [`docs/media/team404_submission_video.mp4`](docs/media/team404_submission_video.mp4) (54 MB; use *View raw* or *Download* to play) |
+
+---
+
+## How it works
+
+```mermaid
+flowchart LR
+  A["3 cameras<br/>day + IR night"] --> B["Detect + track<br/>YOLO26, ByteTrack"]
+  B --> C["Who is who<br/>identity agent"]
+  C --> D["What she is doing<br/>behavior model, every minute"]
+  D --> E["Behavior agent<br/>re-checks flagged minutes"]
+  E --> F["Level 1<br/>activity.csv, time budgets"]
+  F --> G["Level 2<br/>13 BRD indicators + risk agent"]
+  G --> H["Level 3<br/>live alerts + email"]
+  N["new video"] --> H
+```
+
+**Measurement first, judgement second.**
+- **Code measures** positions, zones, speed and who is near whom.
+- **The agents** are vision-language models that plan, call tools and look at frames. They decide only what the measurements cannot settle.
+- **Code checks every claim** before it counts.
+- **Scale:** the 48 h were processed in 33 chunks on our laptops and on TAMU HPRC, then stitched into one ID per cow.
+
+Method notes: [pipeline](docs/PIPELINE.md) · [Level 2](docs/LEVEL2_METHOD.md) · [Level 3](docs/LEVEL3_LIVE.md) · [column definitions](docs/DATA_CONTRACT.md)
+
+## What the results can and cannot support
+
+- **Observed vs estimated:** every minute in `activity.csv` says how it is known. About 30 % of cow-minutes are not visible to any camera, mostly because cows block each other in the resting area and in the far corners at night. Those minutes are reported as not visible, never guessed.
+- **Identity across chunks is the weakest link.** A wrong join blurs the differences between cows more than it invents new ones. Uncertain joins are listed in `id_map.csv`.
+- **The risk score is a ranked suspicion index, not a diagnosis.** It is compared with the herd and is not a calibrated probability. Ten cows over 48 h, with no clinical outcomes, cannot validate a BRD model.
+- **Visible signs need close daylight views.** At night the alerts rely on behavior and say so. A camera cannot take a temperature, so a pen rider confirms.
+
+---
+
+# Running it
+
+Sections 1–5 run the system. For the judges' clip, set up with section 1, then go to [section 3](#3-level-3-on-a-clip-you-choose-the-judges-clip).
+
 ## 1. Quick start
 
-You need the footage the way the organizers shared it (`Day 1/Cam 01/Event*.Avi`, …) and, for the agents, a TAMU AI Chat API key.
+You need:
+- the footage, laid out the way the organizers shared it (`Day 1/Cam 01/Event*.Avi`, …);
+- a TAMU AI Chat API key for the agents.
 
 ### Option A: Docker (recommended)
 
@@ -91,14 +155,14 @@ cp .env.example .env                            # then put your key in it: TAMU_
 docker build -t pen6 .                          # CPU image, ~4 GB
 ```
 
-NVIDIA GPU (much faster tracking), on Linux with the NVIDIA Container Toolkit:
+On Linux with an NVIDIA GPU (much faster tracking) and the NVIDIA Container Toolkit:
 
 ```bash
 docker build -t pen6 --build-arg BASE=pytorch/pytorch:2.5.1-cuda12.4-cudnn9-runtime .
 # then add --gpus all to every docker run below
 ```
 
-Every command in sections 3–5 runs inside the container. Mount the footage read-only at `/videos` and keep the results on your machine:
+Every command in sections 2–5 runs inside the container. Mount the footage read-only at `/videos`, and keep the results on your machine:
 
 ```bash
 docker run --rm -it --env-file .env \
@@ -108,7 +172,7 @@ docker run --rm -it --env-file .env \
 
 ### Option B: Python on your machine
 
-Requirements: Python 3.10–3.12, `ffmpeg` with HEVC decoding (macOS `brew install ffmpeg`; Ubuntu `apt install ffmpeg`), and Git LFS.
+You need Python 3.10–3.12, Git LFS and `ffmpeg` with HEVC decoding (macOS: `brew install ffmpeg`; Ubuntu: `apt install ffmpeg`).
 
 ```bash
 git clone <this repository> pen6 && cd pen6
@@ -118,32 +182,39 @@ pip install -r requirements.txt -r brd_agent/requirements.txt      # exact teste
 cp .env.example .env                                                 # TAMU_API_KEY=...
 ```
 
-The models run on an NVIDIA GPU (CUDA) if there is one, else the Apple GPU (MPS), else the CPU. Set `PEN6_DEVICE=cpu` to force the CPU.
+The models run on the first of these that is available: an NVIDIA GPU (CUDA), the Apple GPU (MPS), then the CPU. To force the CPU, set `PEN6_DEVICE=cpu`.
 
 ### See every result in your browser
 
-The image's default command serves the results showcase on this computer only:
+The Docker image's default command serves the results showcase on this computer only:
 
 ```bash
 docker run --rm -p 127.0.0.1:8000:8000 -v "$PWD/outputs:/app/outputs" pen6
 ```
 
-Without Docker (needs only Python, no packages): `python serve_showcase.py`. Then open:
-
-- **http://localhost:8000/**: the showcase. It covers Levels 1, 2 and 3 with links to every page: the 48 h viewer, the BRD ranking and risk cards, the Level 3 evidence reports, alert cards and emails, and the technical brief.
+Without Docker, run `python serve_showcase.py`; it needs only Python, no packages. Then open:
+- **http://localhost:8000/**: the showcase for Levels 1–3. It links to every page:
+  - the 48 h viewer;
+  - the BRD ranking and the risk cards;
+  - the Level 3 evidence reports, alert cards and emails;
+  - the technical brief.
 - **http://localhost:8000/live/**: your own Level 3 run, after `live_watch.py --clip …` (section 3).
 
 It serves only `submission/`, `docs/`, this README and `outputs/live/`. It never serves the code folders or `.env`.
 
 ---
 
-## 2. Check before you run (1 minute, nothing is processed)
+## 2. Check before you run
+
+This takes 1 minute and processes nothing:
 
 ```bash
 python run_pipeline.py --videos "/videos/Day 2" --name check --dry-run
 ```
 
-This prints which camera each clip was assigned to and the plan. Cameras are recognised from the `Cam 0N` folder, or from the 3 digits after the timestamp in the file name (`006` = cam1 front, `017` = cam2 bunk/top, `003` = cam3 back). The first clip's resolution is then checked. A clip that cannot be placed stops the run; it is never guessed.
+It prints the camera each clip was assigned to, then the plan, then checks the first clip's resolution.
+- **How cameras are recognised:** from the `Cam 0N` folder, or else from the 3 digits after the timestamp in the file name: `006` = cam1 (front), `017` = cam2 (bunk, top view), `003` = cam3 (back).
+- **A clip that cannot be placed stops the run.** It is never guessed.
 
 ---
 
@@ -155,22 +226,22 @@ Pass **one camera's file** of a 5-minute window. The same window from the other 
 python live_watch.py --clip "/videos/Day 2/Cam 01/Event20261108142130006.Avi"
 ```
 
-For that window it:
+For that window, it:
 1. tracks the cows and maps them to the 48 h IDs;
 2. compares each cow with the herd in the same window;
-3. checks close crops for drooping ears, a low head and nasal discharge (VLM). Every flag gets a second look and a measurement check;
+3. uses a vision-language model to check close crops for drooping ears, a low head and nasal discharge. Every flag gets a second look and a measurement check;
 4. updates each cow's risk, starting from the 48 h Level 2 result, and sends alerts with a 12 s clip.
 
 | Output (in `outputs/live/`) | What it is |
 |---|---|
 | `index.html` | Live dashboard: tier and risk per cow, trend, alert feed |
-| `alerts/<cow>_<time>.html` + clip, frame, crops | The alert a pen rider gets: what to do, the evidence, why |
+| `alerts/<cow>_<time>.html`, with its clip, frame and crops | The alert a pen rider gets: what to do, the evidence, why |
 | `outbox/*.eml` | Simulated alert emails and the daily BRD report (never sent) |
 | `report.html`, `risk_history.csv`, `state.json`, `windows.jsonl`, `live.log` | Every decision with its evidence |
 
-To view them in your browser, start the showcase (`python serve_showcase.py`, or the image's default command above) and open **http://localhost:8000/live/**.
+To view them, start the showcase (see "See every result in your browser" in section 1) and open **http://localhost:8000/live/**.
 
-Ranch mode watches the folder the cameras write to and processes each new window as it completes:
+**Ranch mode** watches the folder the cameras write to, and processes each new window as soon as it is complete:
 
 ```bash
 python live_watch.py --watch /videos --poll 30
@@ -181,13 +252,13 @@ Useful flags:
 - `--no-signs`: skips the VLM sign check.
 - `--reset`: starts again from the 48 h baseline.
 
-Settings: `configs/live.yaml`. Method: [`docs/LEVEL3_LIVE.md`](docs/LEVEL3_LIVE.md).
+Settings: `configs/live.yaml` · Method: [`docs/LEVEL3_LIVE.md`](docs/LEVEL3_LIVE.md)
 
 ---
 
 ## 4. Levels 1 and 2 on any footage
 
-One command takes a folder of clips (any length) to the Level 1 and Level 2 deliverables:
+One command takes a folder of clips, of any length, to the Level 1 and Level 2 deliverables:
 
 ```bash
 python run_pipeline.py --videos "/videos/Day 2" --name d2_afternoon \
@@ -196,28 +267,26 @@ python run_pipeline.py --videos "/videos/Day 2" --name d2_afternoon \
 
 | Step | What happens | Output (in `outputs/pipeline/<name>/`) |
 |---|---|---|
-| `prepare` | sort clips into cameras (links, no copies) | `input/cam1..cam3/` |
-| `track` | fine-tuned YOLO26 detector + ByteTrack per camera, 1 frame/s | `stage1/tracking/` |
-| `level1` | identity by cross-camera agreement, world state, identity agent, behavior model | `stage1/level1/` (+ `agent/id_checks/`, the 30-min ID sheets) |
-| `assets` | breathing, sudden movements, feed events, evidence clips | `stage1/level1/assets/` |
-| `import` / `agent` / `export` | stage 2 behavior agent re-checks flagged minutes on the video | `final/activity.csv`, `activity_minute.csv`, `time_budgets.csv`, `actions.csv`, `traces/` |
-| `level2` | 13 BRD indicators vs the herd, risk agent, risk cards | `level2/brd_risk.csv`, `index.html`, `cards/` |
+| `prepare` | Sorts the clips into cameras (links, not copies) | `input/cam1..cam3/` |
+| `track` | Fine-tuned YOLO26 detector and ByteTrack on each camera, 1 frame/s | `stage1/tracking/` |
+| `level1` | Identity by cross-camera agreement, world state, identity agent, behavior model | `stage1/level1/` (+ `agent/id_checks/`, the 30-min ID sheets) |
+| `assets` | Breathing, sudden movements, feed events, evidence clips | `stage1/level1/assets/` |
+| `import` / `agent` / `export` | The stage 2 behavior agent re-checks flagged minutes on the video | `final/activity.csv`, `activity_minute.csv`, `time_budgets.csv`, `actions.csv`, `traces/` |
+| `level2` | 13 BRD indicators compared with the herd, risk agent, risk cards | `level2/brd_risk.csv`, `index.html`, `cards/` |
 
-- **Resuming:** runs resume after an interruption. The same `--name` skips finished steps, and `--from STEP` redoes a step and everything after it.
-- **Logs:** each step's log is in `logs/`. `python why_failed.py` says which step stopped and why ([`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md)).
+- **Resuming:** a run picks up where it stopped. With the same `--name`, finished steps are skipped. `--from STEP` reruns that step and every step after it.
+- **Logs:** each step's log is in `logs/`. `python why_failed.py` tells you which step stopped and why ([`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md)).
 - **Viewer:** `python scripts/run_viewer.py --run outputs/pipeline/<name>` makes an interactive `viewer.html`.
-- **`basis` column:** every row of `activity.csv` says how it is known: `verified` (an agent looked at the frames), `observed`, `unverified`, `estimated` or `not_visible`.
+- **The `basis` column:** every row of `activity.csv` says how it is known:
+  - `verified`: an agent looked at the frames;
+  - `observed`, `unverified` or `estimated`;
+  - `not_visible`: no camera saw the cow.
 
-**Running time:** 5 minutes of 3-camera footage took about 12 min on a MacBook (Apple GPU):
+**Running time:** 5 minutes of footage from all 3 cameras took about 12 min on a MacBook (Apple GPU). An NVIDIA GPU is several times faster. For the full 48 h, see section 5.
 
-| Step | Time |
-|---|---|
-| tracking | 4 min |
-| identity + behavior | 5 min |
-| assets | 1 min |
-| behavior agent | 2 min |
-
-An NVIDIA GPU is several times faster. For the full 48 h, see section 5.
+| Tracking | Identity + behavior | Assets | Behavior agent |
+|:-:|:-:|:-:|:-:|
+| 4 min | 5 min | 1 min | 2 min |
 
 ### Without an API key
 
@@ -232,7 +301,7 @@ python live_watch.py --clip /videos/.../Event....Avi --no-signs     # live_watch
 
 ## 5. Reproducing the 48 h results in `submission/`
 
-48 h × 3 cameras of 4K footage is split into chunks, run in parallel, and stitched.
+The 48 h of 4K footage from 3 cameras is split into chunks, which run in parallel and are then stitched together.
 
 ```bash
 # 1. plan: split the footage into shares (all on one machine here)
@@ -246,11 +315,15 @@ python stitch_shares.py --videos /videos            # -> outputs/stitched/ (fina
 python scripts/stitched_viewer.py                   # -> outputs/stitched/viewer.html
 ```
 
-Each chunk also tracks the 2 minutes before its window. The stitcher joins cow IDs where neighbouring chunks saw the same boxes in the same frames. Uncertain joins are listed in `id_map.csv` and can be overridden with `--id-map overrides.yaml`.
+**How the stitch works:**
+- Each chunk also tracks the 2 minutes before its own window.
+- The stitcher joins cow IDs where neighbouring chunks saw the same boxes in the same frames.
+- Uncertain joins are listed in `id_map.csv`. You can override them with `--id-map overrides.yaml`.
 
-- **On a cluster:** we ran Day 2 as a Slurm GPU array job on TAMU HPRC: [`docs/HPRC_PIPELINE.md`](docs/HPRC_PIPELINE.md).
-- **On laptops:** [`docs/LAPTOP_SETUP.md`](docs/LAPTOP_SETUP.md).
-- **Level 3 baseline:** Level 3 starts from `submission/level2` (`configs/live.yaml: baseline`).
+**Where it runs:**
+- **On a cluster:** we ran Day 2 as a Slurm GPU array job on TAMU HPRC. See [`docs/HPRC_PIPELINE.md`](docs/HPRC_PIPELINE.md).
+- **On laptops:** see [`docs/LAPTOP_SETUP.md`](docs/LAPTOP_SETUP.md).
+- **Level 3 baseline:** Level 3 starts from `submission/level2` (the `baseline` setting in `configs/live.yaml`).
 
 ---
 
@@ -260,22 +333,25 @@ Each chunk also tracks the 2 minutes before its window. The stitcher joins cow I
 |---|---|---|
 | Cow detector | YOLO26-m (Ultralytics 8.4.212), fine-tuned at 1280 px on 216 hand-labelled frames from this pen | `models/angus_det_hprc_m1280.pt` (Git LFS) |
 | Tracker | ByteTrack (Ultralytics), per camera | |
-| Cow appearance (identity tie-break, memory cards) | Meta DINOv2 ViT-S/14 via `torch.hub` (`facebookresearch/dinov2`) | downloaded on first use; baked into the Docker image |
-| Behavior classifier | DINOv2-S (`timm` `vit_small_patch14_dinov2.lvd142m`), last 4 blocks fine-tuned on our ~330 labelled clips + 9,269 CBVD-5 crops | `models/behavior/beh_finetuned.pt` (Git LFS), report in `models/behavior/ft_report.md` |
+| Cow appearance (identity tie-break, memory cards) | Meta DINOv2 ViT-S/14 via `torch.hub` (`facebookresearch/dinov2`) | Downloaded on first use; baked into the Docker image |
+| Behavior classifier | DINOv2-S (`timm` `vit_small_patch14_dinov2.lvd142m`), last 4 blocks fine-tuned on our ~330 labelled clips + 9,269 CBVD-5 crops | `models/behavior/beh_finetuned.pt` (Git LFS); report in `models/behavior/ft_report.md` |
 | Identity agent, stage 2 behavior agent | GPT-5.6 Luna (`protected.gpt-5.6-luna`) via the TAMU AI Chat API | `configs/agent.yaml`, `configs/pipeline.yaml` |
 | Level 2 risk agent | Claude Opus 4.8 (`protected.Claude Opus 4.8`) via TAMU | `configs/risk.yaml` |
 | Level 3 sign check | Gemini 3.5 Flash and Claude Opus 4.8 via TAMU | `configs/live.yaml` |
-| Fallbacks | the same model on the OpenAI API (`OPENAI_API_KEY`), then local Qwen2.5-VL 7B through Ollama | `configs/agent.yaml` |
+| Fallbacks | The same model on the OpenAI API (`OPENAI_API_KEY`), then local Qwen2.5-VL 7B through Ollama | `configs/agent.yaml` |
 
 **External data and code:**
 - CBVD-5 cattle behavior dataset (Kaggle, CC0)
 - COCO-pretrained YOLO26 weights (Ultralytics)
 - DINOv2 (Meta)
-- OpenCV, ffmpeg, Label Studio (local, for our labelling)
+- OpenCV, ffmpeg, and Label Studio (run locally, for our labelling)
 - BRD literature for the indicator weights (sources in `configs/risk.yaml` and on every risk card)
 
-**Tested environment:** Python 3.12.15 with ffmpeg 9.0 on macOS (Apple GPU), and Linux on TAMU HPRC (NVIDIA GPUs). The Docker image uses Debian's ffmpeg. Exact package versions: `requirements-lock.txt`.
-
+**Tested environment:**
+- Python 3.12.15 with ffmpeg 9.0 on macOS (Apple GPU).
+- Linux on TAMU HPRC (NVIDIA GPUs).
+- The Docker image uses Debian's ffmpeg.
+- Exact package versions: `requirements-lock.txt`.
 
 ---
 
@@ -286,20 +362,20 @@ Each chunk also tracks the 2 minutes before its window. The stitcher joins cow I
 | Where | Model | What it does | What keeps it honest |
 |---|---|---|---|
 | Identity agent | GPT-5.6 Luna (TAMU) | Investigates duplicate IDs, ID jumps and camera conflicts; audits every 30 min | Code accepts a relabel only with ≥ 2 kinds of evidence, a top-2 appearance match and no duplicate ID |
-| Stage 2 behavior agent | GPT-5.6 Luna (TAMU) | Re-checks flagged cow-minutes on the video with tools | Rule verifier; rumination needs measured chewing; it abstains rather than guess |
-| Level 2 risk agent | **Claude Opus 4.8** (TAMU) | Audits each cow's indicators and looks for DART signs on 4K crops | Code, not the model, sets the score; a sign needs a cited image of that cow at a minimum size |
-| Level 3 sign check | Gemini 3.5 Flash and **Claude Opus 4.8** (TAMU) | Ears, head carriage and nasal discharge on close crops | Each flag gets a second look and a measurement check (tracker speed, posture) |
-| Benchmarked, not used | Claude Sonnet 5, local Qwen2.5-VL 7B | Compared on 8 identical identity cases (speed, first-try self-check pass) | |
+| Stage 2 behavior agent | GPT-5.6 Luna (TAMU) | Re-checks flagged cow-minutes on the video with tools | A rule verifier checks it; rumination needs measured chewing; it abstains rather than guess |
+| Level 2 risk agent | **Claude Opus 4.8** (TAMU) | Audits each cow's indicators and looks for DART signs on 4K crops | Code, not the model, sets the score; a sign needs a cited image of that cow, at a minimum size |
+| Level 3 sign check | Gemini 3.5 Flash and **Claude Opus 4.8** (TAMU) | Checks ears, head carriage and nasal discharge on close crops | Each flag gets a second look and a measurement check (tracker speed, posture) |
+| Benchmarked, not used | Claude Sonnet 5, local Qwen2.5-VL 7B | Compared on the same 8 identity cases (speed, and whether the first answer passed the self-check) | |
 
-**Building it:** we wrote the code with **Claude Code** (Anthropic's coding agent, Claude Opus models) as a pair programmer. 54 of our 58 commits are co-authored by Claude.
-
-It helped with:
+**Building it:** we wrote the code with **Claude Code** (Anthropic's coding agent, running Claude Opus models) as a pair programmer. 60 of our 64 commits (merges not counted) are co-authored by Claude. It helped with:
 - the pipeline, agents, stitching and viewers;
 - debugging the 48 h runs;
 - the technical brief's layout and wording;
 - this README and the Dockerfile.
 
-The team chose the methods, labelled the training data, ran the footage and checked every number in the brief and in `submission/` against the outputs. We remain responsible for every claim.
+The team chose the methods, labelled the training data and ran the footage. We checked every number in the brief and in `submission/` against the outputs, and we remain responsible for every claim.
+
+---
 
 ## 8. Repository map
 
@@ -318,17 +394,3 @@ submission/            our 48 h results (Levels 1–3), traces, ID-check sheets,
 docs/                  technical brief, method notes per level, setup and troubleshooting
 tests/                 pytest -q
 ```
-
-Method notes:
-- pipeline: [`docs/PIPELINE.md`](docs/PIPELINE.md)
-- Level 2: [`docs/LEVEL2_METHOD.md`](docs/LEVEL2_METHOD.md)
-- Level 3: [`docs/LEVEL3_LIVE.md`](docs/LEVEL3_LIVE.md)
-- column definitions: [`docs/DATA_CONTRACT.md`](docs/DATA_CONTRACT.md)
-
----
-
-## 9. What this can and cannot support
-
-- **Observed vs estimated:** every minute in `activity.csv` carries its basis. About 30 % of cow-minutes are not visible to any camera, and those are reported as such, never guessed.
-- **Risk score:** the BRD risk is a ranked suspicion index against the herd, not a diagnosis or a calibrated probability. 10 cows over 48 h, with no clinical outcomes, cannot validate a BRD model.
-- **Our 48 h call:** COW_02, COW_01 and COW_10 are early suspects on behavior (slower to the bunk, eat less), with no visible clinical sign confirmed. Confirm with temperature and examination.

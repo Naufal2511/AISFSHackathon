@@ -84,7 +84,8 @@ clean standing head view on the next pen ride to rule out nasal or eye discharge
 | [`brd_risk.csv`](brd_risk.csv) | cow, risk 0–1, rank, top reasons, confidence, signs (the table above) |
 | [`indicators.csv`](indicators.csv), [`contributions.csv`](contributions.csv) | every indicator per cow, and how each moved the score (value, herd reference, z, weight) |
 | [`cards/clips/`](cards/clips/) | the 7 clips above, with a frame from each |
-| [`evidence/`](evidence/) | `facts.jsonl` (every fact the agent cited) and `img/` (every frame crop it looked at) |
+| [`IMAGE_EVIDENCE.md`](IMAGE_EVIDENCE.md) | **every image the agent looked at (86), next to the sign verdict it supports**, with the agent's reasoning at each step |
+| [`evidence/`](evidence/) | `facts.jsonl` (every fact the agent cited), `img/` (every frame crop it looked at) and `image_index.csv` (one row per image: cow, camera, time, what cites it) |
 | [`agent/traces/`](agent/traces/) | the risk agent's tool calls, findings and self-check, per cow |
 | [`risk_meta.json`](risk_meta.json) | time span, runs used, model, and the source camera and time of each clip |
 | `index.html`, `cards/COW_*.html` | the interactive ranking and the one-page risk cards (open after download) |

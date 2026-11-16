@@ -1,0 +1,87 @@
+image_id,cow_id,kind,camera,time,region,facing,box_px,daylight,agent_step,tool,cited_for,path
+I0001,COW_10,breathing window,cam1,8 Nov 17:15,,,1034,True,1,breathing,"laboured / open-mouth breathing, extended neck: absent; coughing posture: not assessable; artifact: breathing_effort",evidence/img/I0001.jpg
+I0002,COW_10,trend chart,,,,,,,2,trend,artifact: desync_share,evidence/img/I0002.jpg
+I0003,COW_10,gallery crop,cam1,7 Nov 16:24,body,,1347,True,3,gallery,,evidence/img/I0003.jpg
+I0004,COW_10,gallery crop,cam2,8 Nov 16:25,body,,1318,True,3,gallery,,evidence/img/I0004.jpg
+I0005,COW_10,gallery crop,cam2,8 Nov 14:43,body,,1218,True,3,gallery,ears drooping: absent,evidence/img/I0005.jpg
+I0006,COW_10,gallery crop,cam1,7 Nov 08:39,body,,1212,True,3,gallery,,evidence/img/I0006.jpg
+I0007,COW_10,gallery crop,cam1,7 Nov 17:42,body,,1188,True,3,gallery,,evidence/img/I0007.jpg
+I0008,COW_10,gallery crop,cam1,8 Nov 13:50,body,,1175,True,3,gallery,,evidence/img/I0008.jpg
+I0009,COW_10,head crop,cam2,8 Nov 14:43,head,side-on,1218,True,4,get_crop,head carried low / depressed: not assessable; ears drooping: absent; nasal discharge: not assessable; ocular discharge / tearing: not assessable,evidence/img/I0009.jpg
+I0010,COW_10,herdmate comparison,cam2,8 Nov 16:25,,,1319,True,7,compare_herdmates,head carried low / depressed: not assessable; hollow left flank / gaunt: not assessable,evidence/img/I0010.jpg
+I0011,COW_02,trend chart,,,,,,,1,trend,behavior check,evidence/img/I0011.jpg
+I0012,COW_02,gallery crop,cam1,7 Nov 16:38,body,,1314,True,3,gallery,,evidence/img/I0012.jpg
+I0013,COW_02,gallery crop,cam1,7 Nov 13:40,body,,1266,True,3,gallery,,evidence/img/I0013.jpg
+I0014,COW_02,gallery crop,cam2,7 Nov 12:11,body,,1233,True,3,gallery,,evidence/img/I0014.jpg
+I0015,COW_02,gallery crop,cam2,8 Nov 17:28,body,,1160,True,3,gallery,,evidence/img/I0015.jpg
+I0016,COW_02,gallery crop,cam1,7 Nov 14:00,body,,1124,True,3,gallery,,evidence/img/I0016.jpg
+I0017,COW_02,gallery crop,cam2,7 Nov 13:13,body,,1106,True,3,gallery,,evidence/img/I0017.jpg
+I0018,COW_02,head crop,cam2,7 Nov 12:11,head,toward,1234,True,4,get_crop,"head carried low / depressed: not assessable; ears drooping: absent; nasal discharge: not assessable; ocular discharge / tearing: not assessable; laboured / open-mouth breathing, extended neck: not assessable; hollow left flank / gaunt: not assessable",evidence/img/I0018.jpg
+I0019,COW_02,head crop,cam2,8 Nov 17:28,head,unknown,1160,True,6,get_crop,"head carried low / depressed: not assessable; nasal discharge: not assessable; ocular discharge / tearing: not assessable; laboured / open-mouth breathing, extended neck: not assessable; hollow left flank / gaunt: not assessable",evidence/img/I0019.jpg
+I0020,COW_02,8-frame sequence,cam3,8 Nov 17:57,body,,197,False,8,get_sequence,coughing posture: not assessable,evidence/img/I0020.jpg
+I0021,COW_01,trend chart,,,,,,,1,trend,behavior check,evidence/img/I0021.jpg
+I0022,COW_01,gallery crop,cam1,7 Nov 16:26,body,,1380,True,3,gallery,,evidence/img/I0022.jpg
+I0023,COW_01,gallery crop,cam1,8 Nov 10:12,body,,1172,True,3,gallery,,evidence/img/I0023.jpg
+I0024,COW_01,gallery crop,cam2,8 Nov 16:36,body,,1170,True,3,gallery,hollow left flank / gaunt: not assessable,evidence/img/I0024.jpg
+I0025,COW_01,gallery crop,cam2,8 Nov 14:47,body,,1140,True,3,gallery,,evidence/img/I0025.jpg
+I0026,COW_01,gallery crop,cam1,8 Nov 17:14,body,,1024,True,3,gallery,,evidence/img/I0026.jpg
+I0027,COW_01,gallery crop,cam1,7 Nov 07:18,body,,965,True,3,gallery,,evidence/img/I0027.jpg
+I0028,COW_01,gallery crop,cam3,7 Nov 08:13,body,,852,True,3,gallery,,evidence/img/I0028.jpg
+I0029,COW_01,gallery crop,cam3,8 Nov 07:09,body,,838,True,3,gallery,,evidence/img/I0029.jpg
+I0030,COW_01,head crop,cam1,7 Nov 07:18,head,side-on,965,True,4,get_crop,nasal discharge: absent,evidence/img/I0030.jpg
+I0031,COW_01,head crop,cam2,8 Nov 16:36,head,toward,1171,True,5,get_crop,head carried low / depressed: not assessable; ears drooping: not assessable; nasal discharge: absent; ocular discharge / tearing: not assessable,evidence/img/I0031.jpg
+I0032,COW_01,breathing window,cam3,7 Nov 04:36,,,636,False,6,breathing,"laboured / open-mouth breathing, extended neck: absent",evidence/img/I0032.jpg
+I0033,COW_01,head crop,cam2,8 Nov 14:47,head,unknown,1141,True,7,get_crop,head carried low / depressed: not assessable; ears drooping: not assessable; nasal discharge: absent; ocular discharge / tearing: not assessable; hollow left flank / gaunt: not assessable,evidence/img/I0033.jpg
+I0034,COW_04,trend chart,,,,,,,1,trend,artifact: longest_meal_gap_min; behavior check,evidence/img/I0034.jpg
+I0035,COW_04,gallery crop,cam2,8 Nov 14:43,body,,1230,True,3,gallery,hollow left flank / gaunt: not assessable,evidence/img/I0035.jpg
+I0036,COW_04,gallery crop,cam2,7 Nov 14:20,body,,1229,True,3,gallery,hollow left flank / gaunt: not assessable,evidence/img/I0036.jpg
+I0037,COW_04,gallery crop,cam1,7 Nov 13:10,body,,1223,True,3,gallery,hollow left flank / gaunt: not assessable,evidence/img/I0037.jpg
+I0038,COW_04,gallery crop,cam1,8 Nov 15:30,body,,1187,True,3,gallery,,evidence/img/I0038.jpg
+I0039,COW_04,gallery crop,cam1,7 Nov 09:19,body,,1176,True,3,gallery,,evidence/img/I0039.jpg
+I0040,COW_04,gallery crop,cam1,8 Nov 16:37,body,,1142,True,3,gallery,,evidence/img/I0040.jpg
+I0041,COW_04,head crop,cam2,7 Nov 13:09,head,toward,1487,True,5,get_crop,"head carried low / depressed: absent; ears drooping: not assessable; nasal discharge: not assessable; ocular discharge / tearing: not assessable; laboured / open-mouth breathing, extended neck: absent",evidence/img/I0041.jpg
+I0042,COW_04,head crop,cam1,8 Nov 16:27,head,side-on,1396,True,6,get_crop,"head carried low / depressed: absent; ears drooping: not assessable; ocular discharge / tearing: not assessable; laboured / open-mouth breathing, extended neck: absent",evidence/img/I0042.jpg
+I0043,COW_09,trend chart,,,,,,,1,trend,key evidence,evidence/img/I0043.jpg
+I0044,COW_09,gallery crop,cam1,8 Nov 14:23,body,,1258,True,2,gallery,hollow left flank / gaunt: absent,evidence/img/I0044.jpg
+I0045,COW_09,gallery crop,cam2,8 Nov 08:37,body,,1212,True,2,gallery,,evidence/img/I0045.jpg
+I0046,COW_09,gallery crop,cam1,7 Nov 16:02,body,,1211,True,2,gallery,hollow left flank / gaunt: absent,evidence/img/I0046.jpg
+I0047,COW_09,gallery crop,cam1,7 Nov 13:11,body,,1197,True,2,gallery,,evidence/img/I0047.jpg
+I0048,COW_09,gallery crop,cam2,8 Nov 15:34,body,,1178,True,2,gallery,head carried low / depressed: absent,evidence/img/I0048.jpg
+I0049,COW_09,gallery crop,cam1,8 Nov 17:27,body,,1149,True,2,gallery,,evidence/img/I0049.jpg
+I0050,COW_09,head crop,cam2,8 Nov 15:34,head,side-on,1178,True,3,get_crop,head carried low / depressed: absent; ears drooping: absent; nasal discharge: not assessable; ocular discharge / tearing: absent,evidence/img/I0050.jpg
+I0051,COW_03,gallery crop,cam2,8 Nov 16:26,body,,1393,True,1,gallery,head carried low / depressed: absent; hollow left flank / gaunt: absent,evidence/img/I0051.jpg
+I0052,COW_03,gallery crop,cam1,7 Nov 14:20,body,,1291,True,1,gallery,,evidence/img/I0052.jpg
+I0053,COW_03,gallery crop,cam2,7 Nov 13:48,body,,1238,True,1,gallery,,evidence/img/I0053.jpg
+I0054,COW_03,gallery crop,cam2,7 Nov 08:01,body,,1226,True,1,gallery,,evidence/img/I0054.jpg
+I0055,COW_03,gallery crop,cam1,8 Nov 17:42,body,,1191,True,1,gallery,hollow left flank / gaunt: absent,evidence/img/I0055.jpg
+I0056,COW_03,gallery crop,cam1,7 Nov 10:16,body,,1164,True,1,gallery,,evidence/img/I0056.jpg
+I0057,COW_03,breathing window,cam1,7 Nov 14:53,,,644,True,2,breathing,"laboured / open-mouth breathing, extended neck: absent",evidence/img/I0057.jpg
+I0058,COW_03,head crop,cam2,8 Nov 16:26,head,side-on,1393,True,3,get_crop,head carried low / depressed: absent; ears drooping: not assessable; nasal discharge: not assessable; ocular discharge / tearing: not assessable; hollow left flank / gaunt: absent,evidence/img/I0058.jpg
+I0059,COW_05,gallery crop,cam1,7 Nov 15:03,body,,1365,True,1,gallery,hollow left flank / gaunt: absent,evidence/img/I0059.jpg
+I0060,COW_05,gallery crop,cam1,7 Nov 17:42,body,,1257,True,1,gallery,,evidence/img/I0060.jpg
+I0061,COW_05,gallery crop,cam1,7 Nov 13:05,body,,1246,True,1,gallery,,evidence/img/I0061.jpg
+I0062,COW_05,gallery crop,cam2,8 Nov 15:40,body,,1220,True,1,gallery,,evidence/img/I0062.jpg
+I0063,COW_05,gallery crop,cam1,7 Nov 13:50,body,,1202,True,1,gallery,,evidence/img/I0063.jpg
+I0064,COW_05,gallery crop,cam2,7 Nov 09:12,body,,1158,True,1,gallery,,evidence/img/I0064.jpg
+I0065,COW_05,head crop,cam2,8 Nov 15:40,head,side-on,1220,True,2,get_crop,"head carried low / depressed: not assessable; ears drooping: absent; nasal discharge: not assessable; ocular discharge / tearing: not assessable; laboured / open-mouth breathing, extended neck: absent; hollow left flank / gaunt: absent",evidence/img/I0065.jpg
+I0066,COW_07,8-frame sequence,cam3,8 Nov 18:22,head,,187,False,2,get_sequence,head carried low / depressed: not assessable; ears drooping: not assessable; coughing posture: not assessable; behavior check,evidence/img/I0066.jpg
+I0067,COW_07,gallery crop,cam1,8 Nov 16:21,body,,1350,True,3,gallery,"head carried low / depressed: not assessable; nasal discharge: not assessable; laboured / open-mouth breathing, extended neck: absent; hollow left flank / gaunt: absent",evidence/img/I0067.jpg
+I0068,COW_07,gallery crop,cam1,7 Nov 16:13,body,,1254,True,3,gallery,head carried low / depressed: not assessable; nasal discharge: not assessable,evidence/img/I0068.jpg
+I0069,COW_07,gallery crop,cam1,8 Nov 15:03,body,,1231,True,3,gallery,head carried low / depressed: not assessable; ears drooping: not assessable; nasal discharge: not assessable; ocular discharge / tearing: not assessable,evidence/img/I0069.jpg
+I0070,COW_07,gallery crop,cam1,8 Nov 14:33,body,,1207,True,3,gallery,"head carried low / depressed: not assessable; laboured / open-mouth breathing, extended neck: absent; hollow left flank / gaunt: absent",evidence/img/I0070.jpg
+I0071,COW_07,gallery crop,cam1,7 Nov 14:59,body,,1197,True,3,gallery,head carried low / depressed: not assessable,evidence/img/I0071.jpg
+I0072,COW_07,gallery crop,cam1,7 Nov 16:41,body,,1195,True,3,gallery,head carried low / depressed: not assessable; hollow left flank / gaunt: absent,evidence/img/I0072.jpg
+I0073,COW_06,gallery crop,cam2,7 Nov 13:17,body,,1337,True,1,gallery,"head carried low / depressed: not assessable; ears drooping: not assessable; laboured / open-mouth breathing, extended neck: absent; hollow left flank / gaunt: not assessable",evidence/img/I0073.jpg
+I0074,COW_06,gallery crop,cam1,7 Nov 15:48,body,,1192,True,1,gallery,,evidence/img/I0074.jpg
+I0075,COW_06,gallery crop,cam1,7 Nov 13:40,body,,1191,True,1,gallery,,evidence/img/I0075.jpg
+I0076,COW_06,gallery crop,cam1,7 Nov 12:42,body,,1168,True,1,gallery,,evidence/img/I0076.jpg
+I0077,COW_06,gallery crop,cam1,7 Nov 09:09,body,,1160,True,1,gallery,,evidence/img/I0077.jpg
+I0078,COW_06,gallery crop,cam1,7 Nov 14:02,body,,1144,True,1,gallery,,evidence/img/I0078.jpg
+I0079,COW_06,head crop,cam2,7 Nov 13:17,head,side-on,1338,True,2,get_crop,"head carried low / depressed: not assessable; ears drooping: not assessable; nasal discharge: not assessable; ocular discharge / tearing: not assessable; laboured / open-mouth breathing, extended neck: absent; hollow left flank / gaunt: not assessable",evidence/img/I0079.jpg
+I0080,COW_08,gallery crop,cam1,7 Nov 13:05,body,,1262,True,1,gallery,head carried low / depressed: not assessable; hollow left flank / gaunt: absent,evidence/img/I0080.jpg
+I0081,COW_08,gallery crop,cam1,7 Nov 13:32,body,,1260,True,1,gallery,hollow left flank / gaunt: absent,evidence/img/I0081.jpg
+I0082,COW_08,gallery crop,cam2,7 Nov 12:42,body,,1252,True,1,gallery,head carried low / depressed: not assessable,evidence/img/I0082.jpg
+I0083,COW_08,gallery crop,cam2,7 Nov 12:22,body,,1222,True,1,gallery,,evidence/img/I0083.jpg
+I0084,COW_08,gallery crop,cam1,7 Nov 16:31,body,,1187,True,1,gallery,hollow left flank / gaunt: absent,evidence/img/I0084.jpg
+I0085,COW_08,gallery crop,cam2,7 Nov 14:00,body,,1181,True,1,gallery,,evidence/img/I0085.jpg
+I0086,COW_08,head crop,cam1,7 Nov 13:05,head,side-on,1262,True,2,get_crop,"head carried low / depressed: not assessable; ears drooping: not assessable; nasal discharge: not assessable; ocular discharge / tearing: not assessable; laboured / open-mouth breathing, extended neck: not assessable; coughing posture: not assessable",evidence/img/I0086.jpg
