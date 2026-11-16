@@ -48,3 +48,7 @@ brd_agent/cache/
 !submission/
 !submission/**
 submission/**/.DS_Store
+
+# --- Videos stay out of the repository (regenerate with the commands in README.md) ---
+submission/**/*.mp4
+submission/**/*.avi

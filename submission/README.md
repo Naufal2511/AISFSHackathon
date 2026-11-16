@@ -9,7 +9,7 @@ These files contain event data: the evidence crops, clips and trace images are c
 | File | What it is |
 |---|---|
 | [`SHOWCASE.md`](SHOWCASE.md) | **Everything on one page, with pictures** (renders on GitHub) |
-| `index.html` | The same showcase with playable clips and buttons to every full page (open in a browser after download) |
+| `index.html` | The same showcase with buttons to every full page (open in a browser after download) |
 | `level2/index.html` | BRD risk ranking with reasons, confidence and a card per flagged cow |
 | `level2/brd_risk.csv` | The same ranking as a table |
 | `stitched/viewer.html` | 48 h ethogram per cow, the camera joins, time budgets and the id map (self-contained) |

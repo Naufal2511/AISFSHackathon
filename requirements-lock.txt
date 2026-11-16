@@ -1,0 +1,19 @@
+# Exact versions the submission results were produced with (macOS, Python 3.12.15).
+# pip install -r requirements-lock.txt   (requirements.txt has the minimum versions; the Docker image installs that)
+torch==2.15.0
+torchvision==0.29.2
+timm==1.0.31
+ultralytics==8.4.212
+opencv-python-headless==5.0.0.93
+numpy==2.5.4
+scipy==1.18.1
+pandas==3.1.1
+PyYAML==6.0.3
+matplotlib==3.11.2
+scikit-learn==1.9.1
+tabulate==0.10.0
+pydantic==2.14.3
+Pillow==13.0.0
+requests==2.34.2
+psutil==7.2.2
+pytest==9.2.0
