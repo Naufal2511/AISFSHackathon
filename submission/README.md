@@ -17,12 +17,12 @@ These files contain event data: the evidence crops, clips and trace images are c
 
 ## BRD risk (Level 2)
 
-| Rank | Cow | risk_score | p_top3 | Confidence |
-|---|---|---|---|---|
-| 1 | COW_02 | 0.372 | 0.92 | high |
-| 2 | COW_01 | 0.325 | 0.67 | medium |
-| 3 | COW_10 | 0.259 | 0.88 | high |
-| 4-10 | the rest | 0.10 to 0.19 | | |
+| Rank | Cow | risk_score | p_top3 | Confidence | Relevant Decision Clips |
+|---|---|---|---|---|---|
+| 1 | COW_02 | 0.372 | 0.92 | high | [`COW_02_1.mp4`](level2/cards/clips/COW_02_1.mp4) (feed latency) · [`COW_02_2.mp4`](level2/cards/clips/COW_02_2.mp4) (closest view) |
+| 2 | COW_01 | 0.325 | 0.67 | medium | [`COW_01_1.mp4`](level2/cards/clips/COW_01_1.mp4) (bunk feeding) · [`COW_01_2.mp4`](level2/cards/clips/COW_01_2.mp4) (closest view) |
+| 3 | COW_10 | 0.259 | 0.88 | high | [`COW_10_1.mp4`](level2/cards/clips/COW_10_1.mp4) (bunk visit) · [`COW_10_2.mp4`](level2/cards/clips/COW_10_2.mp4) (closest view) |
+| 4-10 | the rest | 0.10 to 0.19 | | | *(Not flagged)* |
 
 - No cow showed a visible BRD sign in the agent's review. The top 3 are flagged on behavior only: slow to reach the bunk after feed calls, short bunk visits, and less feeding than the herd at the same hours.
 - **risk_score is an index for ranking, not a probability.** Each cow gets its own score: a herd-typical cow is about 0.10, and the scores do not add up to 1.
@@ -31,6 +31,8 @@ These files contain event data: the evidence crops, clips and trace images are c
 
 | File | What it is |
 |---|---|
+| [`level2/README.md`](level2/README.md) | Dedicated Level 2 guide with clip breakdowns and direct video links |
+| [`level2/cards/clips/`](level2/cards/clips/) | The 6 decision evidence clips for COW_02, COW_01, COW_10 |
 | `level2/cards/COW_*.html` | Per-cow card: indicator chart, two 12 s clips, and the evidence the agent cited |
 | `level2/indicators.csv` | Each indicator, per cow |
 | `level2/contributions.csv` | How each indicator moved the score: value, herd reference, z, weight, contribution |
