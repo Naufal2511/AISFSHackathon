@@ -64,7 +64,7 @@ Steps 1–4 open right here on GitHub, with no download. GitHub shows `.html` fi
 | 5 | **`submission/index.html`** | The interactive pages. Download the repository (**Code → Download ZIP**) and open the file in a browser, or run `python serve_showcase.py` and open http://localhost:8000 |
 | 6 | **[Level 3 on your own clip](#3-level-3-on-a-clip-you-choose-the-judges-clip)** | `python live_watch.py --clip <any camera file>` |
 
-> **Event data:** the footage, frames and results stay within the event, so keep this repository private. The only video clips in the repository are the submission video and the Level 2 decision clips (`submission/level2/cards/clips/`). The commands below regenerate the rest.
+> **Event data:** the frames and clips come from the Merck–TAMU AISFS Hackathon 2026 footage (Pen 6) and are shared for judging and reference. The only video clips in the repository are the submission video and the Level 2 decision clips (`submission/level2/cards/clips/`). The commands below regenerate the rest.
 
 ---
 

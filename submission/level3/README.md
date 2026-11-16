@@ -1,8 +1,8 @@
 # Level 3: live early warning, example runs
 
 Saved outputs of `live_watch.py` (code: `live_watch.py`, `src/live/`; design, speed and limits: `docs/LEVEL3_LIVE.md`).
-Everything opens in a browser from disk; nothing needs to run. These files contain event video frames: keep this
-repo private.
+Everything opens in a browser from disk; nothing needs to run. The frames come from the
+hackathon's event video.
 
 **Start with `report.html` in each folder.** It shows every decision with its evidence. At the top: **the alerts from the 48 h BRD risk** (the morning list: each cow's tier, the rule that put her there, Level 2's reasons and clips). Then for each window:
 * the alerts: the pen-rider action, the 12 s clip cropped to the cow, the full frame, the sign crops and the reason;

@@ -2,7 +2,7 @@
 
 The final run covers **11-07 00:04 to 11-09 00:01** (48.0 h, 3 cameras). It joins 33 chunks: 8 laptop chunks for Day 1 and 25 one-hour HPRC chunks for Day 2. They were stitched by `stitch_shares.py`, then scored by `scripts/run_level2.py`. Level 3 (`live_watch.py`) turns that risk into alerts and keeps it current from new video.
 
-These files contain event data: the evidence crops, clips and trace images are cut from the event video. **Keep this repo private. Share these files only within the team, unless the organizers say otherwise.**
+These files contain event data: the evidence crops, clips and trace images are cut from the Merck–TAMU AISFS Hackathon 2026 video, shared here for judging and reference.
 
 ## Open first
 
