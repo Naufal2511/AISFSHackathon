@@ -4,8 +4,56 @@
     {
       "name": "agent-dashboard",
       "runtimeExecutable": ".venv/bin/python",
-      "runtimeArgs": ["scripts/dashboard.py", "--run", "outputs/level1_d1_1600", "--port", "8765"],
+      "runtimeArgs": [
+        "scripts/dashboard.py",
+        "--run",
+        "outputs/level1_d1_1600",
+        "--port",
+        "8765"
+      ],
       "port": 8765
+    },
+    {
+      "name": "run-viewer",
+      "runtimeExecutable": ".venv/bin/python",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8770",
+        "--bind",
+        "127.0.0.1",
+        "--directory",
+        "outputs/pipeline"
+      ],
+      "port": 8770
+    },
+    {
+      "name": "shares-viewer",
+      "runtimeExecutable": ".venv/bin/python",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8771",
+        "--bind",
+        "127.0.0.1",
+        "--directory",
+        "outputs/shares"
+      ],
+      "port": 8771
+    },
+    {
+      "name": "stitched-viewer",
+      "runtimeExecutable": ".venv/bin/python",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8772",
+        "--bind",
+        "127.0.0.1",
+        "--directory",
+        "outputs"
+      ],
+      "port": 8772
     }
   ]
 }

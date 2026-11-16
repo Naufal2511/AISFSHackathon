@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stitched Pen 6</title>
+<style>
+:root {
+  color-scheme: light;
+  --page: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink2: #52514e; --muted: #898781;
+  --grid: #e1e0d9; --axis: #c3c2b7; --ring: rgba(11,11,11,0.10);
+  --b0: #2a78d6; --b1: #eb6834; --b2: #1baf7a; --b3: #eda100; --b4: #e87ba4; --b5: #008300; --b6: #6250d6; --b7: #e34948;
+  --b8: #6f6e69; --nv: #e8e7e1;
+  --e0: #104281; --e1: #256abf; --e2: #5598e7; --e3: #86b6ef;
+  --good: #0ca30c; --warning: #fab219; --serious: #ec835a; --critical: #d03b3b; --info: #898781;
+  --good-ink: #006300;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,0.10);
+    --b0: #3987e5; --b1: #d95926; --b2: #199e70; --b3: #c98500; --b4: #d55181; --b5: #0ca30c; --b6: #9085e9; --b7: #e66767;
+    --b8: #8e8d86; --nv: #2a2a28;
+    --e0: #b7d3f6; --e1: #5598e7; --e2: #256abf; --e3: #184f95;
+    --good-ink: #0ca30c;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink2: #c3c2b7; --muted: #898781;
+  --grid: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,0.10);
+  --b0: #3987e5; --b1: #d95926; --b2: #199e70; --b3: #c98500; --b4: #d55181; --b5: #0ca30c; --b6: #9085e9; --b7: #e66767;
+  --b8: #8e8d86; --nv: #2a2a28;
+  --e0: #b7d3f6; --e1: #5598e7; --e2: #256abf; --e3: #184f95;
+  --good-ink: #0ca30c;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--page); color: var(--ink); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 1180px; margin: 0 auto; padding: 24px 16px 64px; }
+h1 { font-size: 22px; margin: 0 0 4px; font-weight: 650; letter-spacing: -0.01em; }
+h2 { font-size: 16px; margin: 0 0 4px; font-weight: 650; }
+.sub, .note { color: var(--ink2); }
+.note { font-size: 13px; margin: 0 0 12px; max-width: 78ch; }
+section { background: var(--surface); border: 1px solid var(--ring); border-radius: 12px; padding: 16px; margin-top: 16px; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 16px; }
+.tile { background: var(--surface); border: 1px solid var(--ring); border-radius: 12px; padding: 12px 14px; }
+.tile .v { font-size: 24px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.tile .k { color: var(--ink2); font-size: 12.5px; }
+.checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.checks li { display: grid; grid-template-columns: 74px 1fr; gap: 10px; align-items: start; }
+.chip { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; padding: 2px 8px;
+  border-radius: 999px; border: 1px solid var(--ring); white-space: nowrap; color: var(--ink); }
+.chip i { font-style: normal; width: 14px; height: 14px; border-radius: 50%; display: inline-grid; place-items: center;
+  font-size: 10px; color: #fff; font-weight: 700; }
+.chip.good i { background: var(--good); } .chip.warning i { background: var(--warning); color: #0b0b0b; }
+.chip.serious i { background: var(--serious); } .chip.critical i { background: var(--critical); }
+.chip.info i { background: var(--info); }
+.checks b { font-weight: 600; } .checks .d { color: var(--ink2); font-size: 13px; }
+.bar { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin: 8px 0 12px; }
+.seg { display: inline-flex; border: 1px solid var(--ring); border-radius: 8px; overflow: hidden; }
+.seg button { border: 0; background: transparent; color: var(--ink2); padding: 5px 12px; font: inherit; font-size: 13px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--grid); color: var(--ink); font-weight: 600; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 6px; }
+.legend button { display: inline-flex; align-items: center; gap: 6px; border: 1px solid transparent; background: transparent;
+  color: var(--ink); font: inherit; font-size: 12.5px; padding: 3px 8px; border-radius: 999px; cursor: pointer; }
+.legend button:hover { border-color: var(--ring); }
+.legend button.off { color: var(--muted); }
+.legend button.off .sw { opacity: 0.25; }
+.sw { width: 12px; height: 12px; border-radius: 3px; flex: none; }
+.canvas-wrap { position: relative; width: 100%; }
+canvas { display: block; width: 100%; }
+.tip { position: fixed; pointer-events: none; z-index: 10; background: var(--surface); color: var(--ink); border: 1px solid var(--ring);
+  border-radius: 8px; padding: 8px 10px; font-size: 12.5px; box-shadow: 0 4px 16px rgba(0,0,0,0.12); max-width: 300px; display: none; }
+.tip .t { font-weight: 600; margin-bottom: 2px; } .tip .r { display: flex; align-items: center; gap: 6px; } .tip .m { color: var(--ink2); }
+.budget { display: grid; grid-template-columns: 64px 1fr 92px; gap: 8px; align-items: center; margin: 6px 0; }
+.budget .lbl { font-size: 12.5px; color: var(--ink2); font-variant-numeric: tabular-nums; }
+.budget .track { display: flex; gap: 2px; height: 16px; }
+.budget .track div { height: 100%; min-width: 1px; }
+.budget .track div:first-child { border-radius: 4px 0 0 4px; } .budget .track div:last-child { border-radius: 0 4px 4px 0; }
+.budget .vh { font-size: 12.5px; color: var(--ink2); text-align: right; font-variant-numeric: tabular-nums; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+th { color: var(--ink2); font-weight: 600; font-size: 12px; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.scroll { overflow-x: auto; }
+details summary { cursor: pointer; color: var(--ink2); font-size: 13px; margin-top: 12px; }
+select { font: inherit; font-size: 13px; padding: 4px 8px; border-radius: 8px; border: 1px solid var(--ring); background: var(--surface); color: var(--ink); }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+@media (max-width: 600px) { .checks li { grid-template-columns: 1fr; gap: 2px; } .budget { grid-template-columns: 56px 1fr 64px; } }
+</style>
+</head>
+<body>
+<main>
+  <h1 id="title">Stitched result</h1>
+  <div class="sub" id="subtitle"></div>
+  <div class="tiles" id="tiles"></div>
+
+  <section>
+    <h2>End-to-end checks</h2>
+    <p class="note">Computed from the stitched files when this page was built. "Check" items are not failures, but need a look before the result is trusted.</p>
+    <ul class="checks" id="checks"></ul>
+  </section>
+
+  <section>
+    <h2>Every cow, every minute</h2>
+    <p class="note" id="etho-note">One row per cow, one column per minute. The dark line is where one chunk hands over to the next. Hover a cell for the minute's label, evidence and why; click a legend entry to show only that behavior.</p>
+    <div class="bar">
+      <div class="seg" role="group" aria-label="Colour by">
+        <button type="button" data-mode="beh" aria-pressed="true">Behavior</button>
+        <button type="button" data-mode="evi" aria-pressed="false">Evidence</button>
+      </div>
+      <div class="legend" id="legend"></div>
+    </div>
+    <div class="canvas-wrap"><canvas id="etho" aria-label="Ethogram: behavior per cow per minute"></canvas></div>
+  </section>
+
+  <section>
+    <h2>The joins up close</h2>
+    <p class="note">20 minutes either side of a chunk join. If the ids line up, most cows keep doing what they were doing across the line. The mark after each cow says how its id was joined: ✓ by overlapping boxes, ! boxes with the cameras disagreeing, ? appearance only.</p>
+    <div class="bar"><label for="joinSel" class="note" style="margin:0">Join</label><select id="joinSel"></select></div>
+    <div class="canvas-wrap"><canvas id="zoom" aria-label="Ethogram around the selected chunk join"></canvas></div>
+    <div class="scroll"><table id="joinTable"></table></div>
+  </section>
+
+  <section>
+    <h2>Time budgets</h2>
+    <p class="note">Share of each cow's visible time per behavior over the stitched window (minutes the cow was not visible are left out; the right column says how many hours that is).</p>
+    <div id="budgets"></div>
+    <details><summary>Table view</summary><div class="scroll"><table id="budgetTable"></table></div></details>
+  </section>
+
+  <section>
+    <h2>Cow-id map</h2>
+    <p class="note">How each chunk's own cow numbers were mapped to one set of ids (id_map.csv). Fix a wrong row with <span class="mono">stitch_shares.py --id-map</span>.</p>
+    <div class="scroll"><table id="idTable"></table></div>
+  </section>
+</main>
+<div class="tip" id="tip"></div>
+<script>
+const D = /*__DATA__*/null;
+const NB = D.beh.length, NV_B = NB - 1, NV_E = D.basis.length - 1;
+const EVI_LABEL = {verified: "verified (BRD agent checked the frames)", observed: "observed (confident model label)",
+  unverified: "unverified (agent could not confirm)", estimated: "estimated (filled from neighbours)", not_visible: "not visible"};
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const behColor = i => i === NV_B ? css("--nv") : css(i === NB - 2 ? "--b8" : "--b" + i);
+const eviColor = i => i === NV_E ? css("--nv") : css("--e" + i);
+let mode = "beh"; const off = new Set();
+const pad2 = x => String(x).padStart(2, "0");
+const hhmm = t => { const d = Math.floor(t / 1440), r = t % 1440; return (d ? "day " + (d + 1) + " " : "") + pad2(Math.floor(r / 60)) + ":" + pad2(r % 60); };
+const short = n => n.replace("_training", "").replace(/_(c\d+)$/, " $1");   // afeef_training_c01 -> afeef c01
+const ownerOf = t => D.chunks.find(c => t >= c.s && t < c.e);
+
+// ---------- header, tiles, checks
+document.getElementById("title").textContent = "Stitched Pen 6 · " + D.tiles.hours + " h";
+document.getElementById("subtitle").textContent = D.day1 + ", " + hhmm(D.w0) + "–" + hhmm(D.w1) + " · " +
+  D.chunks.map(c => short(c.name) + " (" + c.who + ") " + hhmm(c.s) + "–" + hhmm(c.e)).join(" → ") + " · folder " + D.title;
+const fmt = n => n.toLocaleString("en-US");
+const tiles = [[D.tiles.hours + " h", "stitched, " + D.chunks.length + " chunks"], [String(D.cows.length), "cow ids"],
+  [fmt(D.tiles.cow_minutes), "cow-minutes"], [Math.round(100 * D.tiles.visible / D.tiles.cow_minutes) + "%", "of them visible"],
+  [fmt(D.tiles.bouts), "visible behavior bouts"], [fmt(D.tiles.verified), "minutes checked by the BRD agent"]];
+document.getElementById("tiles").innerHTML = tiles.map(([v, k]) => `<div class="tile"><div class="v">${v}</div><div class="k">${k}</div></div>`).join("");
+const LV = {good: ["✓", "OK"], warning: ["!", "Check"], serious: ["!", "Weak"], critical: ["✕", "Fail"], info: ["i", "Info"]};
+const chip = (lv, text) => `<span class="chip ${lv}"><i>${LV[lv][0]}</i>${text ?? LV[lv][1]}</span>`;
+document.getElementById("checks").innerHTML = D.checks.map(c =>
+  `<li>${chip(c.level)}<div><b>${esc(c.title)}</b><div class="d">${esc(c.detail)}</div></div></li>`).join("");
+function esc(s) { return String(s ?? "").replace(/[&<>"]/g, ch => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[ch])); }
+
+// ---------- legend
+function legendItems() {
+  if (mode === "beh") {
+    const used = new Set(); D.cows.forEach(c => D.grid[c].b.forEach(b => used.add(b)));
+    return D.beh.map((name, i) => ({i, name, color: behColor(i)})).filter(x => used.has(x.i));
+  }
+  return D.basis.map((name, i) => ({i, name: EVI_LABEL[name] || name, color: eviColor(i)}));
+}
+function renderLegend() {
+  const el = document.getElementById("legend");
+  el.innerHTML = legendItems().map(x => `<button type="button" data-i="${x.i}" class="${off.size && !off.has(x.i) ? "off" : ""}"
+    aria-pressed="${off.has(x.i)}"><span class="sw" style="background:${x.color}"></span>${esc(x.name)}</button>`).join("");
+  el.querySelectorAll("button").forEach(b => b.onclick = () => {
+    const i = +b.dataset.i; off.has(i) ? off.delete(i) : off.add(i); renderAll();
+  });
+}
+document.querySelectorAll(".seg button").forEach(b => b.onclick = () => {
+  mode = b.dataset.mode; off.clear();
+  document.querySelectorAll(".seg button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+  renderAll();
+});
+
+// ---------- ethogram canvases
+const tip = document.getElementById("tip");
+function cellCode(cow, t) { const g = D.grid[cow], i = t - D.w0; return mode === "beh" ? g.b[i] : g.e[i]; }
+function codeColor(k) { return mode === "beh" ? behColor(k) : eviColor(k); }
+function setupCanvas(cv, h) {
+  const w = cv.parentElement.clientWidth, r = window.devicePixelRatio || 1;
+  cv.width = Math.round(w * r); cv.height = Math.round(h * r); cv.style.height = h + "px";
+  const x = cv.getContext("2d"); x.setTransform(r, 0, 0, r, 0, 0); return [x, w];
+}
+function strip(cv, t0, t1, o) {
+  const rowH = o.rowH, gap = 2, top = 22, labelW = o.labelW, rightW = o.rightW || 0;
+  const H = top + D.cows.length * (rowH + gap) + 26;
+  const [x, W] = setupCanvas(cv, H);
+  const cw = (W - labelW - rightW) / (t1 - t0);
+  x.clearRect(0, 0, W, H);
+  x.font = "12px system-ui, -apple-system, Segoe UI, sans-serif"; x.textBaseline = "middle";
+  D.cows.forEach((cow, r) => {
+    const y = top + r * (rowH + gap);
+    x.fillStyle = css("--ink2"); x.textAlign = "left"; x.fillText(cow, 0, y + rowH / 2);
+    if (o.mark) { const m = o.mark(cow); if (m) { x.fillStyle = css(m.color); x.fillText(m.glyph, labelW - 14, y + rowH / 2); } }
+    let s = t0;
+    for (let t = t0 + 1; t <= t1; t++) {
+      if (t < t1 && cellCode(cow, t) === cellCode(cow, s) && cw < 6) continue;
+      const k = cellCode(cow, s);
+      x.globalAlpha = off.size && !off.has(k) ? 0.12 : 1;
+      x.fillStyle = codeColor(k);
+      const x0 = labelW + (s - t0) * cw, x1 = labelW + (t - t0) * cw;
+      x.fillRect(x0, y, Math.max(x1 - x0 - (cw >= 6 ? 2 : 0), 0.6), rowH);
+      s = t;
+    }
+    x.globalAlpha = 1;
+  });
+  const yb = top + D.cows.length * (rowH + gap);
+  // hour axis
+  const span = t1 - t0, plotW = W - labelW - rightW;
+  const step = [5, 10, 15, 30, 60, 120, 180, 360, 720, 1440].find(s => plotW / (span / s) >= 52) || 1440;
+  x.fillStyle = css("--muted"); x.textAlign = "center"; x.strokeStyle = css("--axis"); x.lineWidth = 1;
+  for (let t = Math.ceil(t0 / step) * step; t <= t1; t += step) {
+    const px = labelW + (t - t0) * cw;
+    x.beginPath(); x.moveTo(px + 0.5, yb); x.lineTo(px + 0.5, yb + 4); x.stroke();
+    if (px > labelW + 12 && px < W - rightW - 12) x.fillText(hhmm(t), px, yb + 14);
+  }
+  // joins: chunk names only when there is room; a label that would collide with the previous one is left out
+  let lastRight = -1e9;
+  x.font = "600 11.5px system-ui, -apple-system, Segoe UI, sans-serif";
+  D.joins.forEach(j => {
+    if (j.minute <= t0 || j.minute >= t1) return;
+    const px = Math.round(labelW + (j.minute - t0) * cw) - 1;
+    x.fillStyle = css("--ink"); x.fillRect(px, top - 6, 2, yb - top + 6);
+    const label = (span > 720 ? "" : short(j.left) + " | " + short(j.right) + "  ") + hhmm(j.minute);
+    const tw = x.measureText(label).width, cx = Math.min(Math.max(px, labelW + tw / 2), W - rightW - tw / 2);
+    if (cx - tw / 2 > lastRight + 8) { x.textAlign = "center"; x.fillText(label, cx, 8); lastRight = cx + tw / 2; }
+  });
+  x.font = "12px system-ui, -apple-system, Segoe UI, sans-serif";
+  if (o.hover) {
+    const {cow, t} = o.hover, r = D.cows.indexOf(cow);
+    if (r >= 0 && t >= t0 && t < t1) {
+      x.strokeStyle = css("--ink"); x.lineWidth = 1.5;
+      x.strokeRect(labelW + (t - t0) * cw - 1, top + r * (rowH + gap) - 1, Math.max(cw, 2) + 2, rowH + 2);
+    }
+  }
+  cv._geo = {t0, t1, labelW, rightW, cw, top, rowH, gap, W};
+}
+function hoverHandler(cv, redraw) {
+  cv.onmousemove = ev => {
+    const g = cv._geo, b = cv.getBoundingClientRect(), mx = ev.clientX - b.left, my = ev.clientY - b.top;
+    const r = Math.floor((my - g.top) / (g.rowH + g.gap)), t = g.t0 + Math.floor((mx - g.labelW) / g.cw);
+    if (r < 0 || r >= D.cows.length || t < g.t0 || t >= g.t1 || mx < g.labelW) { tip.style.display = "none"; redraw(null); return; }
+    const cow = D.cows[r], i = t - D.w0, gr = D.grid[cow], ch = ownerOf(t);
+    const b2 = gr.b[i], e = gr.e[i];
+    tip.innerHTML = `<div class="t">${cow} · ${hhmm(t)}${ch ? " · " + short(ch.name) : ""}</div>
+      <div class="r"><span class="sw" style="background:${behColor(b2)}"></span>${esc(D.beh[b2])}</div>
+      <div class="r"><span class="sw" style="background:${eviColor(e)}"></span>${esc(EVI_LABEL[D.basis[e]] || D.basis[e])}${e < NV_E ? " · confidence " + (gr.c[i] / 100).toFixed(2) : ""}</div>
+      <div class="m">${esc(D.reasons[gr.r[i]])}</div>`;
+    tip.style.display = "block";
+    const tw = tip.offsetWidth, th = tip.offsetHeight;
+    tip.style.left = Math.min(ev.clientX + 14, window.innerWidth - tw - 8) + "px";
+    tip.style.top = (ev.clientY + 14 + th > window.innerHeight ? ev.clientY - th - 10 : ev.clientY + 14) + "px";
+    redraw({cow, t});
+  };
+  cv.onmouseleave = () => { tip.style.display = "none"; redraw(null); };
+}
+const etho = document.getElementById("etho"), zoom = document.getElementById("zoom");
+let ethoHover = null, zoomHover = null;
+const drawEtho = () => strip(etho, D.w0, D.w1, {rowH: 16, labelW: 64, hover: ethoHover});
+hoverHandler(etho, h => { ethoHover = h; drawEtho(); });
+
+// ---------- joins
+const sel = document.getElementById("joinSel");
+if (!D.joins.length) { sel.innerHTML = "<option>no joins (one chunk)</option>"; }
+D.joins.forEach((j, k) => sel.insertAdjacentHTML("beforeend", `<option value="${k}">${short(j.left)} → ${short(j.right)} at ${hhmm(j.minute)}</option>`));
+const STATUS = s => !s ? ["info", "-"] : s.startsWith("overlap_split") ? ["warning", "!"] : s.startsWith("overlap") ? ["good", "✓"] :
+  s === "matched" ? ["good", "✓"] : s.startsWith("position") ? ["warning", "!"] : s === "low_margin" ? ["serious", "?"] :
+  s.startsWith("guess") ? ["serious", "?"] : s === "new" ? ["critical", "✕"] : s === "override" ? ["info", "✓"] : ["info", "·"];
+const HOW = s => !s ? "" : s.startsWith("overlap_split") ? "boxes, cameras disagree" : s.startsWith("overlap") ? "overlapping boxes" :
+  s.startsWith("position") ? s.replace(/^position \(([\d.]+ m).*$/, "position across the join, $1") : s.startsWith("guess") ? "guess (no evidence)" :
+  s === "matched" ? "clear appearance" : s === "low_margin" ? "near-tied appearance" : s === "new" ? "new id" :
+  s === "first_chunk" ? "reference (first chunk)" : s === "override" ? "manual override" : s;
+function joinRows(j) { return D.cows.map(cow => ({cow, row: D.idmap.find(r => r.chunk === j.right && r.global_id === cow)})); }
+function drawZoom() {
+  if (!D.joins.length) return;
+  const j = D.joins[+sel.value || 0], t0 = Math.max(D.w0, j.minute - 20), t1 = Math.min(D.w1, j.minute + 20);
+  const rows = Object.fromEntries(joinRows(j).map(x => [x.cow, x.row]));
+  strip(zoom, t0, t1, {rowH: 20, labelW: 80, hover: zoomHover, mark: cow => {
+    const r = rows[cow]; if (!r) return {glyph: "·", color: "--muted"};
+    const [lv, g] = STATUS(r.status); return {glyph: g, color: "--" + (lv === "info" ? "muted" : lv === "good" ? "good-ink" : lv)};
+  }});
+  document.getElementById("joinTable").innerHTML = `<thead><tr><th>Cow</th><th>${esc(short(j.right))} called it</th><th>How</th><th>Similarity</th><th>Where each camera's boxes pointed</th></tr></thead><tbody>` +
+    joinRows(j).map(({cow, row}) => {
+      if (!row) return `<tr><td>${cow}</td><td colspan="4" class="note">not in ${esc(short(j.right))}</td></tr>`;
+      const [lv] = STATUS(row.status);
+      return `<tr><td>${cow}</td><td>${esc(row.local_id)}</td><td>${chip(lv, esc(HOW(row.status)))}</td>
+        <td class="num">${row.similarity == null ? "" : (+row.similarity).toFixed(2)}${row.margin == null ? "" : " (margin " + (+row.margin).toFixed(3) + ")"}</td>
+        <td class="mono">${esc(row.overlap_detail || "")}</td></tr>`;
+    }).join("") + "</tbody>";
+}
+sel.onchange = drawZoom;
+hoverHandler(zoom, h => { zoomHover = h; drawZoom(); });
+
+// ---------- budgets
+function drawBudgets() {
+  const vis = D.beh.map((_, i) => i).filter(i => i !== NV_B && D.cows.some(c => D.budgets[c][i] > 0));
+  document.getElementById("budgets").innerHTML = D.cows.map(cow => {
+    const b = D.budgets[cow], tot = vis.reduce((s, i) => s + b[i], 0) || 1;
+    return `<div class="budget"><div class="lbl">${cow}</div><div class="track">` +
+      vis.filter(i => b[i] > 0).map(i => `<div data-cow="${cow}" data-i="${i}" style="flex:${b[i]} 1 0;background:${behColor(i)};opacity:${off.size && mode === "beh" && !off.has(i) ? 0.12 : 1}"></div>`).join("") +
+      `</div><div class="vh">${(tot / 60).toFixed(1)} h visible</div></div>`;
+  }).join("");
+  document.querySelectorAll(".budget .track div").forEach(el => {
+    el.onmousemove = ev => {
+      const cow = el.dataset.cow, i = +el.dataset.i, b = D.budgets[cow], tot = vis.reduce((s, k) => s + b[k], 0);
+      tip.innerHTML = `<div class="t">${cow}</div><div class="r"><span class="sw" style="background:${behColor(i)}"></span>${esc(D.beh[i])}</div>
+        <div class="m">${b[i]} min · ${(100 * b[i] / tot).toFixed(1)}% of visible time</div>`;
+      tip.style.display = "block"; tip.style.left = Math.min(ev.clientX + 14, window.innerWidth - tip.offsetWidth - 8) + "px"; tip.style.top = ev.clientY + 14 + "px";
+    };
+    el.onmouseleave = () => tip.style.display = "none";
+  });
+  document.getElementById("budgetTable").innerHTML = `<thead><tr><th>Cow</th>${vis.map(i => `<th class="num">${esc(D.beh[i])}</th>`).join("")}<th class="num">not visible</th></tr></thead><tbody>` +
+    D.cows.map(cow => `<tr><td>${cow}</td>${vis.map(i => `<td class="num">${D.budgets[cow][i]}</td>`).join("")}<td class="num">${D.budgets[cow][NV_B]}</td></tr>`).join("") +
+    "</tbody><caption class=\"note\" style=\"caption-side:bottom;text-align:left\">minutes in the stitched window</caption>";
+}
+
+// ---------- id map
+document.getElementById("idTable").innerHTML = `<thead><tr><th>Chunk</th><th>Its id</th><th>→ Id</th><th>How</th><th>Similarity</th><th>Overlap per camera</th></tr></thead><tbody>` +
+  D.idmap.map(r => { const [lv] = STATUS(r.status === "first_chunk" ? null : r.status);
+    return `<tr><td>${esc(short(r.chunk))}</td><td>${esc(r.local_id)}</td><td><b>${esc(r.global_id)}</b></td><td>${r.status === "first_chunk" ? '<span class="note">reference</span>' : chip(lv, esc(HOW(r.status)))}</td>
+      <td class="num">${r.similarity == null ? "" : (+r.similarity).toFixed(2)}${r.margin == null ? "" : " (" + (+r.margin).toFixed(3) + ")"}</td><td class="mono">${esc(r.overlap_detail || "")}</td></tr>`; }).join("") + "</tbody>";
+
+function renderAll() { renderLegend(); drawEtho(); drawZoom(); drawBudgets(); }
+renderAll();
+new ResizeObserver(() => { drawEtho(); drawZoom(); }).observe(document.querySelector("main"));
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", renderAll);
+</script>
+</body>
+</html>
