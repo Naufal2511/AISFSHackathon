@@ -1,0 +1,24 @@
+# keep the build context small: footage, results and local environments stay out of the image
+.git
+.venv
+.venv-labelstudio
+**/__pycache__
+**/*.pyc
+input/
+data/
+outputs/
+handoff/
+runs/
+x/
+video/
+brd_agent/cache/
+brd_agent/work/
+*.Avi
+*.avi
+*.mp4
+*.zip
+*.tar.gz
+*.log
+.env
+# loose COCO weights in the repo root (the pipeline uses models/)
+/*.pt

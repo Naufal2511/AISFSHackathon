@@ -43,6 +43,13 @@ class Live:
     def __init__(self, a):
         self.a = a
         self.cfg = yaml.safe_load(open(REPO / a.config, encoding="utf-8"))
+        # a fresh clone has no outputs/: start the live identity files from the copies shipped in submission/live_identity
+        for key in ("gallery", "reference_prototypes"):
+            p = REPO / self.cfg["identity"][key]
+            seed = REPO / "submission" / "live_identity" / p.name
+            if not p.exists() and seed.exists():
+                p.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(seed, p)
         if a.alert_score is not None:
             self.cfg["alert"]["score"] = a.alert_score
         self.out = Path(a.out)
