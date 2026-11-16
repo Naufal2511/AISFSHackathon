@@ -52,3 +52,7 @@ submission/**/.DS_Store
 # --- Videos stay out of the repository (regenerate with the commands in README.md) ---
 submission/**/*.mp4
 submission/**/*.avi
+
+# --- The team's submission video (the one video kept in the repository) ---
+!docs/media/*.mp4
+!docs/media/*.jpg

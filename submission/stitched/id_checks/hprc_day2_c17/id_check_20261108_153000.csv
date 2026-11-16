@@ -1,0 +1,10 @@
+time,cow_id,cam1_seen,cam2_seen,cam3_seen,cam2_track,cam2_sim_own,cam2_best,cam2_best_sim
+2026-11-08 15:30:00,COW_07,False,False,False,,,,
+2026-11-08 15:30:00,COW_05,False,False,False,,,,
+2026-11-08 15:30:00,COW_02,False,False,False,,,,
+2026-11-08 15:30:00,COW_03,False,False,False,,,,
+2026-11-08 15:30:00,COW_10,False,False,False,,,,
+2026-11-08 15:30:00,COW_09,False,False,False,,,,
+2026-11-08 15:30:00,COW_06,False,True,False,4.0,0.935,COW_05,0.952
+2026-11-08 15:30:00,COW_04,False,False,False,,,,
+2026-11-08 15:30:00,COW_01,False,False,False,,,,
