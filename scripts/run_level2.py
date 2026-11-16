@@ -26,7 +26,7 @@ import yaml
 
 from src.risk.agent import Backends, RiskAgent, visual_logit
 from src.risk.data import Herd, hms
-from src.risk.indicators import minute_table
+from src.risk.indicators import confirmed_deliveries, minute_table
 from src.risk.longterm import asset_indicators, load_assets
 from src.risk.features import build as build_features
 from src.risk.report import write_outputs
@@ -64,8 +64,11 @@ def main():
     m = minute_table(herd, cfg)
     assets = load_assets(a.runs)
     fe = assets.get("feed_events")
-    if fe is not None and len(fe):   # real deliveries seen at the trough join the herd-rush proxy
-        m.attrs["feed_rushes"] = sorted(set(m.attrs["feed_rushes"]) | {int(t) // 60 * 60 for t in fe.wall_t})
+    if fe is not None and len(fe):   # trough changes the herd answers join the herd-rush proxy (not every flicker)
+        kept = confirmed_deliveries(fe.wall_t, m.attrs["bunk_occupancy"], cfg["extraction"])
+        print(f"feed deliveries: {len(kept)} of {len(fe)} trough changes confirmed by the herd going to the bunk")
+        ev = sorted(set(m.attrs["feed_rushes"]) | set(kept))
+        m.attrs["feed_rushes"] = [t for i, t in enumerate(ev) if i == 0 or t - ev[i - 1] > 1800]
     hourly, summary = build_features(m, cfg, assets)
     if len(hourly):
         hourly.to_csv(os.path.join(a.out, "features_hourly.csv"), index=False)

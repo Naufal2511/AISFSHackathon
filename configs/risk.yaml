@@ -21,6 +21,7 @@ extraction:
   rush_lo: 0.2                # feed rush: bunk occupancy <= 20 % for the previous quiet_min minutes ...
   rush_hi: 0.5                # ... then >= 50 %
   rush_quiet_min: 15
+  rush_min_cows: 4            # ... and at least this many cows at the bunk (2 of 3 visible cows is not a rush)
   latency_cap_min: 60
 
 scoring:

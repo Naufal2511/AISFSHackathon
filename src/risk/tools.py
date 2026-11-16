@@ -143,14 +143,14 @@ class RiskTools(LongTermTools):
         s = self.sc.loc[cow_id] if cow_id in self.sc.index else None
         lines = [f"{cow_id}: behavior score {s.behavior_score:.2f} (rank {int(s['rank'])} of {len(self.sc)}"
                  + (f", top-3 in {100 * s.p_top3:.0f}% of time-resamples" if "p_top3" in s else "") + ")" if s is not None else cow_id,
-                 "fact | indicator | value | herd median | z (sick-direction) | hours | contribution"]
+                 "fact | indicator | value | herd median (* = herd at the same hours this cow was seen) | z (sick-direction) | hours | contribution"]
         for _, r in d.sort_values("contrib", ascending=False).iterrows():
             base = r.indicator.replace("__trend", "")
             spec = self.cfg["indicators"][base]
             fid = f"F-{cow_id}-{r.indicator}"
             sz = "n/a" if pd.isna(r.signed) else f"{r.signed:+.1f}"
             lines.append(f"{fid} | {spec['label']}{' (day-to-day change)' if r.kind == 'trend' else ''} | "
-                         f"{fmt(r.value, spec['unit'])} | {fmt(r.herd_median, spec['unit'])} | {sz} | "
+                         f"{fmt(r.value, spec['unit'])} | {fmt(r.herd_median, spec['unit'])}{'*' if bool(r.get('matched', False)) else ''} | {sz} | "
                          f"{'' if pd.isna(r.hours) else f'{r.hours:.1f}'} | {r.contrib:+.2f}")
         cov = self.m[self.m.cow_id == cow_id]
         lines.append(f"coverage: seen {cov.seen_s.sum() / 3600:.1f} h, behavior labelled {cov.beh_obs_s.sum() / 3600:.1f} h "

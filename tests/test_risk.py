@@ -91,7 +91,12 @@ class TestSelfCheck(unittest.TestCase):
         self.store = EvidenceStore(self.d)
         img = np.zeros((40, 40, 3), np.uint8)
         self.small = self.store.add_image(img, "COW_01", "crop", {"box_px": 120, "daylight": True, "time": 1}, "test")
-        self.close_night = self.store.add_image(img, "COW_01", "crop", {"box_px": 700, "daylight": False, "time": 1}, "test")
+        self.close_night = self.store.add_image(img, "COW_01", "crop", {"box_px": 700, "daylight": False, "time": 1,
+                                                                       "region": "body", "facing": "side-on"}, "test")
+        self.rump = self.store.add_image(img, "COW_01", "crop", {"box_px": 1100, "daylight": True, "time": 1,
+                                                                "region": "head", "facing": "unknown"}, "test")
+        self.head = self.store.add_image(img, "COW_01", "crop", {"box_px": 1100, "daylight": True, "time": 1,
+                                                                "region": "head", "facing": "side-on"}, "test")
         self.other = self.store.add_image(img, "COW_02", "crop", {"box_px": 700, "daylight": True, "time": 1}, "test")
         self.agent = RiskAgent.__new__(RiskAgent)
         self.agent.store, self.agent.cfg = self.store, CFG
@@ -112,6 +117,31 @@ class TestSelfCheck(unittest.TestCase):
         self.assertEqual(clean["artifacts"], [])        # coverage-only artifact rejected
         self.assertEqual(clean["key_evidence"], [])
 
+    def test_head_signs_need_the_head_in_view(self):
+        """Final 48 h run: a 'head' crop with facing unknown (it showed the rump) was cited for 'ears normal'."""
+        fin = {"signs": {"ears_droop": {"status": "absent", "evidence": [self.rump]},
+                         "ocular_discharge": {"status": "absent", "evidence": [self.head]},
+                         "head_low": {"status": "absent", "evidence": [self.rump]}}}
+        clean, _ = self.agent.apply_rules("COW_01", fin)
+        st = {k: v["status"] for k, v in clean["signs"].items()}
+        self.assertEqual(st["ears_droop"], "not_assessable")
+        self.assertEqual(st["head_low"], "not_assessable")
+        self.assertEqual(st["ocular_discharge"], "absent")
+
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestFeedCalls(unittest.TestCase):
+    def test_only_trough_changes_the_herd_answers_count(self):
+        """48 h run: 56 trough 'deliveries', many at night with no cow at the bunk."""
+        import pandas as pd
+        from src.risk.indicators import confirmed_deliveries
+        mins = np.arange(0, 4 * 3600, 60)
+        occ = pd.DataFrame({"n": 8, "b": 0}, index=mins)
+        occ.loc[(mins >= 3600 + 600) & (mins < 3600 + 1800), "b"] = 6     # the herd goes to the bunk after 01:00
+        occ["share"] = occ.b / occ.n
+        c = {"rush_hi": 0.5, "rush_min_cows": 4}
+        kept = confirmed_deliveries([600, 3600, 3660, 3 * 3600], occ, c)
+        self.assertEqual(kept, [3600])                                     # 00:10 and 03:00: nobody came; 01:01 merged

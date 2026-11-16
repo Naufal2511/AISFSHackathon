@@ -153,19 +153,42 @@ def minute_table(herd: Herd, cfg: Dict) -> pd.DataFrame:
     m["desync_s"] = np.where(ok & (m.coarse != m.herd_mode), m.beh_obs_s, 0.0)
 
     # herd feed rushes (feed delivery proxy): bunk occupancy jumps from low to high
-    occ = m.assign(b=m.bunk_s >= 30).groupby("minute").agg(n=("seen_s", lambda s: (s > 0).sum()), b=("b", "sum"))
-    occ["share"] = occ.b / occ.n.clip(lower=1)
+    occ = bunk_occupancy(m)
     m.attrs["feed_rushes"] = feed_rushes(occ, c)
+    m.attrs["bunk_occupancy"] = occ
     return m
 
 
+def bunk_occupancy(m: pd.DataFrame) -> pd.DataFrame:
+    """Per minute: n cows seen, b cows at the bunk (>= 30 s), share = b / n."""
+    occ = m.assign(b=m.bunk_s >= 30).groupby("minute").agg(n=("seen_s", lambda s: (s > 0).sum()), b=("b", "sum"))
+    occ["share"] = occ.b / occ.n.clip(lower=1)
+    return occ
+
+
+def confirmed_deliveries(times, occ: pd.DataFrame, c: Dict, within_min: int = 30) -> List[int]:
+    """Trough-change events (feed_events) that the herd answers: within `within_min` at least rush_min_cows cows at
+    the bunk and share >= rush_hi. The trough detector fires on shadows and cows' heads too: on the 48 h run it gave
+    56 'deliveries', many at night with no cow going to the bunk. Events within an hour of a kept one are merged."""
+    out, last = [], -10 ** 12
+    hot = occ[(occ.b >= c.get("rush_min_cows", 4)) & (occ.share >= c["rush_hi"])].index.to_numpy()
+    for t in sorted(int(x) // 60 * 60 for x in times):
+        if t - last <= 3600:
+            continue
+        if ((hot >= t) & (hot <= t + 60 * within_min)).any():
+            out.append(t)
+            last = t
+    return out
+
+
 def feed_rushes(occ: pd.DataFrame, c: Dict) -> List[int]:
-    """Minutes where the herd moves to the bunk: share >= hi after >= quiet_min of share <= lo."""
+    """Minutes where the herd moves to the bunk: share >= hi (and >= rush_min_cows cows, so 2 of 3 visible cows is
+    not a rush) after >= quiet_min of share <= lo."""
     out, last = [], -10 ** 12
     sh = occ.share
     mins = sh.index.to_numpy()
     for i, t in enumerate(mins):
-        if sh.iloc[i] < c["rush_hi"] or occ.n.iloc[i] < c["sync_min_cows"]:
+        if sh.iloc[i] < c["rush_hi"] or occ.n.iloc[i] < c["sync_min_cows"] or occ.b.iloc[i] < c.get("rush_min_cows", 4):
             continue
         before = sh[(sh.index >= t - 60 * c["rush_quiet_min"]) & (sh.index < t)]
         if len(before) >= c["rush_quiet_min"] // 2 and (before <= c["rush_lo"]).mean() >= 0.8 and t - last > 3600:

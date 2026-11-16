@@ -17,8 +17,47 @@ def robust_z(v: pd.Series, floor: float) -> pd.Series:
     return (v - med) / max(mad if np.isfinite(mad) else 0.0, floor)
 
 
-def contributions(ind: pd.DataFrame, cfg: Dict, trend: Optional[pd.DataFrame] = None) -> pd.DataFrame:
-    """Long table: cow_id, indicator, value, herd_median, z, signed, hours, shrink, weight, contrib."""
+# Indicators that follow the clock (the herd feeds at deliveries, lies at night). Compared with the herd at the
+# SAME hours the cow was seen: on the 48 h run COW_01 was missing from a 2 h chunk in which the herd fed 40 % of
+# the time, so "4 % vs herd 10 %" overstated its gap (time-matched: 3.8 % vs 8.2 %).
+TIME_MATCHED = {"feeding_share", "lying_share", "rumination_share", "grooming_share", "bunk_visit_rate",
+                "drinking_visit_rate", "distance_m_per_h", "nn_distance_m", "isolation_share", "desync_share",
+                "meals_per_h", "edge_or_alone_share"}
+
+
+def herd_expectation(m: pd.DataFrame, cfg: Dict, min_cover_h: float = 1 / 6) -> pd.DataFrame:
+    """cows x indicators: the herd's value at the hours this cow was seen = the herd MEAN of each hour (cows with
+    >= 10 min that hour, coverage-weighted), averaged with this cow's coverage that hour as the weight. Mean, not
+    median: in most hours most cows do not feed at all, so the hourly median is 0 and understates the herd.
+    NaN where no hour qualifies."""
+    hours = (m.minute // 3600) * 3600
+    num: Dict = {}
+    den: Dict = {}
+    for h in np.unique(hours):
+        sub = m[hours == h]
+        sub.attrs = {k: v for k, v in m.attrs.items() if k != "bunk_occupancy"}
+        ind = indicators(sub, cfg)
+        for name in TIME_MATCHED:
+            if name not in ind:
+                continue
+            v, cov = ind[name], ind.get(f"{name}__hours", pd.Series(0.0, index=ind.index))
+            ok = v.notna() & (cov >= min_cover_h)
+            if ok.sum() < 3:
+                continue
+            med = float(np.average(v[ok], weights=cov[ok]))
+            for cow in ind.index[ok]:
+                num[(cow, name)] = num.get((cow, name), 0.0) + med * float(cov[cow])
+                den[(cow, name)] = den.get((cow, name), 0.0) + float(cov[cow])
+    if not num:
+        return pd.DataFrame()
+    return (pd.Series(num) / pd.Series(den)).unstack()
+
+
+def contributions(ind: pd.DataFrame, cfg: Dict, trend: Optional[pd.DataFrame] = None,
+                  expected: Optional[pd.DataFrame] = None) -> pd.DataFrame:
+    """Long table: cow_id, indicator, value, herd_median, z, signed, hours, shrink, weight, contrib, matched.
+    With `expected` (herd_expectation), clock-dependent indicators are scored on value - herd at the same hours,
+    and herd_median holds that per-cow reference (matched = True)."""
     sc = cfg["scoring"]
     rows = []
     for name, spec in cfg["indicators"].items():
@@ -26,23 +65,31 @@ def contributions(ind: pd.DataFrame, cfg: Dict, trend: Optional[pd.DataFrame] = 
             continue
         v, h = ind[name], ind.get(f"{name}__hours", pd.Series(0.0, index=ind.index))
         usable = v.notna() & (h >= (sc["min_hours"] if name != "feed_call_latency" else 1))
+        matched = expected is not None and name in getattr(expected, "columns", [])
+        if matched:
+            ref = expected[name].reindex(v.index)
+            usable &= ref.notna()
         if usable.sum() < 3:
             continue
-        z = robust_z(v[usable], spec["floor"])
+        if matched:
+            z = robust_z((v - ref)[usable], spec["floor"])
+        else:
+            ref = pd.Series(float(v[usable].median()), index=v.index)
+            z = robust_z(v[usable], spec["floor"])
         for cow in ind.index:
             if not usable.get(cow, False):
                 rows.append({"cow_id": cow, "indicator": name, "value": v.get(cow), "hours": h.get(cow, 0.0),
                              "herd_median": v[usable].median(), "z": np.nan, "signed": np.nan, "shrink": 0.0,
-                             "weight": spec["weight"], "contrib": 0.0, "kind": "level"})
+                             "weight": spec["weight"], "contrib": 0.0, "kind": "level", "matched": matched})
                 continue
             s = float(np.clip(spec["direction"] * z[cow], -sc["z_clip"], sc["z_clip"]))
             hh = float(h[cow]) if name != "feed_call_latency" else float(h[cow]) * 2.0  # each rush ~ 2 h of evidence
             shrink = hh / (hh + sc["shrink_hours"])
             eff = s if s > 0 else sc["protective_factor"] * s
             rows.append({"cow_id": cow, "indicator": name, "value": float(v[cow]), "hours": float(h[cow]),
-                         "herd_median": float(v[usable].median()), "z": float(z[cow]), "signed": s,
+                         "herd_median": float(ref[cow]), "z": float(z[cow]), "signed": s,
                          "shrink": shrink, "weight": spec["weight"], "contrib": spec["weight"] * shrink * eff,
-                         "kind": "level"})
+                         "kind": "level", "matched": matched})
     if trend is not None:
         for name, spec in cfg["indicators"].items():
             if name not in trend:
@@ -95,16 +142,19 @@ def behavior_scores(m: pd.DataFrame, cfg: Dict, with_bootstrap: bool = True, see
     if extra is not None and len(extra.columns):
         ind = ind.join(extra, how="left")
     tr = trend_table(m, cfg)
-    con = contributions(ind, cfg, tr)
+    expected = herd_expectation(m, cfg)
+    con = contributions(ind, cfg, tr, expected)
     sc = score_from(con, cfg)
     sc["rank"] = sc.behavior_score.rank(ascending=False, method="first").astype(int)
     if with_bootstrap and cfg["scoring"]["bootstrap"]:
-        sc["p_top3"] = rank_stability(m, cfg, seed, extra)
+        sc["p_top3"] = rank_stability(m, cfg, seed, extra, expected)
     return ind, con, sc.sort_values("rank")
 
 
-def rank_stability(m: pd.DataFrame, cfg: Dict, seed: int = 0, extra: Optional[pd.DataFrame] = None) -> pd.Series:
-    """Block bootstrap over time: how often is each cow in the top 3 when the observed time is resampled?"""
+def rank_stability(m: pd.DataFrame, cfg: Dict, seed: int = 0, extra: Optional[pd.DataFrame] = None,
+                   expected: Optional[pd.DataFrame] = None) -> pd.Series:
+    """Block bootstrap over time: how often is each cow in the top 3 when the observed time is resampled?
+    (The same-hours herd reference is the full-data one: recomputing it per resample costs 48 indicator passes.)"""
     rng = np.random.default_rng(seed)
     bl = cfg["scoring"]["block_min"] * 60
     mins = np.sort(m.minute.unique())
@@ -117,7 +167,7 @@ def rank_stability(m: pd.DataFrame, cfg: Dict, seed: int = 0, extra: Optional[pd
         ind = indicators(m, cfg, minutes)
         if extra is not None and len(extra.columns):
             ind = ind.join(extra, how="left")
-        s = score_from(contributions(ind, cfg), cfg)
+        s = score_from(contributions(ind, cfg, expected=expected), cfg)
         if s.empty:
             continue
         top = s.behavior_score.sort_values(ascending=False).index[:3]
@@ -135,6 +185,10 @@ def reasons_text(con: pd.DataFrame, cfg: Dict, cow: str, k: int = 3) -> List[str
         f = fmt(r.value, spec["unit"]), fmt(r.herd_median, spec["unit"])
         if r.kind == "trend":
             out.append(f"{spec['label']} changed {f[0]} day-to-day (herd {f[1]})")
+        elif base == "feed_call_latency":
+            out.append(f"{spec['label']} {f[0]} vs herd median {f[1]} (z {r.z:+.1f}, over {r.hours:.0f} feed calls)")
+        elif bool(r.get("matched", False)):
+            out.append(f"{spec['label']} {f[0]} vs herd {f[1]} at the same hours (z {r.z:+.1f}, {r.hours:.1f} h observed)")
         else:
             out.append(f"{spec['label']} {f[0]} vs herd median {f[1]} (z {r.z:+.1f}, {r.hours:.1f} h observed)")
     return out

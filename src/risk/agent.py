@@ -21,6 +21,8 @@ from .tools import RiskTools
 
 SIGNS = ["head_low", "ears_droop", "nasal_discharge", "ocular_discharge", "labored_breathing", "cough", "gaunt"]
 DISCHARGE = {"nasal_discharge", "ocular_discharge"}
+HEAD_SIGNS = {"head_low", "ears_droop", "nasal_discharge", "ocular_discharge"}
+VIEW_OF_HEAD = {"side-on", "toward"}
 
 SYSTEM = """You are a feedlot veterinarian and cattle behaviourist auditing a camera-based early-warning
 system for bovine respiratory disease (BRD) in one pen of up to 10 Angus cattle (Texas A&M Pen 6).
@@ -44,6 +46,9 @@ Evidence rules (an automatic self-check enforces them):
 - A sign can be "present" or "absent" only if you saw THIS cow in an image whose box is >= {min_px} px.
   Discharge needs >= {dis_px} px in daylight colour. Otherwise use "not_assessable". IR night video is
   grey and soft: no discharge, no ear detail.
+- Head signs (head_low, ears_droop, nasal/ocular discharge) need a get_crop(region="head") image of this
+  cow facing "toward" or "side-on". A crop of the back, rump or a cow facing away/unknown is not one. An
+  ear tag in a crop with several heads does not prove which cow it is.
 - Before calling posture abnormal, compare with herdmates at the same moment (compare_herdmates).
   Low heads while eating, drinking or lying are normal. Relaxed ears while ruminating are normal.
 - Short coverage is ALREADY discounted by the score (shrinkage by hours observed). Do not call an
@@ -242,6 +247,14 @@ class RiskAgent:
             if not ok:
                 errs.append(f"{s}={st}: cited images are too small or not daylight (need box >= {need} px"
                             f"{', daylight colour' if s in DISCHARGE else ''}); use not_assessable or a closer view")
+            elif s in HEAD_SIGNS and not [f for f in ok if str(f["data"].get("facing")) in VIEW_OF_HEAD
+                                          and (s == "head_low" or f["data"].get("region") == "head")]:
+                # a head sign needs the head in view: the final 48 h run cited a "head" crop with facing unknown that
+                # showed the cow's rump as proof that its ears were normal. head_low is posture (head vs topline), so
+                # a side-on body crop counts; ears and discharge need a head crop.
+                errs.append(f"{s}={st}: needs an image of {cow} facing {' or '.join(sorted(VIEW_OF_HEAD))}"
+                            f"{'' if s == 'head_low' else ' from get_crop(region=head)'}; the cited images are not one "
+                            f"(rump / back / facing unknown); use not_assessable or find such a view")
         known = set(self.cfg["indicators"])
         for a in final.get("artifacts") or []:
             if a.get("indicator") not in known:
