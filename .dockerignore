@@ -22,3 +22,5 @@ brd_agent/work/
 .env
 # loose COCO weights in the repo root (the pipeline uses models/)
 /*.pt
+# ...except the Level 2 evidence clips (the risk cards play them in the showcase)
+!submission/level2/cards/clips/*.mp4

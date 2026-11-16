@@ -8,7 +8,8 @@ These files contain event data: the evidence crops, clips and trace images are c
 
 | File | What it is |
 |---|---|
-| [`SHOWCASE.md`](SHOWCASE.md) | **Everything on one page, with pictures** (renders on GitHub) |
+| [`SHOWCASE.md`](SHOWCASE.md) | **Everything on one page, with pictures** (renders on GitHub); also as [`SHOWCASE.pdf`](SHOWCASE.pdf) |
+| [`level2/EVIDENCE.md`](level2/EVIDENCE.md) | **The BRD ranking explained cow by cow, with every video clip, its day, time and camera** |
 | `index.html` | The same showcase with buttons to every full page (open in a browser after download) |
 | `level2/index.html` | BRD risk ranking with reasons, confidence and a card per flagged cow |
 | `level2/brd_risk.csv` | The same ranking as a table |
@@ -31,7 +32,7 @@ These files contain event data: the evidence crops, clips and trace images are c
 
 | File | What it is |
 |---|---|
-| `level2/cards/COW_*.html` | Per-cow card: indicator chart, two 12 s clips, and the evidence the agent cited |
+| `level2/cards/COW_*.html` | Per-cow card: indicator chart, 2–3 video clips (`level2/cards/clips/`), and the evidence the agent cited. COW_02 also has the 8 Nov 16:28 feed rush, where she lies alone while the herd feeds |
 | `level2/indicators.csv` | Each indicator, per cow |
 | `level2/contributions.csv` | How each indicator moved the score: value, herd reference, z, weight, contribution |
 | `level2/features_hourly.csv`, `features_summary.csv` | Per-hour and summary features |

@@ -337,7 +337,7 @@ def baseline_card_html(cow: str, tier: str, rule: str, row: Dict, clips: List[st
     e = html.escape
     bg, fg = TIER_COLOR[tier]
     reasons = "".join(f"<li>{e(x.strip())}</li>" for x in str(row.get("top_reasons", "")).split("|") if x.strip())
-    vids = "".join(f"<figure><video src='{e(c)}' controls muted loop playsinline preload='metadata'></video>"
+    vids = "".join(f"<figure><video src='{e(c)}' poster='{e(c[:-4])}.jpg' controls muted loop playsinline preload='metadata'></video>"
                    f"<figcaption>Level 2 evidence clip {i + 1}</figcaption></figure>" for i, c in enumerate(clips))
     link = f"<p><a href='{e(l2_card)}'>Full Level 2 risk card for {e(cow)}</a> (indicator chart, all evidence the risk agent cited)</p>" if l2_card else ""
     return f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -368,6 +368,17 @@ h2{{font-size:15px;margin:0 0 6px}} .act{{font-size:16px;border-left:4px solid v
 </main></body></html>"""
 
 
+def _poster(clip: Path, t: float = 4.0) -> None:
+    """A still next to the clip (<clip>.jpg): players show the scene before play, and screenshots / PDFs are not blank."""
+    ff = _ffmpeg()
+    if ff and not clip.with_suffix(".jpg").exists():
+        try:
+            subprocess.run([ff, "-y", "-loglevel", "error", "-ss", str(t), "-i", str(clip), "-frames:v", "1",
+                            "-vf", "scale='min(960,iw)':-2", "-q:v", "4", str(clip.with_suffix(".jpg"))], check=True, timeout=60)
+        except Exception:
+            pass
+
+
 def baseline_alerts(state, prior: pd.DataFrame, cfg: Dict, repo: Path, out: Path, log) -> List[Dict]:
     """Tier every cow from the 48 h Level 2 result; cards (with Level 2's clips) for the push tiers."""
     from .engine import TIER_NAME, baseline_tier
@@ -387,6 +398,7 @@ def baseline_alerts(state, prior: pd.DataFrame, cfg: Dict, repo: Path, out: Path
                 dst = out / "alerts" / f"baseline_{src.name}"
                 shutil.copy2(src, dst)
                 clips.append(dst.name)
+                _poster(dst)
             l2c = l2 / "cards" / f"{cow}.html"
             link = os.path.relpath(l2c, out / "alerts").replace("\\", "/") if l2c.exists() else None
             card = out / "alerts" / f"baseline_{cow}.html"

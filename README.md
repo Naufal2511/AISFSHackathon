@@ -2,6 +2,18 @@
 
 **Merck–TAMU AISFS Hackathon 2026 · Pen 6 · 10 Angus cattle · 3 cameras · 48 h**
 
+> ### How to see our results and evidence
+> **Right here on GitHub (no download):**
+> 1. **[submission/SHOWCASE.md](submission/SHOWCASE.md)**: every result (Levels 1, 2 and 3) on one page, with pictures.
+> 2. **[submission/SHOWCASE.pdf](submission/SHOWCASE.pdf)**: the same showcase as a PDF (GitHub shows it in its viewer).
+> 3. **[submission/level2/EVIDENCE.md](submission/level2/EVIDENCE.md)**: the BRD risk ranking explained, cow by cow,
+>    with **every video clip, its day, time and camera** (click a picture to play the clip).
+> 4. **[docs/TECHNICAL_BRIEF.pdf](docs/TECHNICAL_BRIEF.pdf)**: the 2-page technical brief.
+>
+> **The full interactive pages** (`.html` files show as code on GitHub): download the repo (**Code → Download ZIP**) and
+> open **`submission/index.html`** in a browser, or run `python serve_showcase.py` (or the Docker image's default
+> command, section 1) and open **http://localhost:8000**.
+
 This repository turns the pen's raw camera clips into:
 
 | Level | What you get | Produced by |
@@ -18,7 +30,7 @@ This repository turns the pen's raw camera clips into:
 
 **The approach is in [`docs/TECHNICAL_BRIEF.pdf`](docs/TECHNICAL_BRIEF.pdf).**
 
-> **Event data:** the footage, frames and results stay within the event. Keep this repository private. Video clips are not in the repository; the commands below regenerate them.
+> **Event data:** the footage, frames and results stay within the event. Keep this repository private. The Level 2 evidence clips (`submission/level2/cards/clips/`) are included; other video clips are not, and the commands below regenerate them.
 
 ---
 

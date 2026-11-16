@@ -72,7 +72,7 @@ def _baseline_section(state: Dict, cfg: Dict) -> str:
     for b in base:
         bg, fg = TIER_STYLE[b["tier"]]
         badge = f"<span class='badge' style='background:{bg};color:{fg}'>{E(b['tier_name'])}</span>"
-        vids = "".join(f"<figure><video src='{E(c)}' controls muted loop playsinline preload='metadata'></video>"
+        vids = "".join(f"<figure><video src='{E(c)}' poster='{E(c[:-4])}.jpg' controls muted loop playsinline preload='metadata'></video>"
                        f"<figcaption>Level 2 clip {i + 1}</figcaption></figure>" for i, c in enumerate(b.get("clips", [])))
         reasons = "".join(f"<li>{E(r)}</li>" for r in b.get("reasons", [])[:3])
         if b["tier"] in t.get("push", []):
