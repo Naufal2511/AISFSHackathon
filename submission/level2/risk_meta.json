@@ -1,0 +1,101 @@
+{
+ "meta": {
+  "span": "11-07 00:04:06 to 11-09 00:01:11",
+  "hours": 47.96666666666667,
+  "n_cows": 10,
+  "activity_source": "baseline classifier (each run's activity.csv)",
+  "models": "protected.Claude Opus 4.8",
+  "runs": [
+   "outputs/stitched/runs/naufal_training_c01",
+   "outputs/stitched/runs/naufal_training_c02",
+   "outputs/stitched/runs/afeef_training_c01",
+   "outputs/stitched/runs/afeef_training_c02",
+   "outputs/stitched/runs/afeef_training_c03",
+   "outputs/stitched/runs/afeef_training_c04",
+   "outputs/stitched/runs/nooh_training_c01",
+   "outputs/stitched/runs/nooh_training_c02",
+   "outputs/stitched/runs/hprc_day2_c01",
+   "outputs/stitched/runs/hprc_day2_c02",
+   "outputs/stitched/runs/hprc_day2_c03",
+   "outputs/stitched/runs/hprc_day2_c04",
+   "outputs/stitched/runs/hprc_day2_c05",
+   "outputs/stitched/runs/hprc_day2_c06",
+   "outputs/stitched/runs/hprc_day2_c07",
+   "outputs/stitched/runs/hprc_day2_c08",
+   "outputs/stitched/runs/hprc_day2_c09",
+   "outputs/stitched/runs/hprc_day2_c10",
+   "outputs/stitched/runs/hprc_day2_c11",
+   "outputs/stitched/runs/hprc_day2_c12",
+   "outputs/stitched/runs/hprc_day2_c13",
+   "outputs/stitched/runs/hprc_day2_c14",
+   "outputs/stitched/runs/hprc_day2_c15",
+   "outputs/stitched/runs/hprc_day2_c16",
+   "outputs/stitched/runs/hprc_day2_c17",
+   "outputs/stitched/runs/hprc_day2_c18",
+   "outputs/stitched/runs/hprc_day2_c19",
+   "outputs/stitched/runs/hprc_day2_c20",
+   "outputs/stitched/runs/hprc_day2_c21",
+   "outputs/stitched/runs/hprc_day2_c22",
+   "outputs/stitched/runs/hprc_day2_c23",
+   "outputs/stitched/runs/hprc_day2_c24",
+   "outputs/stitched/runs/hprc_day2_c25"
+  ],
+  "seconds": 599.6
+ },
+ "clips": {
+  "COW_02": [
+   {
+    "path": "outputs/stitched/level2/cards/clips/COW_02_1.mp4",
+    "camera": "cam3",
+    "t0": 1794009864,
+    "t1": 1794009876,
+    "frames": 104,
+    "why": "behavior: feed call latency (out of step)"
+   },
+   {
+    "path": "outputs/stitched/level2/cards/clips/COW_02_2.mp4",
+    "camera": "cam1",
+    "t0": 1794073794,
+    "t1": 1794073806,
+    "frames": 104,
+    "why": "closest view"
+   }
+  ],
+  "COW_01": [
+   {
+    "path": "outputs/stitched/level2/cards/clips/COW_01_1.mp4",
+    "camera": "cam1",
+    "t0": 1794131064,
+    "t1": 1794131076,
+    "frames": 104,
+    "why": "behavior: feeding share (at bunk)"
+   },
+   {
+    "path": "outputs/stitched/level2/cards/clips/COW_01_2.mp4",
+    "camera": "cam1",
+    "t0": 1794036792,
+    "t1": 1794036804,
+    "frames": 104,
+    "why": "closest view"
+   }
+  ],
+  "COW_10": [
+   {
+    "path": "outputs/stitched/level2/cards/clips/COW_10_1.mp4",
+    "camera": "cam1",
+    "t0": 1794069564,
+    "t1": 1794069576,
+    "frames": 104,
+    "why": "behavior: bunk visit min (at bunk)"
+   },
+   {
+    "path": "outputs/stitched/level2/cards/clips/COW_10_2.mp4",
+    "camera": "cam2",
+    "t0": 1794155559,
+    "t1": 1794155571,
+    "frames": 104,
+    "why": "closest view"
+   }
+  ]
+ }
+}

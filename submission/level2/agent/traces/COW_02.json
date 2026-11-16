@@ -1,0 +1,355 @@
+{
+ "cow_id": "COW_02",
+ "seconds": 73.6,
+ "tool_calls": 8,
+ "steps": [
+  {
+   "thought": "Top deviations: feed_call_latency (+1.2), lying_share (+1.1), distance walked (+1.0), bunk_visit_rate (+0.9), jerk_rate (+0.9). Let me check the feed_call_latency trend first - is the slow approach to bunk sustained?",
+   "tool": "trend",
+   "args": {
+    "cow_id": "COW_02",
+    "indicator": "feed_call_latency",
+    "block_h": 6
+   },
+   "result": "[I0011] sustained deviation starts in block 11-08 06h\n11-07 00h: COW_02 60 vs herd 41 (dev +0.7)\n11-07 06h: COW_02 3 vs herd 25 (dev -0.7)\n11-07 12h: COW_02 1.5 vs herd 6.71 (dev -0.7)\n11-07 18h: COW_02 37 vs herd 25 (dev +0.5)\n11-08 00h: COW_02 40.3 vs herd 21 (dev +2.4)\n11-08 06h: COW_02 60 vs herd 8.5 (dev +4.3)\n11-08 12h: COW_02 60 vs herd 7.5 (dev +17.5)\n11-08 18h: COW_02 5 vs herd 2.5 (dev +0.7)\n11-09 00h: COW_02 nan vs herd nan (dev +nan)",
+   "facts": [
+    "I0011"
+   ],
+   "model": "protected.Claude Opus 4.8"
+  },
+  {
+   "thought": "Feed latency worsened from 11-08 06h onward - cow was not approaching bunk for 60 min on day 2. This aligns with reduced feeding. Let me check feed_response for appetite detail.",
+   "tool": "feed_response",
+   "args": {
+    "cow_id": "COW_02"
+   },
+   "result": "trough change cam2 at 11-07 00:09:42: COW_02 reached bunk after never (30 min), stayed 0 min; herd median nan min / 0 min\ntrough change cam1 at 11-07 00:37:17: COW_02 reached bunk after never (30 min), stayed 0 min; herd median nan min / 0 min\ntrough change cam2 at 11-07 00:53:27: COW_02 reached bunk after never (30 min), stayed 0 min; herd median 22 min / 0 min\ntrough change cam3 at 11-07 00:57:36: COW_02 reached bunk after never (30 min), stayed 0 min; herd median 22 min / 0 min\nherd rush at 11-07 01:28:00: COW_02 reached bunk after never (30 min), stayed 0 min; herd median 2 min / 3 min\ntrough change cam1 at 11-07 01:28:02: COW_02 reached bunk after never (30 min), stayed 0 min; herd median 2 min / 3 min\ntrough change cam3 at 11-07 01:28:51: COW_02 reached bunk after never (30 min), stayed 0 min; herd median 1 min / 3 min\ntrough change cam2 at 11-07 01:46:42: COW_02 reached bunk after never (30 min), stayed 0 min; herd median -1 min / 0 min\ntrough change cam1 at 11-07 02:33:02: COW_02 reached bunk after never (30 min), stayed 0 min; herd median nan min / 0 min\ntrough change cam2 at 11-07 03:27:42: COW_02 reached bunk after never (30 min), stayed 0 min; herd median 28 min / 0 min\nherd rush at 11-07 06:24:00: COW_02 reached bunk after 2 min, stayed 15 min; herd median 0 min / 0 min\ntrough change cam3 at 11-07 06:24:00: COW_02 reached bunk after 2 min, stayed 15 min; herd median 0 min / 0 min\ntrough change cam1 at 11-07 06:31:15: COW_02 reached bunk after 0 min, stayed 10 min",
+   "facts": [],
+   "model": "protected.Claude Opus 4.8"
+  },
+  {
+   "thought": "On day 2 (11-08) afternoon, COW_02 repeatedly failed to approach feed during the big 16:16 herd rush (herd stayed 21 min, cow 0 min). This is a real appetite drop on day 2, though it recovers somewhat at 22:55. Feed latency deviation is real, not an artifact. Now let me check the cow visually - need head crops for clinical signs. Let me look at the gallery first.",
+   "tool": "gallery",
+   "args": {
+    "cow_id": "COW_02",
+    "n": 6
+   },
+   "result": "6 gallery crops: [I0012] 11-07 16:38:48 cam1 1314 px, [I0013] 11-07 13:40:01 cam1 1266 px, [I0014] 11-07 12:11:00 cam2 1233 px, [I0015] 11-08 17:28:34 cam2 1160 px, [I0016] 11-07 14:00:00 cam1 1124 px, [I0017] 11-07 13:13:04 cam2 1106 px",
+   "facts": [],
+   "model": "protected.Claude Opus 4.8"
+  },
+  {
+   "thought": "Gallery crops mostly show rumps/backs or heads down at the bunk (eating). I0014 (cam2, 1233px) shows a cow with head down, mouth open at bunk - likely eating. I0017 shows head at bunk. None are a clean head-forward crop. I need a proper head crop facing toward/side-on. Let me get a head crop from I0014 moment where a face is visible.",
+   "tool": "get_crop",
+   "args": {
+    "cow_id": "COW_02",
+    "time": "11-07 12:11:00",
+    "camera": "cam2",
+    "region": "head",
+    "enhance": true
+   },
+   "result": "[I0018] COW_02 cam2 11-07 12:11:00 head, box 1234 px, facing toward, daylight",
+   "facts": [
+    "I0018"
+   ],
+   "model": "protected.Claude Opus 4.8"
+  },
+  {
+   "thought": "Head crop I0018: COW_02 facing toward/down at the bunk, green ear tag visible. Head is down because eating. Ears look upright/alert, no obvious droop. Nose/muzzle partly visible but at this angle (head-down, eating) I can't confidently assess nasal discharge. Eyes not clearly visible. Ears appear normal - no droop. Let me record what I can and try a better head crop from day 2 (I0015, 17:28 cam2) where cow may be standing. Actually let me check breathing briefly then look at day 2. First record ear observation.",
+   "tool": "record_fact",
+   "args": {
+    "cow_id": "COW_02",
+    "claim": "Head crop at bunk, head down eating, green ear tag confirms COW_02. Ears carried upright/normal, no droop. Nose/eyes not clearly assessable at this head-down eating angle.",
+    "images": [
+     "I0018"
+    ],
+    "sign": "ears_droop",
+    "status": "absent",
+    "confidence": 0.6
+   },
+   "result": "saved V0003",
+   "facts": [
+    "V0003"
+   ],
+   "model": "protected.Claude Opus 4.8"
+  },
+  {
+   "thought": "Now let me check a day-2 head crop (I0015, 11-08 17:28 cam2, 1160px) which may show the cow when off-feed, to assess head carriage, eyes, nose standing.",
+   "tool": "get_crop",
+   "args": {
+    "cow_id": "COW_02",
+    "time": "11-08 17:28:34",
+    "camera": "cam2",
+    "region": "head",
+    "enhance": true
+   },
+   "result": "[I0019] COW_02 cam2 11-08 17:28:34 head, box 1160 px, facing unknown, daylight",
+   "facts": [
+    "I0019"
+   ],
+   "model": "protected.Claude Opus 4.8"
+  },
+  {
+   "thought": "I0019 facing unknown - left panel shows backs/topline, right panel a head down at bunk. Facing unknown means it doesn't satisfy head-sign requirements for nose/eyes. Head carriage: the cow is at the bunk eating (right panel head down into feed). Not assessable for abnormal head_low since eating. Let me check the jerk_rate (cough candidates, +0.9 z) which could indicate BRD cough. I have 3 calls left.",
+   "tool": "jerks",
+   "args": {
+    "cow_id": "COW_02"
+   },
+   "result": "COW_02: 1296 events, 33.6/h; herd median 30.2/h\n11-08 17:57:14 cam3 z 156\n11-07 07:03:39 cam3 z 145\n11-07 07:17:29 cam1 z 136\n11-07 22:46:23 cam3 z 126\n11-08 18:18:14 cam3 z 123\n11-07 06:11:32 cam3 z 117\n11-08 18:27:02 cam3 z 111\n11-07 07:19:12 cam1 z 104\n(check with get_sequence(span_s=6, n=8) around a time: a cough shows neck extension and head drop)",
+   "facts": [],
+   "model": "protected.Claude Opus 4.8"
+  },
+  {
+   "thought": "Jerk rate (33.6 vs 30.2) is only marginally elevated, not strongly specific. Let me check one high-z event with a sequence to see if it's a cough. Pick 11-08 17:57:14 cam3, the highest.",
+   "tool": "get_sequence",
+   "args": {
+    "cow_id": "COW_02",
+    "time": "11-08 17:57:14",
+    "span_s": 6,
+    "n": 8,
+    "camera": "cam3",
+    "region": "body"
+   },
+   "result": "[I0020] 8 crops of COW_02 from cam3 over 6 s, median box 197 px",
+   "facts": [
+    "I0020"
+   ],
+   "model": "protected.Claude Opus 4.8"
+  },
+  {
+   "thought": "The sequence crops are small (197px, under 250) and grey/soft - cannot discern coughing posture or body detail. The jerk cannot be confirmed as a cough. I'll finalize. Behavior: feed_call_latency and feeding deficits are REAL (feed_response shows genuine off-feed episodes on day 2, trend shows sustained onset 11-08). Lying_share elevated is consistent. Breathing was normal (20.8 bpm). No clinical signs clearly visible - head always down eating, ears normal in one crop, no discharge assessable. Jerk rate only marginally up and unconfirmable. I have strong behavioral appetite evidence but weak/no clinical confirmation.",
+   "final": {
+    "signs": {
+     "head_low": {
+      "status": "not_assessable",
+      "evidence": [
+       "I0018",
+       "I0019"
+      ],
+      "note": "All head crops show COW_02 head-down eating at the bunk; never observed standing-not-eating with a toward/side-on facing, so abnormal head carriage cannot be assessed."
+     },
+     "ears_droop": {
+      "status": "absent",
+      "evidence": [
+       "I0018",
+       "V0003"
+      ],
+      "note": "In the clear toward-facing head crop (I0018, 1234px, green tag confirms ID) ears carried upright/normal, no droop."
+     },
+     "nasal_discharge": {
+      "status": "not_assessable",
+      "evidence": [
+       "I0018",
+       "I0019"
+      ],
+      "note": "Muzzle at head-down eating angle; no clean daylight >=450px frontal nose view."
+     },
+     "ocular_discharge": {
+      "status": "not_assessable",
+      "evidence": [
+       "I0018",
+       "I0019"
+      ],
+      "note": "Eyes not clearly resolved in available crops; no qualifying head-forward daylight view."
+     },
+     "labored_breathing": {
+      "status": "absent",
+      "evidence": [
+       "F-COW_02-breathing_bpm",
+       "F-COW_02-breathing_effort"
+      ],
+      "note": "Resting respiratory rate 20.8/min equals herd median; flank amplitude 107% normal. No open-mouth/extended-neck posture seen."
+     },
+     "cough": {
+      "status": "not_assessable",
+      "evidence": [
+       "I0020",
+       "F-COW_02-jerk_rate"
+      ],
+      "note": "Jerk rate 33.6/h only marginally above herd 30.2; highest-z event sequence (cam3, 197px, IR-soft grey) too small/soft to confirm coughing posture."
+     },
+     "gaunt": {
+      "status": "not_assessable",
+      "evidence": [
+       "I0018",
+       "I0019"
+      ],
+      "note": "No clear left-flank view; body crops are rump/top-down at bunk."
+     }
+    },
+    "artifacts": [],
+    "behavior_assessment": "The appetite deviations are REAL, not artifacts. feed_call_latency (F-COW_02-feed_call_latency) shows a CUSUM-confirmed sustained worsening from 11-08 06h (I0011), and feed_response confirms repeated genuine off-feed episodes on day 2 - notably the 11-08 16:16 herd rush where the herd stayed ~21 min but COW_02 never approached. Reduced feeding_share (F-COW_02-feeding_share), lower bunk_visit_rate (F-COW_02-bunk_visit_rate) and elevated lying_share (F-COW_02-lying_share) are consistent with this appetite drop. Reduced locomotion (F-COW_02-distance_m_per_h) fits a lethargic animal. Rumination is actually above herd (protective). Jerk/isolation deviations are small and unconfirmed.",
+    "summary": "COW_02 shows a real, worsening appetite problem that began the morning of 11-08: she is slower to the bunk and skipped feed during several herd rushes, with more lying and less walking. No respiratory signs were confirmed - her breathing rate was normal and I could not get a clean head-forward view to check nose/eyes/head carriage. Recommend a hands-on pen check of COW_02 (temperature, nasal/ocular inspection, lung auscultation) to rule out early BRD, since the behaviour pattern is suspicious even though cameras gave no visible clinical confirmation.",
+    "key_evidence": [
+     "F-COW_02-feed_call_latency",
+     "I0011",
+     "F-COW_02-feeding_share",
+     "F-COW_02-lying_share",
+     "V0003",
+     "I0018",
+     "F-COW_02-breathing_bpm"
+    ],
+    "confidence": 0.6
+   },
+   "model": "protected.Claude Opus 4.8"
+  },
+  {
+   "thought": "labored_breathing=absent needs an image of the cow. I didn't capture a qualifying breathing still image; the breathing data came from flank-motion features, not an image I can cite. Downgrade labored_breathing to not_assessable since I have no qualifying image, or cite the body crops I0018/I0019. The honest call: I have the breathing_bpm feature (normal) but no image showing posture. Best to mark not_assessable with image citation of what I did look at, noting the rate was normal.",
+   "final": {
+    "signs": {
+     "head_low": {
+      "status": "not_assessable",
+      "evidence": [
+       "I0018",
+       "I0019"
+      ],
+      "note": "All head crops show COW_02 head-down eating at the bunk; never observed standing-not-eating with a toward/side-on facing, so abnormal head carriage cannot be assessed."
+     },
+     "ears_droop": {
+      "status": "absent",
+      "evidence": [
+       "I0018",
+       "V0003"
+      ],
+      "note": "In the clear toward-facing head crop (I0018, 1234px, green tag confirms ID) ears carried upright/normal, no droop."
+     },
+     "nasal_discharge": {
+      "status": "not_assessable",
+      "evidence": [
+       "I0018",
+       "I0019"
+      ],
+      "note": "Muzzle at head-down eating angle; no clean daylight >=450px frontal nose view."
+     },
+     "ocular_discharge": {
+      "status": "not_assessable",
+      "evidence": [
+       "I0018",
+       "I0019"
+      ],
+      "note": "Eyes not clearly resolved in available crops; no qualifying head-forward daylight view."
+     },
+     "labored_breathing": {
+      "status": "not_assessable",
+      "evidence": [
+       "I0018",
+       "I0019"
+      ],
+      "note": "Resting respiratory rate is normal (F-COW_02-breathing_bpm 20.8/min = herd median; F-COW_02-breathing_effort 107% normal), but I captured no still image clearly showing flank/neck/mouth posture, so visible labored breathing cannot be formally assessed from an image."
+     },
+     "cough": {
+      "status": "not_assessable",
+      "evidence": [
+       "I0020",
+       "F-COW_02-jerk_rate"
+      ],
+      "note": "Jerk rate 33.6/h only marginally above herd 30.2; highest-z event sequence (cam3, 197px, IR-soft grey) too small/soft to confirm coughing posture."
+     },
+     "gaunt": {
+      "status": "not_assessable",
+      "evidence": [
+       "I0018",
+       "I0019"
+      ],
+      "note": "No clear left-flank view; body crops are rump/top-down at bunk."
+     }
+    },
+    "artifacts": [],
+    "behavior_assessment": "The appetite deviations are REAL, not artifacts. feed_call_latency (F-COW_02-feed_call_latency) shows a CUSUM-confirmed sustained worsening from 11-08 06h (I0011), and feed_response confirms repeated genuine off-feed episodes on day 2 - notably the 11-08 16:16 herd rush where the herd stayed ~21 min but COW_02 never approached. Reduced feeding_share (F-COW_02-feeding_share), lower bunk_visit_rate (F-COW_02-bunk_visit_rate) and elevated lying_share (F-COW_02-lying_share) are consistent with this appetite drop. Reduced locomotion (F-COW_02-distance_m_per_h) fits a lethargic animal. Rumination is actually above herd (protective). Jerk/isolation deviations are small and unconfirmed.",
+    "summary": "COW_02 shows a real, worsening appetite problem that began the morning of 11-08: she is slower to the bunk and skipped feed during several herd rushes, with more lying and less walking. No respiratory signs were confirmed - her measured breathing rate was normal and I could not get a clean head-forward view to check nose/eyes/head carriage. Recommend a hands-on pen check of COW_02 (temperature, nasal/ocular inspection, lung auscultation) to rule out early BRD, since the behaviour pattern is suspicious even though cameras gave no visible clinical confirmation.",
+    "key_evidence": [
+     "F-COW_02-feed_call_latency",
+     "I0011",
+     "F-COW_02-feeding_share",
+     "F-COW_02-lying_share",
+     "V0003",
+     "I0018",
+     "F-COW_02-breathing_bpm"
+    ],
+    "confidence": 0.6
+   },
+   "model": "protected.Claude Opus 4.8",
+   "revision": true
+  }
+ ],
+ "self_check_first": [
+  "labored_breathing=absent cites no image of COW_02 (cite the I#### you looked at)"
+ ],
+ "self_check_after_revision": [],
+ "final": {
+  "signs": {
+   "head_low": {
+    "status": "not_assessable",
+    "evidence": [
+     "I0018",
+     "I0019"
+    ],
+    "note": "All head crops show COW_02 head-down eating at the bunk; never observed standing-not-eating with a toward/side-on facing, so abnormal head carriage cannot be assessed."
+   },
+   "ears_droop": {
+    "status": "absent",
+    "evidence": [
+     "I0018",
+     "V0003"
+    ],
+    "note": "In the clear toward-facing head crop (I0018, 1234px, green tag confirms ID) ears carried upright/normal, no droop."
+   },
+   "nasal_discharge": {
+    "status": "not_assessable",
+    "evidence": [
+     "I0018",
+     "I0019"
+    ],
+    "note": "Muzzle at head-down eating angle; no clean daylight >=450px frontal nose view."
+   },
+   "ocular_discharge": {
+    "status": "not_assessable",
+    "evidence": [
+     "I0018",
+     "I0019"
+    ],
+    "note": "Eyes not clearly resolved in available crops; no qualifying head-forward daylight view."
+   },
+   "labored_breathing": {
+    "status": "not_assessable",
+    "evidence": [
+     "I0018",
+     "I0019"
+    ],
+    "note": "Resting respiratory rate is normal (F-COW_02-breathing_bpm 20.8/min = herd median; F-COW_02-breathing_effort 107% normal), but I captured no still image clearly showing flank/neck/mouth posture, so visible labored breathing cannot be formally assessed from an image."
+   },
+   "cough": {
+    "status": "not_assessable",
+    "evidence": [
+     "I0020",
+     "F-COW_02-jerk_rate"
+    ],
+    "note": "Jerk rate 33.6/h only marginally above herd 30.2; highest-z event sequence (cam3, 197px, IR-soft grey) too small/soft to confirm coughing posture."
+   },
+   "gaunt": {
+    "status": "not_assessable",
+    "evidence": [
+     "I0018",
+     "I0019"
+    ],
+    "note": "No clear left-flank view; body crops are rump/top-down at bunk."
+   }
+  },
+  "artifacts": [],
+  "behavior_assessment": "The appetite deviations are REAL, not artifacts. feed_call_latency (F-COW_02-feed_call_latency) shows a CUSUM-confirmed sustained worsening from 11-08 06h (I0011), and feed_response confirms repeated genuine off-feed episodes on day 2 - notably the 11-08 16:16 herd rush where the herd stayed ~21 min but COW_02 never approached. Reduced feeding_share (F-COW_02-feeding_share), lower bunk_visit_rate (F-COW_02-bunk_visit_rate) and elevated lying_share (F-COW_02-lying_share) are consistent with this appetite drop. Reduced locomotion (F-COW_02-distance_m_per_h) fits a lethargic animal. Rumination is actually above herd (protective). Jerk/isolation deviations are small and unconfirmed.",
+  "summary": "COW_02 shows a real, worsening appetite problem that began the morning of 11-08: she is slower to the bunk and skipped feed during several herd rushes, with more lying and less walking. No respiratory signs were confirmed - her measured breathing rate was normal and I could not get a clean head-forward view to check nose/eyes/head carriage. Recommend a hands-on pen check of COW_02 (temperature, nasal/ocular inspection, lung auscultation) to rule out early BRD, since the behaviour pattern is suspicious even though cameras gave no visible clinical confirmation.",
+  "key_evidence": [
+   "F-COW_02-feed_call_latency",
+   "I0011",
+   "F-COW_02-feeding_share",
+   "F-COW_02-lying_share",
+   "V0003",
+   "I0018",
+   "F-COW_02-breathing_bpm"
+  ],
+  "confidence": 0.6
+ },
+ "models": [
+  "protected.Claude Opus 4.8"
+ ]
+}

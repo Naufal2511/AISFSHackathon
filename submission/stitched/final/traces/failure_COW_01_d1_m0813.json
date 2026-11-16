@@ -1,0 +1,600 @@
+{
+ "trace_id": "COW_01_d1_m0813",
+ "brief": {
+  "cow_id": "COW_01",
+  "day": 1,
+  "minute": 813,
+  "tier1_top": [
+   [
+    "standing",
+    0.2309
+   ]
+  ],
+  "tier1_entropy": 0.5403615368260497,
+  "zone_fractions": {
+   "feed_bunk": 0.26666666666666666,
+   "resting": 0.0,
+   "open": 0.7333333333333333
+  },
+  "speed_px_s": 0.5088,
+  "posture": null,
+  "visible_frac": {
+   "back": 0.173,
+   "front": 0.2,
+   "top": 0.0
+  },
+  "id_conf": 0.95,
+  "is_night": false,
+  "prev_label": "feeding",
+  "next_label_tier1": "other_not_visible",
+  "camera_disagreement": false,
+  "task": "verify",
+  "src_file": "Event20261107133009006.Avi",
+  "src_camera": "front",
+  "src_offset_s": 184.0,
+  "abs_time": "2026-11-07T13:33:13",
+  "yolo_flags": [
+   "label_unstable",
+   "id_unresolved",
+   "yolo_flag:label_unstable",
+   "yolo_flag:id_unresolved"
+  ]
+ },
+ "events": [
+  {
+   "t": 0.0,
+   "type": "gate",
+   "action": "agent",
+   "reasons": [
+    "low_confidence"
+   ]
+  },
+  {
+   "t": 1.672,
+   "type": "night_check",
+   "camera": "front",
+   "brightness": 119.3,
+   "saturation": 0.099,
+   "ir_like": false,
+   "is_night": false
+  },
+  {
+   "t": 1.673,
+   "type": "vlm",
+   "task": "plan",
+   "prompt_tokens": 2857,
+   "completion_tokens": 685,
+   "latency_s": 4.74,
+   "cached": true,
+   "repaired": false
+  },
+  {
+   "t": 1.673,
+   "type": "plan",
+   "source": "llm",
+   "rationale": "The tier-1 standing claim is weak and the cow is partly near the feed bunk, so I will verify location, movement, posture, intake, and rumination while checking camera visibility and identity.",
+   "steps": [
+    {
+     "tool": "best_camera",
+     "args": {},
+     "reason": "Determine which camera provides the most reliable view because visibility is low and the detector marked the identity unresolved.",
+     "source": "planner"
+    },
+    {
+     "tool": "zone_query",
+     "args": {},
+     "reason": "Check whether the cow is actually at the feed bunk or waterer, which could disprove standing.",
+     "source": "planner"
+    },
+    {
+     "tool": "track_history",
+     "args": {
+      "window_s": 90
+     },
+     "reason": "Measure displacement and posture around the minute to distinguish standing from walking or lying.",
+     "source": "planner"
+    },
+    {
+     "tool": "temporal_window",
+     "args": {
+      "camera": "auto",
+      "before_s": 30,
+      "after_s": 30,
+      "n_frames": 6
+     },
+     "reason": "Inspect sustained body position and head location across the minute rather than relying on one frame.",
+     "source": "planner"
+    },
+    {
+     "tool": "zoom",
+     "args": {
+      "camera": "auto",
+      "region": "head",
+      "t_offset_s": 0,
+      "scale": 3.0
+     },
+     "reason": "Examine whether the muzzle is at feed or water and whether any visible head posture supports another behavior.",
+     "source": "planner"
+    },
+    {
+     "tool": "zoom",
+     "args": {
+      "camera": "auto",
+      "region": "legs",
+      "t_offset_s": 0,
+      "scale": 3.0
+     },
+     "reason": "Verify whether the cow is upright on all four legs or recumbent.",
+     "source": "planner"
+    },
+    {
+     "tool": "rumination_probe",
+     "args": {
+      "camera": "auto",
+      "seconds": 8
+     },
+     "reason": "Use high-frequency jaw measurements to test rumination, which cannot be established from a still image.",
+     "source": "planner"
+    },
+    {
+     "tool": "compare_to_exemplar",
+     "args": {
+      "camera": "auto"
+     },
+     "reason": "Verify that the visible crop is COW_01 because the upstream detector flagged the identity as unresolved.",
+     "source": "planner"
+    }
+   ],
+   "mandatory_added": []
+  },
+  {
+   "t": 1.673,
+   "type": "tool",
+   "tool": "best_camera",
+   "args": {},
+   "ok": true,
+   "facts": {
+    "visible_frac": {
+     "back": 0.173,
+     "front": 0.2,
+     "top": 0.0
+    },
+    "best_camera": "front"
+   },
+   "error": null,
+   "images": [],
+   "captions": [],
+   "reason": "Determine which camera provides the most reliable view because visibility is low and the detector marked the identity unresolved.",
+   "source": "planner"
+  },
+  {
+   "t": 1.673,
+   "type": "tool",
+   "tool": "zone_query",
+   "args": {},
+   "ok": true,
+   "facts": {
+    "available": true,
+    "zone_fractions": {
+     "feed_bunk": 0.26666666666666666,
+     "waterer": 0.0,
+     "resting": 0.0,
+     "open": 0.7333333333333333
+    },
+    "head_in_bunk_frac": 0.26666666666666666,
+    "source": "fused_state",
+    "note": "zones come from the tracking state (body position, no separate waterer zone); head position not measured"
+   },
+   "error": null,
+   "images": [],
+   "captions": [],
+   "reason": "Check whether the cow is actually at the feed bunk or waterer, which could disprove standing.",
+   "source": "planner"
+  },
+  {
+   "t": 1.673,
+   "type": "tool",
+   "tool": "track_history",
+   "args": {
+    "window_s": 90.0
+   },
+   "ok": true,
+   "facts": {
+    "speed_mean": 0.308,
+    "speed_max": 0.59,
+    "displacement_m": 0.23,
+    "unit": "m/s",
+    "posture_mode": "unknown",
+    "posture_changes": 0,
+    "n_records": 14,
+    "camera": "front",
+    "prev_label": "feeding",
+    "next_label_tier1": "other_not_visible"
+   },
+   "error": null,
+   "images": [],
+   "captions": [],
+   "reason": "Measure displacement and posture around the minute to distinguish standing from walking or lying.",
+   "source": "planner"
+  },
+  {
+   "t": 10.032,
+   "type": "tool",
+   "tool": "temporal_window",
+   "args": {
+    "camera": "auto",
+    "before_s": 30,
+    "after_s": 30,
+    "n_frames": 6
+   },
+   "ok": true,
+   "facts": {
+    "camera": "front",
+    "n_frames": 2,
+    "span_s": [
+     -30,
+     30
+    ]
+   },
+   "error": null,
+   "images": [
+    "img/8f44c541_crop_1ffa5b37.png",
+    "img/dfee648d_crop_5441a202.png"
+   ],
+   "captions": [
+    "front filmstrip frame 1/2",
+    "front filmstrip frame 2/2"
+   ],
+   "reason": "Inspect sustained body position and head location across the minute rather than relying on one frame.",
+   "source": "planner"
+  },
+  {
+   "t": 11.232,
+   "type": "tool",
+   "tool": "zoom",
+   "args": {
+    "camera": "auto",
+    "region": "head",
+    "t_offset_s": 0.0,
+    "scale": 3.0
+   },
+   "ok": true,
+   "facts": {
+    "camera": "front",
+    "region": "head",
+    "available": false
+   },
+   "error": null,
+   "images": [],
+   "captions": [],
+   "reason": "Examine whether the muzzle is at feed or water and whether any visible head posture supports another behavior.",
+   "source": "planner"
+  },
+  {
+   "t": 12.501,
+   "type": "tool",
+   "tool": "zoom",
+   "args": {
+    "camera": "auto",
+    "region": "legs",
+    "t_offset_s": 0.0,
+    "scale": 3.0
+   },
+   "ok": true,
+   "facts": {
+    "camera": "front",
+    "region": "legs",
+    "available": false
+   },
+   "error": null,
+   "images": [],
+   "captions": [],
+   "reason": "Verify whether the cow is upright on all four legs or recumbent.",
+   "source": "planner"
+  },
+  {
+   "t": 12.502,
+   "type": "tool",
+   "tool": "rumination_probe",
+   "args": {
+    "camera": "auto",
+    "seconds": 8.0
+   },
+   "ok": true,
+   "facts": {
+    "camera": "front",
+    "jaw_motion_score": 0.0,
+    "periodicity_hz": 0.0,
+    "rumination_likely": false,
+    "note": "heuristic; thresholds are assumptions"
+   },
+   "error": null,
+   "images": [],
+   "captions": [],
+   "reason": "Use high-frequency jaw measurements to test rumination, which cannot be established from a still image.",
+   "source": "planner"
+  },
+  {
+   "t": 13.579,
+   "type": "tool",
+   "tool": "compare_to_exemplar",
+   "args": {
+    "camera": "auto"
+   },
+   "ok": true,
+   "facts": {
+    "camera": "front",
+    "similarity": null,
+    "match": null
+   },
+   "error": null,
+   "images": [],
+   "captions": [],
+   "reason": "Verify that the visible crop is COW_01 because the upstream detector flagged the identity as unresolved.",
+   "source": "planner"
+  },
+  {
+   "t": 18.553,
+   "type": "vlm",
+   "task": "hypothesis",
+   "prompt_tokens": 2200,
+   "completion_tokens": 582,
+   "latency_s": 4.91,
+   "cached": false,
+   "repaired": false
+  },
+  {
+   "t": 18.553,
+   "type": "hypothesis",
+   "stage": "first",
+   "label": "standing",
+   "confidence": 0.68,
+   "cues": [
+    "Cow is visibly upright on all four legs in both front-camera frames",
+    "Track displacement was only 0.23 m over the interval, below roughly one body length",
+    "Rumination probe found no jaw-motion signal (score 0.0; rumination_likely false)",
+    "No waterer zone occupancy was measured"
+   ],
+   "alternatives": [
+    [
+     "other_not_visible",
+     0.18
+    ],
+    [
+     "walking",
+     0.09
+    ],
+    [
+     "feeding",
+     0.05
+    ]
+   ],
+   "needs": "A side or overhead camera covering the full minute, with verified head and feed-bunk position, would distinguish standing from brief feeding or walking.",
+   "rationale": "Standing is best supported by the upright posture visible in both frames and the small measured displacement. Feeding is weaker because head position was not measured and the images do not show a feed bunk; walking is weaker because displacement was only 0.23 m.",
+   "tags": []
+  },
+  {
+   "t": 18.554,
+   "type": "verifier",
+   "stage": "first",
+   "checks": [
+    {
+     "name": "visibility",
+     "passed": true,
+     "severity": "hard",
+     "detail": "max visible fraction 0.20 (min 0.15)"
+    },
+    {
+     "name": "posture_upright",
+     "passed": true,
+     "severity": "hard",
+     "detail": "posture=unknown, speed=0.3px/s"
+    },
+    {
+     "name": "cue_chewing_hallucinated",
+     "passed": false,
+     "severity": "hard",
+     "detail": "claims chewing but jaw_motion_score=0.0"
+    }
+   ],
+   "n_hard": 1,
+   "n_soft": 0
+  },
+  {
+   "t": 18.554,
+   "type": "decision",
+   "behavior": "standing",
+   "confidence": 0.2309,
+   "reason": "unresolved_fallback_tier1",
+   "correction": "unresolved",
+   "rationale": "The proposed 'standing' was contradicted by measurements (cue_chewing_hallucinated) and could not be repaired; YOLO's 'standing' kept at low confidence."
+  }
+ ],
+ "decision": {
+  "cow_id": "COW_01",
+  "day": 1,
+  "minute": 813,
+  "behavior": "standing",
+  "confidence": 0.2309,
+  "source": "model_estimate",
+  "tier": 2,
+  "reason": "unresolved_fallback_tier1",
+  "cameras_used": [
+   "front"
+  ],
+  "tier1_label": "standing",
+  "n_tool_calls": 8,
+  "n_vlm_calls": 2,
+  "trace_id": "COW_01_d1_m0813",
+  "flags": [
+   "hard:cue_chewing_hallucinated"
+  ],
+  "behavior_tags": [],
+  "used_history": false,
+  "tokens_in": 5057,
+  "tokens_out": 1267,
+  "provider": "openai",
+  "model": "protected.gpt-5.6-luna",
+  "prompt_version": "v3",
+  "rationale": "The proposed 'standing' was contradicted by measurements (cue_chewing_hallucinated) and could not be repaired; YOLO's 'standing' kept at low confidence.",
+  "correction": "unresolved",
+  "is_night": false,
+  "id_verified": false,
+  "id_suggested": null,
+  "actions": [
+   {
+    "seq": 1,
+    "actor": "gate",
+    "action": "gate:agent",
+    "args": {},
+    "reason": "escalation rules: low_confidence",
+    "outcome": "agent",
+    "source": ""
+   },
+   {
+    "seq": 2,
+    "actor": "agent",
+    "action": "night_check",
+    "args": {
+     "camera": "front"
+    },
+    "reason": "measure brightness and colour saturation of the actual frame, so night/infrared handling does not depend on the clock or an upstream flag",
+    "outcome": "brightness=119.3, saturation=0.099, ir_like=False -> night=False",
+    "source": ""
+   },
+   {
+    "seq": 3,
+    "actor": "vlm",
+    "action": "plan",
+    "args": {},
+    "reason": "The tier-1 standing claim is weak and the cow is partly near the feed bunk, so I will verify location, movement, posture, intake, and rumination while checking camera visibility and identity.",
+    "outcome": "8 steps: ['best_camera', 'zone_query', 'track_history', 'temporal_window', 'zoom', 'zoom', 'rumination_probe', 'compare_to_exemplar']",
+    "source": ""
+   },
+   {
+    "seq": 4,
+    "actor": "tool",
+    "action": "tool:best_camera",
+    "args": {},
+    "reason": "Determine which camera provides the most reliable view because visibility is low and the detector marked the identity unresolved.",
+    "outcome": "ok {\"visible_frac\":{\"back\":0.173,\"front\":0.2,\"top\":0.0},\"best_camera\":\"front\"}",
+    "source": "planner"
+   },
+   {
+    "seq": 5,
+    "actor": "tool",
+    "action": "tool:zone_query",
+    "args": {},
+    "reason": "Check whether the cow is actually at the feed bunk or waterer, which could disprove standing.",
+    "outcome": "ok {\"available\":true,\"zone_fractions\":{\"feed_bunk\":0.26666666666666666,\"waterer\":0.0,\"resting\":0.0,\"open\":0.7333333333333333},\"head_in_bunk_frac\":0.26666666666666666,\"source\":\"fused_state\",\"note\":\"zones ...",
+    "source": "planner"
+   },
+   {
+    "seq": 6,
+    "actor": "tool",
+    "action": "tool:track_history",
+    "args": {
+     "window_s": 90.0
+    },
+    "reason": "Measure displacement and posture around the minute to distinguish standing from walking or lying.",
+    "outcome": "ok {\"speed_mean\":0.308,\"speed_max\":0.59,\"displacement_m\":0.23,\"unit\":\"m/s\",\"posture_mode\":\"unknown\",\"posture_changes\":0,\"n_records\":14,\"camera\":\"front\",\"prev_label\":\"feeding\",\"next_label_tier1\":\"other_no...",
+    "source": "planner"
+   },
+   {
+    "seq": 7,
+    "actor": "tool",
+    "action": "tool:temporal_window",
+    "args": {
+     "camera": "auto",
+     "before_s": 30,
+     "after_s": 30,
+     "n_frames": 6
+    },
+    "reason": "Inspect sustained body position and head location across the minute rather than relying on one frame.",
+    "outcome": "ok {\"camera\":\"front\",\"n_frames\":2,\"span_s\":[-30,30]}",
+    "source": "planner"
+   },
+   {
+    "seq": 8,
+    "actor": "tool",
+    "action": "tool:zoom",
+    "args": {
+     "camera": "auto",
+     "region": "head",
+     "t_offset_s": 0.0,
+     "scale": 3.0
+    },
+    "reason": "Examine whether the muzzle is at feed or water and whether any visible head posture supports another behavior.",
+    "outcome": "ok {\"camera\":\"front\",\"region\":\"head\",\"available\":false}",
+    "source": "planner"
+   },
+   {
+    "seq": 9,
+    "actor": "tool",
+    "action": "tool:zoom",
+    "args": {
+     "camera": "auto",
+     "region": "legs",
+     "t_offset_s": 0.0,
+     "scale": 3.0
+    },
+    "reason": "Verify whether the cow is upright on all four legs or recumbent.",
+    "outcome": "ok {\"camera\":\"front\",\"region\":\"legs\",\"available\":false}",
+    "source": "planner"
+   },
+   {
+    "seq": 10,
+    "actor": "tool",
+    "action": "tool:rumination_probe",
+    "args": {
+     "camera": "auto",
+     "seconds": 8.0
+    },
+    "reason": "Use high-frequency jaw measurements to test rumination, which cannot be established from a still image.",
+    "outcome": "ok {\"camera\":\"front\",\"jaw_motion_score\":0.0,\"periodicity_hz\":0.0,\"rumination_likely\":false,\"note\":\"heuristic; thresholds are assumptions\"}",
+    "source": "planner"
+   },
+   {
+    "seq": 11,
+    "actor": "tool",
+    "action": "tool:compare_to_exemplar",
+    "args": {
+     "camera": "auto"
+    },
+    "reason": "Verify that the visible crop is COW_01 because the upstream detector flagged the identity as unresolved.",
+    "outcome": "ok {\"camera\":\"front\",\"similarity\":null,\"match\":null}",
+    "source": "planner"
+   },
+   {
+    "seq": 12,
+    "actor": "vlm",
+    "action": "hypothesis:first",
+    "args": {},
+    "reason": "independent look at the evidence without YOLO's guess",
+    "outcome": "standing conf=0.68; Standing is best supported by the upright posture visible in both frames and the small measured displacement. Feeding is weaker because head position was not measured and the images do not show a feed bunk; walking is weaker because displacement was only 0.23 m.",
+    "source": ""
+   },
+   {
+    "seq": 13,
+    "actor": "verifier",
+    "action": "verify:first",
+    "args": {},
+    "reason": "deterministic rule check of the label against measurements, independent of the VLM",
+    "outcome": "failed hard:cue_chewing_hallucinated",
+    "source": ""
+   },
+   {
+    "seq": 14,
+    "actor": "resolver",
+    "action": "final_decision",
+    "args": {
+     "behavior": "standing",
+     "confidence": 0.2309
+    },
+    "reason": "The proposed 'standing' was contradicted by measurements (cue_chewing_hallucinated) and could not be repaired; YOLO's 'standing' kept at low confidence.",
+    "outcome": "unresolved: standing -> standing",
+    "source": ""
+   }
+  ]
+ }
+}

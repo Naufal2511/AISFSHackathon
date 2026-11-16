@@ -1,0 +1,703 @@
+{
+ "trace_id": "COW_05_d1_m1085",
+ "brief": {
+  "cow_id": "COW_05",
+  "day": 1,
+  "minute": 1085,
+  "tier1_top": [
+   [
+    "ruminating_lying",
+    0.7128
+   ],
+   [
+    "ruminating_standing",
+    0.2574
+   ],
+   [
+    "social_interaction",
+    0.0082
+   ],
+   [
+    "grooming",
+    0.0074
+   ]
+  ],
+  "tier1_entropy": 0.7267555111190147,
+  "zone_fractions": {
+   "feed_bunk": 0.0,
+   "resting": 0.2833333333333333,
+   "open": 0.7166666666666667
+  },
+  "speed_px_s": 0.594,
+  "posture": null,
+  "visible_frac": {
+   "back": 0.0,
+   "front": 0.42,
+   "top": 0.0
+  },
+  "id_conf": 0.95,
+  "is_night": true,
+  "prev_label": "other_not_visible",
+  "next_label_tier1": "ruminating_standing",
+  "camera_disagreement": false,
+  "task": "verify",
+  "src_file": "Event20261108180049006.Avi",
+  "src_camera": "front",
+  "src_offset_s": 280.0,
+  "abs_time": "2026-11-08T18:05:29",
+  "yolo_flags": [
+   "gap_fill",
+   "id_unresolved",
+   "rule_contradiction:posture_lying",
+   "rule_flag:rumination_unverified",
+   "yolo_flag:id_unresolved"
+  ]
+ },
+ "events": [
+  {
+   "t": 0.0,
+   "type": "gate",
+   "action": "agent",
+   "reasons": [
+    "night_low_confidence",
+    "rare_class_modest_conf"
+   ]
+  },
+  {
+   "t": 0.922,
+   "type": "night_check",
+   "camera": "front",
+   "brightness": 101.6,
+   "saturation": 0.0,
+   "ir_like": true,
+   "is_night": true
+  },
+  {
+   "t": 6.372,
+   "type": "vlm",
+   "task": "plan",
+   "prompt_tokens": 2965,
+   "completion_tokens": 718,
+   "latency_s": 5.44,
+   "cached": false,
+   "repaired": false
+  },
+  {
+   "t": 6.373,
+   "type": "plan",
+   "source": "llm",
+   "rationale": "The main uncertainty is whether the cow is lying or standing, while rumination must be measured rather than inferred from stills. Because this is nighttime and visibility is limited, I will identify the best view, use posture/history measurements, and confirm jaw periodicity with a high-frame-rate probe.",
+   "steps": [
+    {
+     "tool": "best_camera",
+     "args": {},
+     "reason": "This identifies which camera provides the most reliable view of COW_05 before selecting image-based checks.",
+     "source": "planner"
+    },
+    {
+     "tool": "enhance_night",
+     "args": {
+      "camera": "auto",
+      "t_offset_s": 0
+     },
+     "reason": "Night enhancement is needed before relying on any visual posture or identity cues in the dark frame.",
+     "source": "planner"
+    },
+    {
+     "tool": "cow_history",
+     "args": {
+      "lookback_min": 30
+     },
+     "reason": "This checks whether COW_05 is already in a continuous lying or rumination bout, using history only as supporting context.",
+     "source": "planner"
+    },
+    {
+     "tool": "track_history",
+     "args": {
+      "window_s": 90
+     },
+     "reason": "This directly tests posture and movement around the minute to separate recumbent from upright rumination.",
+     "source": "planner"
+    },
+    {
+     "tool": "rumination_probe",
+     "args": {
+      "camera": "auto",
+      "seconds": 8
+     },
+     "reason": "This measures jaw-motion periodicity because rumination cannot be established from a still image.",
+     "source": "planner"
+    },
+    {
+     "tool": "temporal_window",
+     "args": {
+      "camera": "auto",
+      "before_s": 15,
+      "after_s": 15,
+      "n_frames": 6
+     },
+     "reason": "This checks whether the cow remains identifiable and whether posture is sustained or changes during the minute.",
+     "source": "planner"
+    }
+   ],
+   "mandatory_added": []
+  },
+  {
+   "t": 6.373,
+   "type": "tool",
+   "tool": "best_camera",
+   "args": {},
+   "ok": true,
+   "facts": {
+    "visible_frac": {
+     "back": 0.0,
+     "front": 0.42,
+     "top": 0.0
+    },
+    "best_camera": "front"
+   },
+   "error": null,
+   "images": [],
+   "captions": [],
+   "reason": "This identifies which camera provides the most reliable view of COW_05 before selecting image-based checks.",
+   "source": "planner"
+  },
+  {
+   "t": 7.538,
+   "type": "tool",
+   "tool": "enhance_night",
+   "args": {
+    "camera": "auto",
+    "t_offset_s": 0.0
+   },
+   "ok": true,
+   "facts": {
+    "camera": "front",
+    "brightness_before": 101.6,
+    "brightness_after": 146.9,
+    "ir_like": true,
+    "looks_like_night": true
+   },
+   "error": null,
+   "images": [
+    "img/0bed43ce_enh_front_c576afdb.png"
+   ],
+   "captions": [
+    "front enhanced scene t=+0s"
+   ],
+   "reason": "Night enhancement is needed before relying on any visual posture or identity cues in the dark frame.",
+   "source": "planner"
+  },
+  {
+   "t": 7.539,
+   "type": "tool",
+   "tool": "cow_history",
+   "args": {
+    "lookback_min": 30
+   },
+   "ok": true,
+   "facts": {
+    "available": true,
+    "recent_runs": "social_interaction x3 > ruminating_standing x3 > social_interaction x1 > standing x1 > social_interaction x6 > standing x1 > other_not_visible x2 > ruminating_standing x10 > other_not_visible x3",
+    "current_bout": {
+     "label": "other_not_visible",
+     "minutes": 3,
+     "ends_minutes_ago": 1,
+     "final": true
+    },
+    "minutes_since": {
+     "feeding": 47,
+     "drinking": null,
+     "lying": null,
+     "walking": null,
+     "ruminating_lying": null,
+     "ruminating_standing": 4
+    },
+    "counts_last_60": {
+     "other_not_visible": 16,
+     "feeding": 3,
+     "ruminating_standing": 26,
+     "social_interaction": 13,
+     "standing": 2
+    },
+    "n_provisional_in_window": 0,
+    "note": "context only (same cow, recent minutes); the current minute's images and measurements decide. '?' = provisional tier-1 label",
+    "next_tier1": [
+     "ruminating_standing",
+     "ruminating_standing"
+    ]
+   },
+   "error": null,
+   "images": [],
+   "captions": [],
+   "reason": "This checks whether COW_05 is already in a continuous lying or rumination bout, using history only as supporting context.",
+   "source": "planner"
+  },
+  {
+   "t": 7.539,
+   "type": "tool",
+   "tool": "track_history",
+   "args": {
+    "window_s": 90.0
+   },
+   "ok": true,
+   "facts": {
+    "speed_mean": 0.502,
+    "speed_max": 1.27,
+    "displacement_m": 0.45,
+    "unit": "m/s",
+    "posture_mode": "unknown",
+    "posture_changes": 0,
+    "n_records": 28,
+    "camera": "front",
+    "prev_label": "other_not_visible",
+    "next_label_tier1": "ruminating_standing"
+   },
+   "error": null,
+   "images": [],
+   "captions": [],
+   "reason": "This directly tests posture and movement around the minute to separate recumbent from upright rumination.",
+   "source": "planner"
+  },
+  {
+   "t": 8.767,
+   "type": "tool",
+   "tool": "rumination_probe",
+   "args": {
+    "camera": "auto",
+    "seconds": 8.0
+   },
+   "ok": true,
+   "facts": {
+    "camera": "front",
+    "jaw_motion_score": 0.002,
+    "periodicity_hz": 0.62,
+    "rumination_likely": false,
+    "note": "heuristic; thresholds are assumptions"
+   },
+   "error": null,
+   "images": [],
+   "captions": [],
+   "reason": "This measures jaw-motion periodicity because rumination cannot be established from a still image.",
+   "source": "planner"
+  },
+  {
+   "t": 10.576,
+   "type": "tool",
+   "tool": "temporal_window",
+   "args": {
+    "camera": "auto",
+    "before_s": 15.0,
+    "after_s": 15.0,
+    "n_frames": 6
+   },
+   "ok": true,
+   "facts": {
+    "camera": "front",
+    "n_frames": 4,
+    "span_s": [
+     -15.0,
+     15.0
+    ]
+   },
+   "error": null,
+   "images": [
+    "img/ed24b635_crop_a717fb7b.png",
+    "img/1c0f4199_crop_e6c5e700.png",
+    "img/f14b32b8_crop_f1e777c9.png",
+    "img/0c9626fd_crop_0ee5dd30.png"
+   ],
+   "captions": [
+    "front filmstrip frame 1/4",
+    "front filmstrip frame 2/4",
+    "front filmstrip frame 3/4",
+    "front filmstrip frame 4/4"
+   ],
+   "reason": "This checks whether the cow remains identifiable and whether posture is sustained or changes during the minute.",
+   "source": "planner"
+  },
+  {
+   "t": 14.098,
+   "type": "vlm",
+   "task": "hypothesis",
+   "prompt_tokens": 2511,
+   "completion_tokens": 320,
+   "latency_s": 3.44,
+   "cached": false,
+   "repaired": false
+  },
+  {
+   "t": 14.098,
+   "type": "hypothesis",
+   "stage": "first",
+   "label": "other_not_visible",
+   "confidence": 0.88,
+   "cues": [
+    "Front enhanced IR images are very dark and heavily occluded, with no identifiable view of COW_05",
+    "Posture is unknown in track measurements",
+    "Rumination probe reports rumination_likely=false with jaw_motion_score 0.002",
+    "Night enhancement indicates an infrared night scene"
+   ],
+   "alternatives": [
+    [
+     "standing",
+     0.06
+    ],
+    [
+     "ruminating_standing",
+     0.04
+    ]
+   ],
+   "needs": "A clearer front or top-camera view covering the cow for most of the minute, plus reliable posture and identity tracking",
+   "rationale": "COW_05 cannot be reliably identified or classified in the dark, obstructed front-camera images, and the measurements do not establish posture or rumination. Standing or ruminating_standing are weaker because posture is unknown and the rumination probe is negative.",
+   "tags": []
+  },
+  {
+   "t": 14.099,
+   "type": "verifier",
+   "stage": "first",
+   "checks": [
+    {
+     "name": "visibility",
+     "passed": true,
+     "severity": "hard",
+     "detail": ""
+    }
+   ],
+   "n_hard": 0,
+   "n_soft": 0
+  },
+  {
+   "t": 14.099,
+   "type": "second_look",
+   "camera": "front",
+   "steps": [
+    {
+     "tool": "get_frames",
+     "args": {
+      "camera": "front"
+     },
+     "reason": "a second, independent look from the front (best remaining view), so one blind spot cannot decide the label",
+     "source": "second_look"
+    },
+    {
+     "tool": "zoom",
+     "args": {
+      "camera": "front",
+      "region": "head"
+     },
+     "reason": "inspect the head from the front (best remaining view) to test the cues behind 'other_not_visible'",
+     "source": "second_look"
+    }
+   ]
+  },
+  {
+   "t": 14.481,
+   "type": "tool",
+   "tool": "get_frames",
+   "args": {
+    "camera": "front",
+    "t_offset_s": 0.0
+   },
+   "ok": true,
+   "facts": {
+    "camera": "front",
+    "t_offset_s": 0.0,
+    "available": true
+   },
+   "error": null,
+   "images": [
+    "img/df51ea5f_crop_0df25c03.png"
+   ],
+   "captions": [
+    "front body t=+0s"
+   ],
+   "reason": "a second, independent look from the front (best remaining view), so one blind spot cannot decide the label",
+   "source": "second_look"
+  },
+  {
+   "t": 14.878,
+   "type": "tool",
+   "tool": "zoom",
+   "args": {
+    "camera": "front",
+    "region": "head",
+    "t_offset_s": 0.0,
+    "scale": 2.0
+   },
+   "ok": true,
+   "facts": {
+    "camera": "front",
+    "region": "head",
+    "available": true
+   },
+   "error": null,
+   "images": [
+    "img/934567db_crop_60cc9e40.png"
+   ],
+   "captions": [
+    "front head zoom x2 t=+0s"
+   ],
+   "reason": "inspect the head from the front (best remaining view) to test the cues behind 'other_not_visible'",
+   "source": "second_look"
+  },
+  {
+   "t": 14.878,
+   "type": "verifier",
+   "stage": "after_second_look",
+   "checks": [
+    {
+     "name": "visibility",
+     "passed": true,
+     "severity": "hard",
+     "detail": ""
+    }
+   ],
+   "n_hard": 0,
+   "n_soft": 0
+  },
+  {
+   "t": 17.047,
+   "type": "vlm",
+   "task": "critique",
+   "prompt_tokens": 1940,
+   "completion_tokens": 190,
+   "latency_s": 2.15,
+   "cached": false,
+   "repaired": false
+  },
+  {
+   "t": 17.047,
+   "type": "critique",
+   "verdict": "accept",
+   "best_alternative": "standing",
+   "reason": "The strongest alternative is standing, but the new front body and head images remain too dark and occluded to establish identity or posture, and the measurements report unknown posture with rumination_likely=false. Thus no visible or measured evidence supports standing or ruminating_lying over other_not_visible.",
+   "requested_camera": "top"
+  },
+  {
+   "t": 17.047,
+   "type": "decision",
+   "behavior": "other_not_visible",
+   "confidence": 0.85,
+   "reason": "agent_accept",
+   "correction": "abstained",
+   "rationale": "Not visible enough to judge (YOLO said 'ruminating_lying'): COW_05 cannot be reliably identified or classified in the dark, obstructed front-camera images, and the measurements do not establish posture or rumination. Standing or ruminating_standing are weaker because posture is unknown and the rumination probe is negative.. Night/infrared frame: confidence capped and fine cues need a measurement."
+  }
+ ],
+ "decision": {
+  "cow_id": "COW_05",
+  "day": 1,
+  "minute": 1085,
+  "behavior": "other_not_visible",
+  "confidence": 0.85,
+  "source": "not_visible",
+  "tier": 2,
+  "reason": "agent_accept",
+  "cameras_used": [
+   "front"
+  ],
+  "tier1_label": "ruminating_lying",
+  "n_tool_calls": 8,
+  "n_vlm_calls": 3,
+  "trace_id": "COW_05_d1_m1085",
+  "flags": [
+   "disagrees_with_tier1",
+   "night"
+  ],
+  "behavior_tags": [],
+  "used_history": true,
+  "tokens_in": 7416,
+  "tokens_out": 1228,
+  "provider": "openai",
+  "model": "protected.gpt-5.6-luna",
+  "prompt_version": "v3",
+  "rationale": "Not visible enough to judge (YOLO said 'ruminating_lying'): COW_05 cannot be reliably identified or classified in the dark, obstructed front-camera images, and the measurements do not establish posture or rumination. Standing or ruminating_standing are weaker because posture is unknown and the rumination probe is negative.. Night/infrared frame: confidence capped and fine cues need a measurement.",
+  "correction": "abstained",
+  "is_night": true,
+  "id_verified": null,
+  "id_suggested": null,
+  "actions": [
+   {
+    "seq": 1,
+    "actor": "gate",
+    "action": "gate:agent",
+    "args": {},
+    "reason": "escalation rules: night_low_confidence, rare_class_modest_conf",
+    "outcome": "agent",
+    "source": ""
+   },
+   {
+    "seq": 2,
+    "actor": "agent",
+    "action": "night_check",
+    "args": {
+     "camera": "front"
+    },
+    "reason": "measure brightness and colour saturation of the actual frame, so night/infrared handling does not depend on the clock or an upstream flag",
+    "outcome": "brightness=101.6, saturation=0.0, ir_like=True -> night=True",
+    "source": ""
+   },
+   {
+    "seq": 3,
+    "actor": "vlm",
+    "action": "plan",
+    "args": {},
+    "reason": "The main uncertainty is whether the cow is lying or standing, while rumination must be measured rather than inferred from stills. Because this is nighttime and visibility is limited, I will identify the best view, use posture/history measurements, and confirm jaw periodicity with a high-frame-rate probe.",
+    "outcome": "6 steps: ['best_camera', 'enhance_night', 'cow_history', 'track_history', 'rumination_probe', 'temporal_window']",
+    "source": ""
+   },
+   {
+    "seq": 4,
+    "actor": "tool",
+    "action": "tool:best_camera",
+    "args": {},
+    "reason": "This identifies which camera provides the most reliable view of COW_05 before selecting image-based checks.",
+    "outcome": "ok {\"visible_frac\":{\"back\":0.0,\"front\":0.42,\"top\":0.0},\"best_camera\":\"front\"}",
+    "source": "planner"
+   },
+   {
+    "seq": 5,
+    "actor": "tool",
+    "action": "tool:enhance_night",
+    "args": {
+     "camera": "auto",
+     "t_offset_s": 0.0
+    },
+    "reason": "Night enhancement is needed before relying on any visual posture or identity cues in the dark frame.",
+    "outcome": "ok {\"camera\":\"front\",\"brightness_before\":101.6,\"brightness_after\":146.9,\"ir_like\":true,\"looks_like_night\":true}",
+    "source": "planner"
+   },
+   {
+    "seq": 6,
+    "actor": "tool",
+    "action": "tool:cow_history",
+    "args": {
+     "lookback_min": 30
+    },
+    "reason": "This checks whether COW_05 is already in a continuous lying or rumination bout, using history only as supporting context.",
+    "outcome": "ok {\"available\":true,\"recent_runs\":\"social_interaction x3 > ruminating_standing x3 > social_interaction x1 > standing x1 > social_interaction x6 > standing x1 > other_not_visible x2 > ruminating_standing...",
+    "source": "planner"
+   },
+   {
+    "seq": 7,
+    "actor": "tool",
+    "action": "tool:track_history",
+    "args": {
+     "window_s": 90.0
+    },
+    "reason": "This directly tests posture and movement around the minute to separate recumbent from upright rumination.",
+    "outcome": "ok {\"speed_mean\":0.502,\"speed_max\":1.27,\"displacement_m\":0.45,\"unit\":\"m/s\",\"posture_mode\":\"unknown\",\"posture_changes\":0,\"n_records\":28,\"camera\":\"front\",\"prev_label\":\"other_not_visible\",\"next_label_tier1\"...",
+    "source": "planner"
+   },
+   {
+    "seq": 8,
+    "actor": "tool",
+    "action": "tool:rumination_probe",
+    "args": {
+     "camera": "auto",
+     "seconds": 8.0
+    },
+    "reason": "This measures jaw-motion periodicity because rumination cannot be established from a still image.",
+    "outcome": "ok {\"camera\":\"front\",\"jaw_motion_score\":0.002,\"periodicity_hz\":0.62,\"rumination_likely\":false,\"note\":\"heuristic; thresholds are assumptions\"}",
+    "source": "planner"
+   },
+   {
+    "seq": 9,
+    "actor": "tool",
+    "action": "tool:temporal_window",
+    "args": {
+     "camera": "auto",
+     "before_s": 15.0,
+     "after_s": 15.0,
+     "n_frames": 6
+    },
+    "reason": "This checks whether the cow remains identifiable and whether posture is sustained or changes during the minute.",
+    "outcome": "ok {\"camera\":\"front\",\"n_frames\":4,\"span_s\":[-15.0,15.0]}",
+    "source": "planner"
+   },
+   {
+    "seq": 10,
+    "actor": "vlm",
+    "action": "hypothesis:first",
+    "args": {},
+    "reason": "independent look at the evidence without YOLO's guess",
+    "outcome": "other_not_visible conf=0.88; COW_05 cannot be reliably identified or classified in the dark, obstructed front-camera images, and the measurements do not establish posture or rumination. Standing or ruminating_standing are weaker because posture is unknown and the rumination probe is negative.",
+    "source": ""
+   },
+   {
+    "seq": 11,
+    "actor": "verifier",
+    "action": "verify:first",
+    "args": {},
+    "reason": "deterministic rule check of the label against measurements, independent of the VLM",
+    "outcome": "all checks passed",
+    "source": ""
+   },
+   {
+    "seq": 12,
+    "actor": "agent",
+    "action": "escalate_second_look",
+    "args": {},
+    "reason": "independent look says 'other_not_visible' but YOLO said 'ruminating_lying'",
+    "outcome": "second look + critique",
+    "source": "second_look"
+   },
+   {
+    "seq": 13,
+    "actor": "tool",
+    "action": "tool:get_frames",
+    "args": {
+     "camera": "front",
+     "t_offset_s": 0.0
+    },
+    "reason": "a second, independent look from the front (best remaining view), so one blind spot cannot decide the label",
+    "outcome": "ok {\"camera\":\"front\",\"t_offset_s\":0.0,\"available\":true}",
+    "source": "second_look"
+   },
+   {
+    "seq": 14,
+    "actor": "tool",
+    "action": "tool:zoom",
+    "args": {
+     "camera": "front",
+     "region": "head",
+     "t_offset_s": 0.0,
+     "scale": 2.0
+    },
+    "reason": "inspect the head from the front (best remaining view) to test the cues behind 'other_not_visible'",
+    "outcome": "ok {\"camera\":\"front\",\"region\":\"head\",\"available\":true}",
+    "source": "second_look"
+   },
+   {
+    "seq": 15,
+    "actor": "verifier",
+    "action": "verify:after_second_look",
+    "args": {},
+    "reason": "deterministic rule check of the label against measurements, independent of the VLM",
+    "outcome": "all checks passed",
+    "source": ""
+   },
+   {
+    "seq": 16,
+    "actor": "vlm",
+    "action": "critique",
+    "args": {},
+    "reason": "argue against the proposed label using the new evidence before it is accepted",
+    "outcome": "accept (alt=standing): The strongest alternative is standing, but the new front body and head images remain too dark and occluded to establish identity or posture, and the measurements report unknown posture with rumination_likely=false. Thus no visible or measured evidence supports standing or ruminating_lying over other_not_visible.",
+    "source": ""
+   },
+   {
+    "seq": 17,
+    "actor": "resolver",
+    "action": "final_decision",
+    "args": {
+     "behavior": "other_not_visible",
+     "confidence": 0.85
+    },
+    "reason": "Not visible enough to judge (YOLO said 'ruminating_lying'): COW_05 cannot be reliably identified or classified in the dark, obstructed front-camera images, and the measurements do not establish posture or rumination. Standing or ruminating_standing are weaker because posture is unknown and the rumination probe is negative.. Night/infrared frame: confidence capped and fine cues need a measurement.",
+    "outcome": "abstained: ruminating_lying -> other_not_visible",
+    "source": ""
+   }
+  ]
+ }
+}

@@ -1,0 +1,210 @@
+{
+ "cow_id": "COW_07",
+ "seconds": 38.9,
+ "tool_calls": 3,
+ "steps": [
+  {
+   "thought": "COW_07 ranks low (8/10, score 0.15). Few real deviations. The top contributors are jerk_rate (+1.0, cough/head-shake), longest lying bout, and lying/walking trends. Breathing is normal (20.8/min). Let me check jerks first as it's the main signal and could indicate cough.",
+   "tool": "jerks",
+   "args": {
+    "cow_id": "COW_07"
+   },
+   "result": "COW_07: 1300 events, 33.9/h; herd median 30.2/h\n11-08 18:22:25 cam3 z 388\n11-08 18:28:14 cam3 z 339\n11-08 17:57:14 cam3 z 173\n11-07 06:11:21 cam3 z 162\n11-08 00:18:31 cam3 z 127\n11-08 00:17:58 cam3 z 118\n11-08 18:43:36 cam3 z 117\n11-08 00:15:52 cam3 z 104\n(check with get_sequence(span_s=6, n=8) around a time: a cough shows neck extension and head drop)",
+   "facts": [],
+   "model": "protected.Claude Opus 4.8"
+  },
+  {
+   "thought": "jerk_rate is only slightly above herd (33.9 vs 30.2, z+1.0). The top events cluster at 11-08 18:22-18:43 cam3. Let me check a sequence around the strongest event (18:22:25) to see if it's a cough posture. Daylight hopefully. This also may give a head crop.",
+   "tool": "get_sequence",
+   "args": {
+    "cow_id": "COW_07",
+    "time": "11-08 18:22:25",
+    "span_s": 6,
+    "n": 8,
+    "camera": "cam3",
+    "region": "head"
+   },
+   "result": "[I0066] 8 crops of COW_07 from cam3 over 6 s, median box 187 px",
+   "facts": [
+    "I0066"
+   ],
+   "model": "protected.Claude Opus 4.8"
+  },
+  {
+   "thought": "This is IR night footage (grey, soft), median box 187 px \u2014 below 250 px threshold and IR. Can't assess discharge or ear detail in IR. The jerk events are at night (18:22 is evening but these are clearly IR/grey). No clear cough posture visible; just low-res grey crops. I have no daylight head crop. jerk_rate z+1.0 is modest and not an artifact per se, but I lack image evidence of cough. All head signs are not_assessable (no qualifying daylight facing crop). Breathing is normal. I'll save my finding and finalize \u2014 I have 1 call left but a gallery might not help given the overall low score; let me use it for one daylight head crop attempt.",
+   "tool": "gallery",
+   "args": {
+    "cow_id": "COW_07",
+    "n": 6
+   },
+   "result": "6 gallery crops: [I0067] 11-08 16:21:36 cam1 1350 px, [I0068] 11-07 16:13:55 cam1 1254 px, [I0069] 11-08 15:03:41 cam1 1231 px, [I0070] 11-08 14:33:25 cam1 1207 px, [I0071] 11-07 14:59:04 cam1 1197 px, [I0072] 11-07 16:41:20 cam1 1195 px",
+   "facts": [],
+   "model": "protected.Claude Opus 4.8"
+  },
+  {
+   "thought": "Daylight gallery crops are large (1200-1350 px) but mostly show backs/rumps with the cow at the bunk, facing away or down into the feed. I0069 shows a side/head-on view of a head but the cow is at the bunk feeding (head down eating, which is normal). None give a clear facing-toward head crop to assess ears/nose/eyes while NOT eating. Body condition looks normal/full \u2014 not gaunt. No labored breathing visible, breathing measured normal (F-COW_07-breathing_bpm 20.8, F-COW_07-breathing_effort 105%). The cow is a low-concern animal. Head signs not_assessable (no qualifying non-eating facing head crop). jerk_rate modestly elevated but no cough posture confirmed and I won't call it an artifact. Finalizing.",
+   "final": {
+    "signs": {
+     "head_low": {
+      "status": "not_assessable",
+      "evidence": [
+       "I0066",
+       "I0067",
+       "I0068",
+       "I0069",
+       "I0070",
+       "I0071",
+       "I0072"
+      ],
+      "note": "Daylight crops show the cow at the bunk (head down eating, normal) or facing away/rump; the only head-on view is while feeding. Night sequence is IR and <250px. No qualifying standing-not-eating facing head crop."
+     },
+     "ears_droop": {
+      "status": "not_assessable",
+      "evidence": [
+       "I0066",
+       "I0069"
+      ],
+      "note": "No daylight facing head crop; IR night crops lack ear detail."
+     },
+     "nasal_discharge": {
+      "status": "not_assessable",
+      "evidence": [
+       "I0067",
+       "I0068",
+       "I0069"
+      ],
+      "note": "No daylight head-on crop >=450px showing muzzle; cow faces away or feeds head-down."
+     },
+     "ocular_discharge": {
+      "status": "not_assessable",
+      "evidence": [
+       "I0069"
+      ],
+      "note": "No clear daylight eye view; IR night unusable for discharge."
+     },
+     "labored_breathing": {
+      "status": "absent",
+      "evidence": [
+       "I0067",
+       "I0070"
+      ],
+      "note": "Resting breathing measured normal (F-COW_07-breathing_bpm 20.8/min, effort 105% = herd); daylight body views show no open-mouth or heaving flank."
+     },
+     "cough": {
+      "status": "not_assessable",
+      "evidence": [
+       "I0066"
+      ],
+      "note": "Top jerk events at night in cam3 IR, box 187px; sequence shows no clear neck-extension/head-drop cough posture, but resolution too poor to confirm or rule out."
+     },
+     "gaunt": {
+      "status": "absent",
+      "evidence": [
+       "I0067",
+       "I0070",
+       "I0072"
+      ],
+      "note": "Daylight body crops show a full, well-conditioned frame; no hollow flank or empty look."
+     }
+    },
+    "artifacts": [],
+    "behavior_assessment": "COW_07 is a low-concern animal (rank 8/10, score 0.15). The few 'sick-direction' deviations are weak and not clinically convincing: jerk_rate +1.0 (F-COW_07-jerk_rate, 33.9 vs 30.2/h) is only marginally above the herd and its biggest events are IR night cam3 with no confirmable cough posture (I0066); longest_lying_bout and lying/walking trends (F-COW_07-longest_lying_bout_min, F-COW_07-lying_share__trend) are mild and offset by normal feeding, rumination (77%), normal appetite (feed_call_latency actually FASTER than herd, F-COW_07-feed_call_latency), normal social spacing and normal breathing. I found no image evidence that any indicator's identity, visibility or label is wrong, so I call no artifacts.",
+    "summary": "COW_07 looks like a normal, healthy animal: it eats promptly after feed delivery, ruminates and lies normally, keeps up with the herd, and breathes at a normal rate with a full body condition. The only mild flags (slightly more sudden movements, a bit more lying) are small and unconfirmed, with the top cough candidates occurring at night in low-resolution IR. No priority for pulling; continue routine monitoring and recheck if daytime coughing or appetite drop appears.",
+    "key_evidence": [
+     "F-COW_07-jerk_rate",
+     "F-COW_07-breathing_bpm",
+     "F-COW_07-feed_call_latency",
+     "F-COW_07-rumination_share",
+     "I0066",
+     "I0067",
+     "I0069"
+    ],
+    "confidence": 0.72
+   },
+   "model": "protected.Claude Opus 4.8"
+  }
+ ],
+ "self_check_first": [],
+ "self_check_after_revision": [],
+ "final": {
+  "signs": {
+   "head_low": {
+    "status": "not_assessable",
+    "evidence": [
+     "I0066",
+     "I0067",
+     "I0068",
+     "I0069",
+     "I0070",
+     "I0071",
+     "I0072"
+    ],
+    "note": "Daylight crops show the cow at the bunk (head down eating, normal) or facing away/rump; the only head-on view is while feeding. Night sequence is IR and <250px. No qualifying standing-not-eating facing head crop."
+   },
+   "ears_droop": {
+    "status": "not_assessable",
+    "evidence": [
+     "I0066",
+     "I0069"
+    ],
+    "note": "No daylight facing head crop; IR night crops lack ear detail."
+   },
+   "nasal_discharge": {
+    "status": "not_assessable",
+    "evidence": [
+     "I0067",
+     "I0068",
+     "I0069"
+    ],
+    "note": "No daylight head-on crop >=450px showing muzzle; cow faces away or feeds head-down."
+   },
+   "ocular_discharge": {
+    "status": "not_assessable",
+    "evidence": [
+     "I0069"
+    ],
+    "note": "No clear daylight eye view; IR night unusable for discharge."
+   },
+   "labored_breathing": {
+    "status": "absent",
+    "evidence": [
+     "I0067",
+     "I0070"
+    ],
+    "note": "Resting breathing measured normal (F-COW_07-breathing_bpm 20.8/min, effort 105% = herd); daylight body views show no open-mouth or heaving flank."
+   },
+   "cough": {
+    "status": "not_assessable",
+    "evidence": [
+     "I0066"
+    ],
+    "note": "Top jerk events at night in cam3 IR, box 187px; sequence shows no clear neck-extension/head-drop cough posture, but resolution too poor to confirm or rule out."
+   },
+   "gaunt": {
+    "status": "absent",
+    "evidence": [
+     "I0067",
+     "I0070",
+     "I0072"
+    ],
+    "note": "Daylight body crops show a full, well-conditioned frame; no hollow flank or empty look."
+   }
+  },
+  "artifacts": [],
+  "behavior_assessment": "COW_07 is a low-concern animal (rank 8/10, score 0.15). The few 'sick-direction' deviations are weak and not clinically convincing: jerk_rate +1.0 (F-COW_07-jerk_rate, 33.9 vs 30.2/h) is only marginally above the herd and its biggest events are IR night cam3 with no confirmable cough posture (I0066); longest_lying_bout and lying/walking trends (F-COW_07-longest_lying_bout_min, F-COW_07-lying_share__trend) are mild and offset by normal feeding, rumination (77%), normal appetite (feed_call_latency actually FASTER than herd, F-COW_07-feed_call_latency), normal social spacing and normal breathing. I found no image evidence that any indicator's identity, visibility or label is wrong, so I call no artifacts.",
+  "summary": "COW_07 looks like a normal, healthy animal: it eats promptly after feed delivery, ruminates and lies normally, keeps up with the herd, and breathes at a normal rate with a full body condition. The only mild flags (slightly more sudden movements, a bit more lying) are small and unconfirmed, with the top cough candidates occurring at night in low-resolution IR. No priority for pulling; continue routine monitoring and recheck if daytime coughing or appetite drop appears.",
+  "key_evidence": [
+   "F-COW_07-jerk_rate",
+   "F-COW_07-breathing_bpm",
+   "F-COW_07-feed_call_latency",
+   "F-COW_07-rumination_share",
+   "I0066",
+   "I0067",
+   "I0069"
+  ],
+  "confidence": 0.72
+ },
+ "models": [
+  "protected.Claude Opus 4.8"
+ ]
+}

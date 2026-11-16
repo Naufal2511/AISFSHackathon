@@ -1,0 +1,301 @@
+chunk,who,start,local_id,global_id,similarity,margin,status,overlap_detail
+naufal_training_c01,naufal_training,2026-11-07 00:04:00,COW_01,COW_01,,,first_chunk,
+naufal_training_c01,naufal_training,2026-11-07 00:04:00,COW_02,COW_02,,,first_chunk,
+naufal_training_c01,naufal_training,2026-11-07 00:04:00,COW_03,COW_03,,,first_chunk,
+naufal_training_c01,naufal_training,2026-11-07 00:04:00,COW_04,COW_04,,,first_chunk,
+naufal_training_c01,naufal_training,2026-11-07 00:04:00,COW_05,COW_05,,,first_chunk,
+naufal_training_c01,naufal_training,2026-11-07 00:04:00,COW_06,COW_06,,,first_chunk,
+naufal_training_c01,naufal_training,2026-11-07 00:04:00,COW_07,COW_07,,,first_chunk,
+naufal_training_c01,naufal_training,2026-11-07 00:04:00,COW_08,COW_08,,,first_chunk,
+naufal_training_c01,naufal_training,2026-11-07 00:04:00,COW_09,COW_09,,,first_chunk,
+naufal_training_c01,naufal_training,2026-11-07 00:04:00,COW_10,COW_10,,,first_chunk,
+naufal_training_c02,naufal_training,2026-11-07 04:04:00,COW_01,COW_03,0.5,,overlap_split (120 of 240 boxes; cameras disagree),cam1 COW_03 120; cam3 COW_09 120
+naufal_training_c02,naufal_training,2026-11-07 04:04:00,COW_02,COW_02,0.487,,overlap_split (114 of 234 boxes; cameras disagree),cam1 COW_08 104; cam3 COW_02 114
+naufal_training_c02,naufal_training,2026-11-07 04:04:00,COW_03,COW_10,0.5,,overlap_split (120 of 240 boxes; cameras disagree),cam1 COW_10 120; cam3 COW_01 120
+naufal_training_c02,naufal_training,2026-11-07 04:04:00,COW_04,COW_06,0.5,,overlap_split (120 of 240 boxes; cameras disagree),cam1 COW_02 120; cam3 COW_06 120
+naufal_training_c02,naufal_training,2026-11-07 04:04:00,COW_05,COW_07,1.0,,overlap (120 boxes),cam1 COW_07 120
+naufal_training_c02,naufal_training,2026-11-07 04:04:00,COW_06,COW_01,0.65,-0.06,low_margin,
+naufal_training_c02,naufal_training,2026-11-07 04:04:00,COW_07,COW_08,1.0,,overlap (120 boxes),cam3 COW_08 120
+naufal_training_c02,naufal_training,2026-11-07 04:04:00,COW_08,COW_09,0.889,0.034,low_margin,
+naufal_training_c02,naufal_training,2026-11-07 04:04:00,COW_09,COW_04,0.771,0.0,low_margin,
+naufal_training_c02,naufal_training,2026-11-07 04:04:00,COW_10,COW_05,0.798,0.026,low_margin,
+afeef_training_c01,afeef_training,2026-11-07 08:03:00,COW_01,COW_03,1.0,,overlap (360 boxes),cam1 COW_03 120; cam2 COW_03 120; cam3 COW_03 120
+afeef_training_c01,afeef_training,2026-11-07 08:03:00,COW_02,COW_08,0.773,-0.031,low_margin,
+afeef_training_c01,afeef_training,2026-11-07 08:03:00,COW_03,COW_05,1.0,,overlap (71 boxes),cam3 COW_05 71
+afeef_training_c01,afeef_training,2026-11-07 08:03:00,COW_04,COW_01,0.663,,overlap_split (108 of 163 boxes; cameras disagree),cam1 COW_01 46; cam3 COW_01 62
+afeef_training_c01,afeef_training,2026-11-07 08:03:00,COW_05,COW_02,0.825,0.0,low_margin,cam1 COW_05 42; cam3 COW_10 47
+afeef_training_c01,afeef_training,2026-11-07 08:03:00,COW_06,COW_04,1.0,,overlap (120 boxes),cam3 COW_04 120
+afeef_training_c01,afeef_training,2026-11-07 08:03:00,COW_07,COW_10,0.329,,overlap_split (23 of 70 boxes; cameras disagree),cam1 COW_10 23; cam3 COW_01 47
+afeef_training_c01,afeef_training,2026-11-07 08:03:00,COW_08,COW_07,0.808,0.008,low_margin,cam3 COW_06 32
+afeef_training_c01,afeef_training,2026-11-07 08:03:00,COW_09,COW_09,0.783,-0.028,low_margin,
+afeef_training_c01,afeef_training,2026-11-07 08:03:00,COW_10,COW_06,1.0,,overlap (201 boxes),cam1 COW_06 90; cam3 COW_06 111
+afeef_training_c02,afeef_training,2026-11-07 10:03:00,COW_01,COW_03,1.0,,overlap (120 boxes),cam1 COW_03 120
+afeef_training_c02,afeef_training,2026-11-07 10:03:00,COW_02,COW_09,1.0,,overlap (151 boxes),cam3 COW_09 151
+afeef_training_c02,afeef_training,2026-11-07 10:03:00,COW_03,COW_04,1.0,,overlap (360 boxes),cam1 COW_04 120; cam2 COW_04 120; cam3 COW_04 120
+afeef_training_c02,afeef_training,2026-11-07 10:03:00,COW_04,COW_08,1.0,,overlap (154 boxes),cam1 COW_08 120; cam3 COW_08 34
+afeef_training_c02,afeef_training,2026-11-07 10:03:00,COW_05,COW_02,1.0,,overlap (240 boxes),cam1 COW_02 120; cam3 COW_02 120
+afeef_training_c02,afeef_training,2026-11-07 10:03:00,COW_06,COW_05,0.894,-0.009,low_margin,cam3 COW_03 120
+afeef_training_c02,afeef_training,2026-11-07 10:03:00,COW_07,COW_06,0.903,0.026,low_margin,
+afeef_training_c02,afeef_training,2026-11-07 10:03:00,COW_08,COW_07,1.0,,overlap (216 boxes),cam1 COW_07 120; cam3 COW_07 96
+afeef_training_c02,afeef_training,2026-11-07 10:03:00,COW_09,COW_01,0.88,0.077,matched,
+afeef_training_c03,afeef_training,2026-11-07 12:03:00,COW_01,COW_03,1.0,,overlap (120 boxes),cam3 COW_03 120
+afeef_training_c03,afeef_training,2026-11-07 12:03:00,COW_02,COW_02,0.936,0.021,low_margin,
+afeef_training_c03,afeef_training,2026-11-07 12:03:00,COW_03,COW_09,0.948,0.0,low_margin,
+afeef_training_c03,afeef_training,2026-11-07 12:03:00,COW_04,COW_05,0.953,0.012,low_margin,
+afeef_training_c03,afeef_training,2026-11-07 12:03:00,COW_05,COW_07,1.0,,overlap (233 boxes),cam3 COW_07 233
+afeef_training_c03,afeef_training,2026-11-07 12:03:00,COW_06,COW_08,1.0,,overlap (257 boxes),cam1 COW_08 17; cam2 COW_08 120; cam3 COW_08 120
+afeef_training_c03,afeef_training,2026-11-07 12:03:00,COW_07,COW_06,0.918,-0.013,low_margin,
+afeef_training_c03,afeef_training,2026-11-07 12:03:00,COW_08,COW_10,0.896,-0.024,low_margin,
+afeef_training_c03,afeef_training,2026-11-07 12:03:00,COW_09,COW_04,0.923,0.0,low_margin,
+afeef_training_c04,afeef_training,2026-11-07 14:02:00,COW_01,COW_04,0.739,,overlap_split (153 of 207 boxes; cameras disagree),cam1 COW_04 119; cam3 COW_07 53
+afeef_training_c04,afeef_training,2026-11-07 14:02:00,COW_02,COW_08,0.502,,overlap_split (120 of 239 boxes; cameras disagree),cam1 COW_08 120; cam2 COW_03 119
+afeef_training_c04,afeef_training,2026-11-07 14:02:00,COW_03,COW_02,1.0,,overlap (360 boxes),cam1 COW_02 120; cam2 COW_02 120; cam3 COW_02 120
+afeef_training_c04,afeef_training,2026-11-07 14:02:00,COW_04,COW_03,0.451,,overlap_split (119 of 264 boxes; cameras disagree),cam1 COW_03 119; cam2 COW_08 114; cam3 COW_09 31
+afeef_training_c04,afeef_training,2026-11-07 14:02:00,COW_05,COW_07,0.556,,overlap_split (115 of 207 boxes; cameras disagree),cam1 COW_07 115; cam3 COW_05 92
+afeef_training_c04,afeef_training,2026-11-07 14:02:00,COW_06,COW_09,0.58,,overlap_split (120 of 207 boxes; cameras disagree),cam2 COW_09 120; cam3 COW_08 87
+afeef_training_c04,afeef_training,2026-11-07 14:02:00,COW_07,COW_10,0.744,,overlap_split (32 of 43 boxes; cameras disagree),cam1 COW_10 32
+afeef_training_c04,afeef_training,2026-11-07 14:02:00,COW_08,COW_06,0.921,0.001,low_margin,cam3 COW_03 73
+afeef_training_c04,afeef_training,2026-11-07 14:02:00,COW_09,COW_01,0.85,0.0,low_margin,
+afeef_training_c04,afeef_training,2026-11-07 14:02:00,COW_10,COW_05,0.934,0.02,low_margin,
+nooh_training_c01,nooh_training,2026-11-07 16:02:00,COW_01,COW_09,1.0,,overlap (236 boxes),cam1 COW_09 116; cam3 COW_09 120
+nooh_training_c01,nooh_training,2026-11-07 16:02:00,COW_02,COW_04,0.552,,overlap_split (16 of 29 boxes; cameras disagree),cam1 COW_05 9; cam3 COW_04 16
+nooh_training_c01,nooh_training,2026-11-07 16:02:00,COW_03,COW_02,0.665,,overlap_split (119 of 179 boxes; cameras disagree),cam3 COW_02 119
+nooh_training_c01,nooh_training,2026-11-07 16:02:00,COW_04,COW_06,0.251,,overlap_split (46 of 183 boxes; cameras disagree),cam1 COW_06 46; cam2 COW_07 95; cam3 COW_01 30
+nooh_training_c01,nooh_training,2026-11-07 16:02:00,COW_05,COW_08,0.908,0.0,low_margin,cam2 COW_02 44; cam3 COW_01 18
+nooh_training_c01,nooh_training,2026-11-07 16:02:00,COW_06,COW_05,0.912,0.0,low_margin,
+nooh_training_c01,nooh_training,2026-11-07 16:02:00,COW_07,COW_01,1.0,,overlap (48 boxes),cam1 COW_01 48
+nooh_training_c01,nooh_training,2026-11-07 16:02:00,COW_08,COW_03,0.922,0.055,matched,
+nooh_training_c01,nooh_training,2026-11-07 16:02:00,COW_09,COW_07,0.909,,overlap (100 boxes),cam3 COW_07 100
+nooh_training_c01,nooh_training,2026-11-07 16:02:00,COW_10,COW_10,0.663,,overlap_split (116 of 175 boxes; cameras disagree),cam2 COW_10 116; cam3 COW_06 47
+nooh_training_c02,nooh_training,2026-11-07 20:01:00,COW_01,COW_03,1.0,,overlap (17 boxes),cam3 COW_03 17
+nooh_training_c02,nooh_training,2026-11-07 20:01:00,COW_02,COW_05,0.887,-0.025,low_margin,
+nooh_training_c02,nooh_training,2026-11-07 20:01:00,COW_03,COW_08,0.871,-0.047,low_margin,
+nooh_training_c02,nooh_training,2026-11-07 20:01:00,COW_04,COW_02,1.0,,overlap (119 boxes),cam3 COW_02 119
+nooh_training_c02,nooh_training,2026-11-07 20:01:00,COW_05,COW_10,1.0,,overlap (120 boxes),cam1 COW_10 120
+nooh_training_c02,nooh_training,2026-11-07 20:01:00,COW_06,COW_09,0.777,0.086,matched,
+nooh_training_c02,nooh_training,2026-11-07 20:01:00,COW_07,COW_07,0.874,0.0,low_margin,
+nooh_training_c02,nooh_training,2026-11-07 20:01:00,COW_08,COW_04,1.0,,overlap (120 boxes),cam1 COW_04 120
+nooh_training_c02,nooh_training,2026-11-07 20:01:00,COW_09,COW_01,0.802,-0.075,low_margin,
+nooh_training_c02,nooh_training,2026-11-07 20:01:00,COW_10,COW_06,0.906,0.0,low_margin,
+hprc_day2_c01,hprc_day2,2026-11-08 00:00:00,COW_01,COW_04,1.0,,overlap (240 boxes),cam1 COW_04 120; cam3 COW_04 120
+hprc_day2_c01,hprc_day2,2026-11-08 00:00:00,COW_02,COW_08,,,guess (no usable evidence: one of the cows not placed yet),
+hprc_day2_c01,hprc_day2,2026-11-08 00:00:00,COW_03,COW_05,0.898,,overlap (177 boxes),cam1 COW_05 57; cam3 COW_05 120
+hprc_day2_c01,hprc_day2,2026-11-08 00:00:00,COW_04,COW_06,1.0,,overlap (120 boxes),cam3 COW_06 120
+hprc_day2_c01,hprc_day2,2026-11-08 00:00:00,COW_05,COW_10,,,guess (no usable evidence: one of the cows not placed yet),cam1 COW_06 104
+hprc_day2_c01,hprc_day2,2026-11-08 00:00:00,COW_06,COW_01,1.0,,overlap (120 boxes),cam3 COW_01 120
+hprc_day2_c01,hprc_day2,2026-11-08 00:00:00,COW_07,COW_09,1.0,,overlap (120 boxes),cam3 COW_09 120
+hprc_day2_c01,hprc_day2,2026-11-08 00:00:00,COW_08,COW_07,0.762,,overlap_split (109 of 143 boxes; cameras disagree),cam1 COW_03 33; cam3 COW_07 109
+hprc_day2_c01,hprc_day2,2026-11-08 00:00:00,COW_09,COW_03,0.802,,overlap (77 boxes),cam1 COW_05 19; cam3 COW_03 77
+hprc_day2_c02,hprc_day2,2026-11-08 00:58:00,COW_01,COW_04,1.0,,overlap (240 boxes),cam1 COW_04 120; cam3 COW_04 120
+hprc_day2_c02,hprc_day2,2026-11-08 00:58:00,COW_02,COW_10,1.0,,overlap (360 boxes),cam1 COW_10 120; cam2 COW_10 120; cam3 COW_10 120
+hprc_day2_c02,hprc_day2,2026-11-08 00:58:00,COW_03,COW_08,1.0,,overlap (120 boxes),cam1 COW_08 120
+hprc_day2_c02,hprc_day2,2026-11-08 00:58:00,COW_04,COW_05,1.0,,overlap (261 boxes),cam1 COW_05 141; cam3 COW_05 120
+hprc_day2_c02,hprc_day2,2026-11-08 00:58:00,COW_05,COW_03,0.992,,overlap (120 boxes),cam1 COW_01 1; cam3 COW_03 120
+hprc_day2_c02,hprc_day2,2026-11-08 00:58:00,COW_06,COW_06,1.0,,overlap (240 boxes),cam1 COW_06 120; cam3 COW_06 120
+hprc_day2_c02,hprc_day2,2026-11-08 00:58:00,COW_07,COW_07,1.0,,overlap (236 boxes),cam1 COW_07 116; cam3 COW_07 120
+hprc_day2_c02,hprc_day2,2026-11-08 00:58:00,COW_08,COW_02,,,guess (no usable evidence: one of the cows not placed yet),
+hprc_day2_c02,hprc_day2,2026-11-08 00:58:00,COW_09,COW_01,1.0,,overlap (120 boxes),cam3 COW_01 120
+hprc_day2_c02,hprc_day2,2026-11-08 00:58:00,COW_10,COW_09,0.881,1.881,matched,
+hprc_day2_c03,hprc_day2,2026-11-08 01:55:00,COW_01,COW_02,1.0,,overlap (120 boxes),cam3 COW_02 120
+hprc_day2_c03,hprc_day2,2026-11-08 01:55:00,COW_02,COW_04,1.0,,overlap (120 boxes),cam1 COW_04 120
+hprc_day2_c03,hprc_day2,2026-11-08 01:55:00,COW_03,COW_05,0.968,,overlap (120 boxes),cam1 COW_06 4; cam3 COW_05 120
+hprc_day2_c03,hprc_day2,2026-11-08 01:55:00,COW_04,COW_10,1.0,,overlap (360 boxes),cam1 COW_10 120; cam2 COW_10 120; cam3 COW_10 120
+hprc_day2_c03,hprc_day2,2026-11-08 01:55:00,COW_05,COW_07,0.597,,overlap_split (80 of 134 boxes; cameras disagree),cam1 COW_03 54; cam3 COW_07 80
+hprc_day2_c03,hprc_day2,2026-11-08 01:55:00,COW_06,COW_01,1.0,,overlap (37 boxes),cam1 COW_01 12; cam3 COW_01 25
+hprc_day2_c03,hprc_day2,2026-11-08 01:55:00,COW_07,COW_06,0.979,0.003,low_margin,cam1 COW_08 108
+hprc_day2_c03,hprc_day2,2026-11-08 01:55:00,COW_08,COW_08,0.923,,overlap (120 boxes),cam1 COW_07 10; cam3 COW_08 120
+hprc_day2_c03,hprc_day2,2026-11-08 01:55:00,COW_09,COW_03,0.896,0.015,low_margin,cam1 COW_06 21; cam3 COW_09 120
+hprc_day2_c03,hprc_day2,2026-11-08 01:55:00,COW_10,COW_09,1.0,,overlap (240 boxes),cam1 COW_09 120; cam2 COW_09 120
+hprc_day2_c04,hprc_day2,2026-11-08 02:53:00,COW_01,COW_03,1.0,,overlap (104 boxes),cam3 COW_03 104
+hprc_day2_c04,hprc_day2,2026-11-08 02:53:00,COW_02,COW_02,1.0,,overlap (240 boxes),cam1 COW_02 120; cam3 COW_02 120
+hprc_day2_c04,hprc_day2,2026-11-08 02:53:00,COW_03,COW_06,1.0,,overlap (205 boxes),cam1 COW_06 120; cam3 COW_06 85
+hprc_day2_c04,hprc_day2,2026-11-08 02:53:00,COW_04,COW_04,1.0,,overlap (120 boxes),cam3 COW_04 120
+hprc_day2_c04,hprc_day2,2026-11-08 02:53:00,COW_05,COW_08,1.0,,overlap (35 boxes),cam1 COW_08 16; cam3 COW_08 19
+hprc_day2_c04,hprc_day2,2026-11-08 02:53:00,COW_06,COW_01,1.0,,overlap (207 boxes),cam1 COW_01 87; cam3 COW_01 120
+hprc_day2_c04,hprc_day2,2026-11-08 02:53:00,COW_07,COW_07,0.984,0.0,low_margin,
+hprc_day2_c04,hprc_day2,2026-11-08 02:53:00,COW_08,COW_10,0.859,-0.127,low_margin,
+hprc_day2_c04,hprc_day2,2026-11-08 02:53:00,COW_09,COW_05,0.999,0.007,low_margin,
+hprc_day2_c04,hprc_day2,2026-11-08 02:53:00,COW_10,COW_09,1.0,,overlap (119 boxes),cam3 COW_09 119
+hprc_day2_c05,hprc_day2,2026-11-08 03:51:00,COW_01,COW_02,0.965,,overlap (194 boxes),cam1 COW_02 120; cam3 COW_02 74
+hprc_day2_c05,hprc_day2,2026-11-08 03:51:00,COW_02,COW_06,0.94,,overlap (158 boxes),cam1 COW_06 120; cam3 COW_06 38
+hprc_day2_c05,hprc_day2,2026-11-08 03:51:00,COW_03,COW_07,1.0,,overlap (114 boxes),cam3 COW_07 114
+hprc_day2_c05,hprc_day2,2026-11-08 03:51:00,COW_04,COW_04,1.0,,overlap (237 boxes),cam1 COW_04 120; cam3 COW_04 117
+hprc_day2_c05,hprc_day2,2026-11-08 03:51:00,COW_05,COW_01,1.0,,overlap (62 boxes),cam3 COW_01 62
+hprc_day2_c05,hprc_day2,2026-11-08 03:51:00,COW_06,COW_08,0.857,,overlap (12 boxes),cam3 COW_08 12
+hprc_day2_c05,hprc_day2,2026-11-08 03:51:00,COW_07,COW_03,0.55,,overlap_split (121 of 220 boxes; cameras disagree),cam1 COW_03 120; cam3 COW_09 99
+hprc_day2_c05,hprc_day2,2026-11-08 03:51:00,COW_08,COW_05,1.0,,overlap (110 boxes),cam3 COW_05 110
+hprc_day2_c05,hprc_day2,2026-11-08 03:51:00,COW_09,COW_10,0.979,0.059,matched,cam3 COW_01 3
+hprc_day2_c05,hprc_day2,2026-11-08 03:51:00,COW_10,COW_09,0.934,0.0,low_margin,cam1 COW_08 6; cam3 COW_02 37
+hprc_day2_c06,hprc_day2,2026-11-08 04:48:00,COW_01,COW_02,1.0,,overlap (171 boxes),cam1 COW_02 120; cam3 COW_02 51
+hprc_day2_c06,hprc_day2,2026-11-08 04:48:00,COW_02,COW_03,1.0,,overlap (240 boxes),cam1 COW_03 120; cam3 COW_03 120
+hprc_day2_c06,hprc_day2,2026-11-08 04:48:00,COW_03,COW_06,0.996,0.043,low_margin,
+hprc_day2_c06,hprc_day2,2026-11-08 04:48:00,COW_04,COW_10,1.0,,overlap (239 boxes),cam1 COW_10 119; cam3 COW_10 120
+hprc_day2_c06,hprc_day2,2026-11-08 04:48:00,COW_05,COW_09,0.988,0.003,low_margin,
+hprc_day2_c06,hprc_day2,2026-11-08 04:48:00,COW_06,COW_01,1.0,,overlap (84 boxes),cam3 COW_01 84
+hprc_day2_c06,hprc_day2,2026-11-08 04:48:00,COW_07,COW_04,1.0,,overlap (117 boxes),cam3 COW_04 117
+hprc_day2_c06,hprc_day2,2026-11-08 04:48:00,COW_08,COW_07,1.0,,overlap (230 boxes),cam1 COW_07 124; cam2 COW_07 106
+hprc_day2_c07,hprc_day2,2026-11-08 05:46:00,COW_01,COW_04,0.981,0.043,low_margin,
+hprc_day2_c07,hprc_day2,2026-11-08 05:46:00,COW_02,COW_06,1.0,,overlap (307 boxes),cam1 COW_06 132; cam2 COW_06 83; cam3 COW_06 92
+hprc_day2_c07,hprc_day2,2026-11-08 05:46:00,COW_03,COW_03,1.0,,overlap (358 boxes),cam1 COW_03 120; cam2 COW_03 120; cam3 COW_03 118
+hprc_day2_c07,hprc_day2,2026-11-08 05:46:00,COW_04,COW_05,0.993,0.0,low_margin,
+hprc_day2_c07,hprc_day2,2026-11-08 05:46:00,COW_05,COW_10,1.0,,overlap (120 boxes),cam3 COW_10 120
+hprc_day2_c07,hprc_day2,2026-11-08 05:46:00,COW_06,COW_02,1.0,,overlap (115 boxes),cam3 COW_02 115
+hprc_day2_c07,hprc_day2,2026-11-08 05:46:00,COW_07,COW_01,0.95,-0.009,low_margin,
+hprc_day2_c07,hprc_day2,2026-11-08 05:46:00,COW_08,COW_09,1.0,,overlap (119 boxes),cam3 COW_09 119
+hprc_day2_c07,hprc_day2,2026-11-08 05:46:00,COW_09,COW_07,0.983,0.0,low_margin,
+hprc_day2_c08,hprc_day2,2026-11-08 06:44:00,COW_01,COW_10,1.0,,overlap (240 boxes),cam1 COW_10 120; cam3 COW_10 120
+hprc_day2_c08,hprc_day2,2026-11-08 06:44:00,COW_02,COW_06,1.0,,overlap (359 boxes),cam1 COW_06 120; cam2 COW_06 119; cam3 COW_06 120
+hprc_day2_c08,hprc_day2,2026-11-08 06:44:00,COW_03,COW_01,1.0,,overlap (359 boxes),cam1 COW_01 119; cam2 COW_01 120; cam3 COW_01 120
+hprc_day2_c08,hprc_day2,2026-11-08 06:44:00,COW_04,COW_09,1.0,,overlap (240 boxes),cam1 COW_09 120; cam3 COW_09 120
+hprc_day2_c08,hprc_day2,2026-11-08 06:44:00,COW_05,COW_03,1.0,,overlap (120 boxes),cam1 COW_03 120
+hprc_day2_c08,hprc_day2,2026-11-08 06:44:00,COW_06,COW_07,0.5,,overlap_split (120 of 240 boxes; cameras disagree),cam1 COW_07 120; cam3 COW_03 120
+hprc_day2_c08,hprc_day2,2026-11-08 06:44:00,COW_07,COW_02,0.492,,overlap_split (116 of 236 boxes; cameras disagree),cam1 COW_02 116; cam3 COW_04 120
+hprc_day2_c08,hprc_day2,2026-11-08 06:44:00,COW_08,COW_04,1.0,,overlap (56 boxes),cam1 COW_04 56
+hprc_day2_c09,hprc_day2,2026-11-08 07:41:00,COW_01,COW_07,1.0,,overlap (240 boxes),cam1 COW_07 120; cam3 COW_07 120
+hprc_day2_c09,hprc_day2,2026-11-08 07:41:00,COW_02,COW_05,0.886,0.002,low_margin,cam1 COW_03 120
+hprc_day2_c09,hprc_day2,2026-11-08 07:41:00,COW_03,COW_01,0.752,,overlap_split (118 of 157 boxes; cameras disagree),cam1 COW_02 39; cam3 COW_01 118
+hprc_day2_c09,hprc_day2,2026-11-08 07:41:00,COW_04,COW_02,1.0,,overlap (120 boxes),cam3 COW_02 120
+hprc_day2_c09,hprc_day2,2026-11-08 07:41:00,COW_05,COW_10,1.0,,overlap (240 boxes),cam1 COW_10 120; cam3 COW_10 120
+hprc_day2_c09,hprc_day2,2026-11-08 07:41:00,COW_06,COW_09,0.504,,overlap_split (120 of 238 boxes; cameras disagree),cam1 COW_06 107; cam3 COW_09 120
+hprc_day2_c09,hprc_day2,2026-11-08 07:41:00,COW_07,COW_06,0.992,,overlap (120 boxes),cam1 COW_01 1; cam3 COW_06 120
+hprc_day2_c09,hprc_day2,2026-11-08 07:41:00,COW_08,COW_03,0.619,,overlap_split (120 of 194 boxes; cameras disagree),cam1 COW_09 74; cam3 COW_03 120
+hprc_day2_c09,hprc_day2,2026-11-08 07:41:00,COW_09,COW_04,0.893,0.093,matched,
+hprc_day2_c10,hprc_day2,2026-11-08 08:39:00,COW_01,COW_07,0.591,,overlap_split (120 of 203 boxes; cameras disagree),cam1 COW_03 69; cam3 COW_07 120
+hprc_day2_c10,hprc_day2,2026-11-08 08:39:00,COW_02,COW_01,0.916,,overlap (120 boxes),cam1 COW_03 11; cam3 COW_01 120
+hprc_day2_c10,hprc_day2,2026-11-08 08:39:00,COW_03,COW_09,0.968,,overlap (240 boxes),cam1 COW_09 120; cam2 COW_09 120; cam3 COW_04 8
+hprc_day2_c10,hprc_day2,2026-11-08 08:39:00,COW_04,COW_02,0.996,0.017,low_margin,cam1 COW_01 4
+hprc_day2_c10,hprc_day2,2026-11-08 08:39:00,COW_05,COW_05,0.5,,overlap_split (120 of 240 boxes; cameras disagree),cam2 COW_05 120; cam3 COW_02 120
+hprc_day2_c10,hprc_day2,2026-11-08 08:39:00,COW_06,COW_04,1.0,,overlap (117 boxes),cam1 COW_04 117
+hprc_day2_c10,hprc_day2,2026-11-08 08:39:00,COW_07,COW_10,0.987,0.0,low_margin,
+hprc_day2_c10,hprc_day2,2026-11-08 08:39:00,COW_08,COW_03,1.0,,overlap (150 boxes),cam1 COW_03 30; cam3 COW_03 120
+hprc_day2_c10,hprc_day2,2026-11-08 08:39:00,COW_09,COW_06,1.0,,overlap (117 boxes),cam1 COW_06 117
+hprc_day2_c11,hprc_day2,2026-11-08 09:37:00,COW_01,COW_03,0.264,,overlap_split (43 of 163 boxes; cameras disagree),cam1 COW_03 43; cam3 COW_07 120
+hprc_day2_c11,hprc_day2,2026-11-08 09:37:00,COW_02,COW_07,1.0,,overlap (120 boxes),cam1 COW_07 120
+hprc_day2_c11,hprc_day2,2026-11-08 09:37:00,COW_03,COW_09,1.0,,overlap (135 boxes),cam1 COW_09 15; cam3 COW_09 120
+hprc_day2_c11,hprc_day2,2026-11-08 09:37:00,COW_04,COW_06,0.516,,overlap_split (127 of 246 boxes; cameras disagree),cam1 COW_06 127; cam3 COW_01 119
+hprc_day2_c11,hprc_day2,2026-11-08 09:37:00,COW_05,COW_01,1.0,,overlap (120 boxes),cam1 COW_01 120
+hprc_day2_c11,hprc_day2,2026-11-08 09:37:00,COW_06,COW_04,0.872,0.013,low_margin,
+hprc_day2_c11,hprc_day2,2026-11-08 09:37:00,COW_07,COW_05,0.962,0.014,low_margin,cam3 COW_06 120
+hprc_day2_c11,hprc_day2,2026-11-08 09:37:00,COW_08,COW_10,1.0,,overlap (240 boxes),cam1 COW_10 120; cam3 COW_10 120
+hprc_day2_c12,hprc_day2,2026-11-08 10:34:00,COW_01,COW_07,1.0,,overlap (240 boxes),cam1 COW_07 120; cam3 COW_07 120
+hprc_day2_c12,hprc_day2,2026-11-08 10:34:00,COW_02,COW_09,0.876,,overlap (120 boxes),cam1 COW_06 17; cam3 COW_09 120
+hprc_day2_c12,hprc_day2,2026-11-08 10:34:00,COW_03,COW_01,0.603,,overlap_split (120 of 199 boxes; cameras disagree),cam1 COW_05 79; cam3 COW_01 120
+hprc_day2_c12,hprc_day2,2026-11-08 10:34:00,COW_04,COW_04,1.0,,overlap (235 boxes),cam1 COW_04 118; cam3 COW_04 117
+hprc_day2_c12,hprc_day2,2026-11-08 10:34:00,COW_05,COW_10,0.557,,overlap_split (108 of 194 boxes; cameras disagree),cam1 COW_10 108; cam3 COW_05 86
+hprc_day2_c12,hprc_day2,2026-11-08 10:34:00,COW_06,COW_03,0.444,,overlap_split (24 of 54 boxes; cameras disagree),cam1 COW_01 30; cam3 COW_03 24
+hprc_day2_c12,hprc_day2,2026-11-08 10:34:00,COW_07,COW_06,0.986,0.0,low_margin,
+hprc_day2_c12,hprc_day2,2026-11-08 10:34:00,COW_08,COW_02,0.995,0.015,low_margin,
+hprc_day2_c13,hprc_day2,2026-11-08 11:32:00,COW_01,COW_06,1.0,,overlap (240 boxes),cam1 COW_06 120; cam3 COW_06 120
+hprc_day2_c13,hprc_day2,2026-11-08 11:32:00,COW_02,COW_04,0.504,,overlap_split (115 of 228 boxes; cameras disagree),cam1 COW_07 113; cam3 COW_04 115
+hprc_day2_c13,hprc_day2,2026-11-08 11:32:00,COW_03,COW_01,1.0,,overlap (240 boxes),cam1 COW_01 120; cam3 COW_01 120
+hprc_day2_c13,hprc_day2,2026-11-08 11:32:00,COW_04,COW_09,1.0,,overlap (240 boxes),cam1 COW_09 120; cam3 COW_09 120
+hprc_day2_c13,hprc_day2,2026-11-08 11:32:00,COW_05,COW_02,0.963,0.368,matched,
+hprc_day2_c13,hprc_day2,2026-11-08 11:32:00,COW_06,COW_10,1.0,,overlap (240 boxes),cam1 COW_10 120; cam3 COW_10 120
+hprc_day2_c13,hprc_day2,2026-11-08 11:32:00,COW_07,COW_03,0.569,,overlap_split (120 of 211 boxes; cameras disagree),cam1 COW_02 91; cam3 COW_03 120
+hprc_day2_c13,hprc_day2,2026-11-08 11:32:00,COW_08,COW_07,1.0,,overlap (114 boxes),cam3 COW_07 114
+hprc_day2_c14,hprc_day2,2026-11-08 12:30:00,COW_01,COW_09,0.5,,overlap_split (120 of 240 boxes; cameras disagree),cam1 COW_03 120; cam3 COW_09 120
+hprc_day2_c14,hprc_day2,2026-11-08 12:30:00,COW_02,COW_02,1.0,,overlap (138 boxes),cam1 COW_02 18; cam3 COW_02 120
+hprc_day2_c14,hprc_day2,2026-11-08 12:30:00,COW_03,COW_04,1.0,,overlap (233 boxes),cam1 COW_04 113; cam3 COW_04 120
+hprc_day2_c14,hprc_day2,2026-11-08 12:30:00,COW_04,COW_07,0.704,,overlap_split (221 of 314 boxes; cameras disagree),cam1 COW_07 102; cam3 COW_07 119
+hprc_day2_c14,hprc_day2,2026-11-08 12:30:00,COW_05,COW_06,0.988,0.468,matched,
+hprc_day2_c14,hprc_day2,2026-11-08 12:30:00,COW_06,COW_03,1.0,,overlap (120 boxes),cam3 COW_03 120
+hprc_day2_c14,hprc_day2,2026-11-08 12:30:00,COW_07,COW_01,1.0,,overlap (120 boxes),cam3 COW_01 120
+hprc_day2_c14,hprc_day2,2026-11-08 12:30:00,COW_08,COW_10,1.0,,overlap (238 boxes),cam1 COW_10 120; cam3 COW_10 118
+hprc_day2_c15,hprc_day2,2026-11-08 13:28:00,COW_01,COW_01,1.0,,overlap (120 boxes),cam1 COW_01 120
+hprc_day2_c15,hprc_day2,2026-11-08 13:28:00,COW_02,COW_09,1.0,,overlap (240 boxes),cam1 COW_09 120; cam3 COW_09 120
+hprc_day2_c15,hprc_day2,2026-11-08 13:28:00,COW_03,COW_06,1.0,,overlap (240 boxes),cam1 COW_06 120; cam3 COW_06 120
+hprc_day2_c15,hprc_day2,2026-11-08 13:28:00,COW_04,COW_02,1.0,,overlap (240 boxes),cam1 COW_02 120; cam3 COW_02 120
+hprc_day2_c15,hprc_day2,2026-11-08 13:28:00,COW_05,COW_04,0.755,,overlap_split (120 of 159 boxes; cameras disagree),cam1 COW_07 39; cam3 COW_04 120
+hprc_day2_c15,hprc_day2,2026-11-08 13:28:00,COW_06,COW_07,0.508,,overlap_split (120 of 236 boxes; cameras disagree),cam1 COW_04 116; cam3 COW_07 120
+hprc_day2_c15,hprc_day2,2026-11-08 13:28:00,COW_07,COW_03,1.0,,overlap (240 boxes),cam1 COW_03 120; cam3 COW_03 120
+hprc_day2_c15,hprc_day2,2026-11-08 13:28:00,COW_08,COW_10,0.502,,overlap_split (120 of 239 boxes; cameras disagree),cam1 COW_07 119; cam3 COW_10 120
+hprc_day2_c16,hprc_day2,2026-11-08 14:25:00,COW_01,COW_07,1.0,,overlap (120 boxes),cam1 COW_07 120
+hprc_day2_c16,hprc_day2,2026-11-08 14:25:00,COW_02,COW_09,1.0,,overlap (347 boxes),cam1 COW_09 120; cam2 COW_09 110; cam3 COW_09 117
+hprc_day2_c16,hprc_day2,2026-11-08 14:25:00,COW_03,COW_06,1.0,,overlap (359 boxes),cam1 COW_06 120; cam2 COW_06 120; cam3 COW_06 119
+hprc_day2_c16,hprc_day2,2026-11-08 14:25:00,COW_04,COW_10,1.0,,overlap (240 boxes),cam1 COW_10 120; cam3 COW_10 120
+hprc_day2_c16,hprc_day2,2026-11-08 14:25:00,COW_05,COW_04,0.48,,overlap_split (120 of 250 boxes; cameras disagree),cam1 COW_03 120; cam3 COW_04 120
+hprc_day2_c16,hprc_day2,2026-11-08 14:25:00,COW_06,COW_01,1.0,,overlap (190 boxes),cam1 COW_01 120; cam3 COW_01 70
+hprc_day2_c16,hprc_day2,2026-11-08 14:25:00,COW_07,COW_02,1.0,,overlap (240 boxes),cam1 COW_02 120; cam3 COW_02 120
+hprc_day2_c16,hprc_day2,2026-11-08 14:25:00,COW_08,COW_03,0.992,0.391,matched,cam3 COW_07 13
+hprc_day2_c17,hprc_day2,2026-11-08 15:23:00,COW_01,COW_07,0.998,-0.0,low_margin,
+hprc_day2_c17,hprc_day2,2026-11-08 15:23:00,COW_02,COW_05,0.869,-0.109,low_margin,
+hprc_day2_c17,hprc_day2,2026-11-08 15:23:00,COW_03,COW_02,0.997,0.004,low_margin,
+hprc_day2_c17,hprc_day2,2026-11-08 15:23:00,COW_04,COW_03,0.994,0.0,low_margin,
+hprc_day2_c17,hprc_day2,2026-11-08 15:23:00,COW_05,COW_10,0.995,0.0,low_margin,
+hprc_day2_c17,hprc_day2,2026-11-08 15:23:00,COW_06,COW_09,0.473,,overlap_split (105 of 222 boxes; cameras disagree),cam1 COW_09 105; cam3 COW_04 117
+hprc_day2_c17,hprc_day2,2026-11-08 15:23:00,COW_07,COW_06,0.989,0.009,low_margin,
+hprc_day2_c17,hprc_day2,2026-11-08 15:23:00,COW_08,COW_04,1.0,,overlap (120 boxes),cam1 COW_04 120
+hprc_day2_c17,hprc_day2,2026-11-08 15:23:00,COW_09,COW_01,0.997,-0.0,low_margin,
+hprc_day2_c18,hprc_day2,2026-11-08 16:21:00,COW_01,COW_10,1.0,,overlap (59 boxes),cam1 COW_10 48; cam3 COW_10 11
+hprc_day2_c18,hprc_day2,2026-11-08 16:21:00,COW_02,COW_09,0.5,,overlap_split (120 of 240 boxes; cameras disagree),cam1 COW_07 120; cam3 COW_09 120
+hprc_day2_c18,hprc_day2,2026-11-08 16:21:00,COW_03,COW_04,1.0,,overlap (360 boxes),cam1 COW_04 120; cam2 COW_04 120; cam3 COW_04 120
+hprc_day2_c18,hprc_day2,2026-11-08 16:21:00,COW_04,COW_02,1.0,,overlap (240 boxes),cam1 COW_02 120; cam3 COW_02 120
+hprc_day2_c18,hprc_day2,2026-11-08 16:21:00,COW_05,COW_03,0.931,0.0,low_margin,
+hprc_day2_c18,hprc_day2,2026-11-08 16:21:00,COW_06,COW_05,0.968,0.055,matched,
+hprc_day2_c18,hprc_day2,2026-11-08 16:21:00,COW_07,COW_06,1.0,,overlap (120 boxes),cam3 COW_06 120
+hprc_day2_c18,hprc_day2,2026-11-08 16:21:00,COW_08,COW_01,1.0,,overlap (240 boxes),cam1 COW_01 120; cam3 COW_01 120
+hprc_day2_c18,hprc_day2,2026-11-08 16:21:00,COW_09,COW_07,0.934,0.004,low_margin,cam1 COW_06 120
+hprc_day2_c18,hprc_day2,2026-11-08 16:21:00,COW_10,COW_08,0.903,-0.017,low_margin,
+hprc_day2_c19,hprc_day2,2026-11-08 17:18:00,COW_01,COW_09,0.981,0.0,low_margin,cam1 COW_06 7
+hprc_day2_c19,hprc_day2,2026-11-08 17:18:00,COW_02,COW_06,1.0,,overlap (28 boxes),cam3 COW_06 28
+hprc_day2_c19,hprc_day2,2026-11-08 17:18:00,COW_03,COW_05,1.0,,overlap (89 boxes),cam3 COW_05 89
+hprc_day2_c19,hprc_day2,2026-11-08 17:18:00,COW_04,COW_07,0.762,,overlap_split (112 of 147 boxes; cameras disagree),cam1 COW_09 35; cam3 COW_07 112
+hprc_day2_c19,hprc_day2,2026-11-08 17:18:00,COW_05,COW_10,1.0,,overlap (120 boxes),cam2 COW_10 120
+hprc_day2_c19,hprc_day2,2026-11-08 17:18:00,COW_06,COW_02,1.0,,overlap (240 boxes),cam1 COW_02 120; cam3 COW_02 120
+hprc_day2_c19,hprc_day2,2026-11-08 17:18:00,COW_07,COW_08,0.989,0.024,low_margin,
+hprc_day2_c19,hprc_day2,2026-11-08 17:18:00,COW_08,COW_03,0.945,0.043,low_margin,cam1 COW_05 20
+hprc_day2_c19,hprc_day2,2026-11-08 17:18:00,COW_09,COW_01,1.0,,overlap (240 boxes),cam1 COW_01 120; cam2 COW_01 120
+hprc_day2_c20,hprc_day2,2026-11-08 18:16:00,COW_01,COW_07,1.0,,overlap (240 boxes),cam1 COW_07 120; cam3 COW_07 120
+hprc_day2_c20,hprc_day2,2026-11-08 18:16:00,COW_02,COW_03,0.491,,overlap_split (114 of 232 boxes; cameras disagree),cam1 COW_10 118; cam3 COW_03 114
+hprc_day2_c20,hprc_day2,2026-11-08 18:16:00,COW_03,COW_08,1.0,,overlap (166 boxes),cam1 COW_08 104; cam3 COW_08 62
+hprc_day2_c20,hprc_day2,2026-11-08 18:16:00,COW_04,COW_05,1.0,,overlap (237 boxes),cam1 COW_05 117; cam3 COW_05 120
+hprc_day2_c20,hprc_day2,2026-11-08 18:16:00,COW_05,COW_09,1.0,,overlap (120 boxes),cam1 COW_09 120
+hprc_day2_c20,hprc_day2,2026-11-08 18:16:00,COW_06,COW_02,1.0,,overlap (240 boxes),cam1 COW_02 120; cam3 COW_02 120
+hprc_day2_c20,hprc_day2,2026-11-08 18:16:00,COW_07,COW_10,1.0,,overlap (120 boxes),cam3 COW_10 120
+hprc_day2_c20,hprc_day2,2026-11-08 18:16:00,COW_08,COW_01,0.997,0.0,low_margin,
+hprc_day2_c20,hprc_day2,2026-11-08 18:16:00,COW_09,COW_04,0.985,0.007,low_margin,cam1 COW_03 28
+hprc_day2_c21,hprc_day2,2026-11-08 19:14:00,COW_01,COW_10,1.0,,overlap (240 boxes),cam1 COW_10 120; cam3 COW_10 120
+hprc_day2_c21,hprc_day2,2026-11-08 19:14:00,COW_02,COW_02,0.996,0.006,low_margin,
+hprc_day2_c21,hprc_day2,2026-11-08 19:14:00,COW_03,COW_01,1.0,,overlap (238 boxes),cam1 COW_01 118; cam3 COW_01 120
+hprc_day2_c21,hprc_day2,2026-11-08 19:14:00,COW_04,COW_07,0.674,,overlap_split (240 of 356 boxes; cameras disagree),cam1 COW_07 120; cam3 COW_07 120
+hprc_day2_c21,hprc_day2,2026-11-08 19:14:00,COW_05,COW_09,1.0,,overlap (120 boxes),cam1 COW_09 120
+hprc_day2_c21,hprc_day2,2026-11-08 19:14:00,COW_06,COW_03,1.0,,overlap (120 boxes),cam3 COW_03 120
+hprc_day2_c21,hprc_day2,2026-11-08 19:14:00,COW_07,COW_06,0.983,0.0,low_margin,
+hprc_day2_c21,hprc_day2,2026-11-08 19:14:00,COW_08,COW_04,0.825,,overlap (203 boxes),cam1 COW_04 88; cam3 COW_04 115
+hprc_day2_c21,hprc_day2,2026-11-08 19:14:00,COW_09,COW_08,0.918,0.085,matched,cam3 COW_08 3
+hprc_day2_c22,hprc_day2,2026-11-08 20:11:00,COW_01,COW_10,1.0,,overlap (120 boxes),cam1 COW_10 120
+hprc_day2_c22,hprc_day2,2026-11-08 20:11:00,COW_02,COW_06,1.0,,overlap (234 boxes),cam1 COW_06 120; cam3 COW_06 114
+hprc_day2_c22,hprc_day2,2026-11-08 20:11:00,COW_03,COW_02,0.938,0.009,low_margin,cam3 COW_08 120
+hprc_day2_c22,hprc_day2,2026-11-08 20:11:00,COW_04,COW_01,1.0,,overlap (234 boxes),cam1 COW_01 114; cam3 COW_01 120
+hprc_day2_c22,hprc_day2,2026-11-08 20:11:00,COW_05,COW_03,1.0,,overlap (223 boxes),cam1 COW_03 103; cam3 COW_03 120
+hprc_day2_c22,hprc_day2,2026-11-08 20:11:00,COW_06,COW_09,0.5,,overlap_split (120 of 240 boxes; cameras disagree),cam1 COW_04 120; cam3 COW_09 120
+hprc_day2_c22,hprc_day2,2026-11-08 20:11:00,COW_07,COW_08,0.5,,overlap_split (120 of 240 boxes; cameras disagree),cam1 COW_08 120; cam3 COW_10 120
+hprc_day2_c23,hprc_day2,2026-11-08 21:09:00,COW_01,COW_10,0.566,,overlap_split (120 of 212 boxes; cameras disagree),cam1 COW_10 120; cam3 COW_01 92
+hprc_day2_c23,hprc_day2,2026-11-08 21:09:00,COW_02,COW_09,0.986,0.011,low_margin,cam1 COW_06 120; cam3 COW_08 38
+hprc_day2_c23,hprc_day2,2026-11-08 21:09:00,COW_03,COW_07,0.993,-0.003,low_margin,
+hprc_day2_c23,hprc_day2,2026-11-08 21:09:00,COW_04,COW_06,1.0,,overlap (120 boxes),cam3 COW_06 120
+hprc_day2_c23,hprc_day2,2026-11-08 21:09:00,COW_05,COW_08,1.0,,overlap (223 boxes),cam1 COW_08 33; cam3 COW_08 190
+hprc_day2_c23,hprc_day2,2026-11-08 21:09:00,COW_06,COW_02,1.0,,overlap (240 boxes),cam1 COW_02 120; cam3 COW_02 120
+hprc_day2_c23,hprc_day2,2026-11-08 21:09:00,COW_07,COW_03,0.5,,overlap_split (120 of 240 boxes; cameras disagree),cam1 COW_03 120; cam3 COW_10 120
+hprc_day2_c23,hprc_day2,2026-11-08 21:09:00,COW_08,COW_05,0.997,0.001,low_margin,
+hprc_day2_c23,hprc_day2,2026-11-08 21:09:00,COW_09,COW_04,0.979,0.126,matched,
+hprc_day2_c24,hprc_day2,2026-11-08 22:07:00,COW_01,COW_10,1.0,,overlap (240 boxes),cam1 COW_10 120; cam3 COW_10 120
+hprc_day2_c24,hprc_day2,2026-11-08 22:07:00,COW_02,COW_07,1.0,,overlap (240 boxes),cam1 COW_07 120; cam3 COW_07 120
+hprc_day2_c24,hprc_day2,2026-11-08 22:07:00,COW_03,COW_03,0.5,,overlap_split (120 of 240 boxes; cameras disagree),cam1 COW_03 120; cam3 COW_06 120
+hprc_day2_c24,hprc_day2,2026-11-08 22:07:00,COW_04,COW_08,1.0,,overlap (239 boxes),cam1 COW_08 120; cam3 COW_08 119
+hprc_day2_c24,hprc_day2,2026-11-08 22:07:00,COW_05,COW_09,0.538,,overlap_split (120 of 223 boxes; cameras disagree),cam1 COW_09 120; cam3 COW_03 103
+hprc_day2_c24,hprc_day2,2026-11-08 22:07:00,COW_06,COW_05,1.0,,overlap (233 boxes),cam1 COW_05 113; cam3 COW_05 120
+hprc_day2_c24,hprc_day2,2026-11-08 22:07:00,COW_07,COW_04,0.975,0.011,low_margin,cam3 COW_09 118
+hprc_day2_c24,hprc_day2,2026-11-08 22:07:00,COW_08,COW_01,0.985,0.02,low_margin,
+hprc_day2_c24,hprc_day2,2026-11-08 22:07:00,COW_09,COW_02,0.969,0.003,low_margin,
+hprc_day2_c24,hprc_day2,2026-11-08 22:07:00,COW_10,COW_06,1.0,,overlap (120 boxes),cam1 COW_06 120
+hprc_day2_c25,hprc_day2,2026-11-08 23:04:00,COW_01,COW_07,0.5,,overlap_split (120 of 240 boxes; cameras disagree),cam1 COW_08 120; cam3 COW_07 120
+hprc_day2_c25,hprc_day2,2026-11-08 23:04:00,COW_02,COW_05,0.491,,overlap_split (110 of 224 boxes; cameras disagree),cam1 COW_05 13; cam2 COW_03 114; cam3 COW_05 97
+hprc_day2_c25,hprc_day2,2026-11-08 23:04:00,COW_03,COW_03,0.657,,overlap_split (238 of 362 boxes; cameras disagree),cam1 COW_03 118; cam2 COW_06 124; cam3 COW_03 120
+hprc_day2_c25,hprc_day2,2026-11-08 23:04:00,COW_04,COW_02,0.956,,overlap (263 boxes),cam1 COW_02 58; cam2 COW_02 85; cam3 COW_02 120
+hprc_day2_c25,hprc_day2,2026-11-08 23:04:00,COW_05,COW_04,1.0,,overlap (120 boxes),cam1 COW_04 120
+hprc_day2_c25,hprc_day2,2026-11-08 23:04:00,COW_06,COW_01,0.85,0.0,low_margin,
+hprc_day2_c25,hprc_day2,2026-11-08 23:04:00,COW_07,COW_08,1.0,0.163,matched,cam3 COW_04 119
+hprc_day2_c25,hprc_day2,2026-11-08 23:04:00,COW_08,COW_10,1.0,,overlap (120 boxes),cam3 COW_10 120
+hprc_day2_c25,hprc_day2,2026-11-08 23:04:00,COW_09,COW_09,1.0,,overlap (183 boxes),cam1 COW_09 63; cam3 COW_09 120
+hprc_day2_c25,hprc_day2,2026-11-08 23:04:00,COW_10,COW_06,1.0,,overlap (119 boxes),cam1 COW_06 119

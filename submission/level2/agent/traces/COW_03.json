@@ -1,0 +1,191 @@
+{
+ "cow_id": "COW_03",
+ "seconds": 37.2,
+ "tool_calls": 3,
+ "steps": [
+  {
+   "thought": "COW_03 is rank 6, modest score. The top deviations in the sick direction are longest_meal_gap (+2.4) and feeding_share trend (+1.6), but interestingly feeding_share itself is high (13% vs 9%, negative contribution) and bunk_visit_min is long (16.4 vs 9.5). This cow actually feeds MORE per visit but fewer visits \u2014 contradictory. Let me check the breathing deviation (slightly elevated bpm/effort) and look for clinical signs via gallery first for head signs.",
+   "tool": "gallery",
+   "args": {
+    "cow_id": "COW_03",
+    "n": 6
+   },
+   "result": "6 gallery crops: [I0051] 11-08 16:26:49 cam2 1393 px, [I0052] 11-07 14:20:11 cam1 1291 px, [I0053] 11-07 13:48:49 cam2 1238 px, [I0054] 11-07 08:01:00 cam2 1226 px, [I0055] 11-08 17:42:29 cam1 1191 px, [I0056] 11-07 10:16:44 cam1 1164 px",
+   "facts": [],
+   "model": "protected.Claude Opus 4.8"
+  },
+  {
+   "thought": "The gallery crops are mostly backs/rumps from the overhead cameras \u2014 heads down at the bunk eating. None give a clear head-on view for ears/eyes/nose. Most show cows at the bunk feeding (head down = normal eating posture, not head_low abnormal). I need a head crop facing toward/side-on. Let me try get_crop on the one that might show a head \u2014 I0051 or I0054 appear to have heads visible. Let me get a head crop around a close feeding moment and check breathing, since bpm is the only mildly elevated vital. Actually breathing matters more clinically. Let me check breathing to confirm the resting rate.",
+   "tool": "breathing",
+   "args": {
+    "cow_id": "COW_03"
+   },
+   "result": "[I0057] COW_03: 12 windows, 5 valid; median 23/min; herd median of cows 21/min (n=10). Typical resting adult cattle: about 26-50/min.\n11-07 14:53:28 cam1 18/min quality 19.5 valid box 644 px\n11-07 14:53:27 cam2 18/min quality 14.8 valid box 495 px\n11-08 06:43:07 cam3 23/min quality 10.4 valid box 572 px\n11-07 12:52:29 cam1 23/min quality 6.9 valid box 1072 px\n11-07 07:57:41 cam1 39/min quality 5.3 valid box 1057 px\n11-08 23:24:01 cam1 23/min quality 3.3 rejected box 1033 px\n11-08 16:46:30 cam1 46/min quality 3.0 rejected box 416 px\n11-07 12:52:29 cam2 23/min quality 2.8 rejected box 1144 px",
+   "facts": [
+    "I0057"
+   ],
+   "model": "protected.Claude Opus 4.8"
+  },
+  {
+   "thought": "Breathing is 23/min, actually BELOW the typical resting range of 26-50, and near herd median (21). Not elevated clinically \u2014 the +0.6 z is noise on 2.5h. No respiratory concern. The feeding deviations: feeding_share is HIGH (13% vs 9%) and bunk visits long \u2014 this cow spends longer at the bunk per visit, which is the OPPOSITE of a sick signature. The longest_meal_gap (+2.4) is likely a single overnight gap on short coverage, not sustained appetite loss, and feed_call_latency is normal (18.2 vs 19.1). The gallery gave me no head-on view, so head signs are not_assessable. I'll use my last call to get a head crop to try to assess ears/eyes/nose. I0051 (cam2, 1393px) looked most head-visible.",
+   "tool": "get_crop",
+   "args": {
+    "cow_id": "COW_03",
+    "time": "11-08 16:26:49",
+    "camera": "cam2",
+    "region": "head",
+    "enhance": true
+   },
+   "result": "[I0058] COW_03 cam2 11-08 16:26:49 head, box 1393 px, facing side-on, daylight",
+   "facts": [
+    "I0058"
+   ],
+   "model": "protected.Claude Opus 4.8"
+  },
+  {
+   "thought": "The head crop shows COW_03 at the bunk with its head down, muzzle in the feed \u2014 eating. The head is side-on but reaching into the trough actively feeding. I can see the muzzle/nose region but it's buried in feed; no gross discharge visible, no ear detail at this angle (ears are soft/foreshortened from the overhead view). This is normal feeding posture, not head_low. Ears not clearly assessable. No nasal/ocular detail. Breathing is normal (23/min, below sick range). The feeding deviations are contradictory with illness: this cow eats MORE per visit and spends more total time feeding \u2014 not the sick-direction appetite loss. The longest_meal_gap is a short-coverage overnight artifact-like noise but per rules I can't call it an artifact without image evidence, so I'll report it as a believed-but-benign deviation rather than an artifact. I'll finalize.",
+   "final": {
+    "signs": {
+     "head_low": {
+      "status": "absent",
+      "evidence": [
+       "I0058",
+       "I0051"
+      ],
+      "note": "Head carried down only while actively feeding at the bunk (muzzle in feed) \u2014 normal eating posture, not abnormal head carriage."
+     },
+     "ears_droop": {
+      "status": "not_assessable",
+      "evidence": [
+       "I0058"
+      ],
+      "note": "Overhead side-on views foreshorten the ears while the cow is at the bunk; no clear head-on crop to judge ear carriage."
+     },
+     "nasal_discharge": {
+      "status": "not_assessable",
+      "evidence": [
+       "I0058"
+      ],
+      "note": "Muzzle buried in feed; no clean daylight head-on view >=450px to assess nasal discharge."
+     },
+     "ocular_discharge": {
+      "status": "not_assessable",
+      "evidence": [
+       "I0058"
+      ],
+      "note": "No clear eye-region view at >=450px daylight; head-on crop not available."
+     },
+     "labored_breathing": {
+      "status": "absent",
+      "evidence": [
+       "I0057"
+      ],
+      "note": "Resting rate 23/min (herd median 21), below the typical 26-50 range; no open-mouth or extended-neck effort seen."
+     },
+     "cough": {
+      "status": "not_assessable",
+      "evidence": [
+       "F-COW_03-jerk_rate"
+      ],
+      "note": "Jerk rate 28.1/h is below herd median (30.2); no coughing posture captured in a sequence."
+     },
+     "gaunt": {
+      "status": "absent",
+      "evidence": [
+       "I0051",
+       "I0055",
+       "I0058"
+      ],
+      "note": "Overhead body/rump crops show full, well-filled topline and flank; no hollow/empty look."
+     }
+    },
+    "artifacts": [],
+    "behavior_assessment": "The headline deviations point the wrong way for illness. feeding_share is HIGH (13% vs 9%*, F-COW_03-feeding_share), with long bunk visits (16.4 vs 9.5 min, F-COW_03-bunk_visit_min) and long meals (12.6 vs 8.7, F-COW_03-meal_min) \u2014 this cow eats longer, not less. feed_call_latency is normal (F-COW_03-feed_call_latency). The longest_meal_gap of 532 min (+2.4, F-COW_03-longest_meal_gap_min) is a single long overnight gap on 39 h of coverage and is contradicted by otherwise strong/above-median feeding; I believe it is real but benign (an overnight non-feeding interval), not an appetite-loss signal. Breathing (F-COW_03-breathing_bpm) is confirmed normal on images. Lying, rumination, isolation and social metrics are all near herd median.",
+    "summary": "COW_03 is a low-concern animal (rank 6/10) that actually feeds more and longer than the herd, breathes normally (23/min), and shows no visible gaunt, head-low or labored breathing. The one 'sick-direction' number \u2014 a long overnight meal gap \u2014 is contradicted by its strong overall appetite, so no respiratory-disease action is warranted. Head signs (ears, nose, eyes) could not be judged because only overhead at-bunk views were available; recheck with a head-on crop if clinical suspicion rises.",
+    "key_evidence": [
+     "F-COW_03-feeding_share",
+     "F-COW_03-bunk_visit_min",
+     "F-COW_03-longest_meal_gap_min",
+     "I0057",
+     "I0058",
+     "I0051"
+    ],
+    "confidence": 0.78
+   },
+   "model": "protected.Claude Opus 4.8"
+  }
+ ],
+ "self_check_first": [],
+ "self_check_after_revision": [],
+ "final": {
+  "signs": {
+   "head_low": {
+    "status": "absent",
+    "evidence": [
+     "I0058",
+     "I0051"
+    ],
+    "note": "Head carried down only while actively feeding at the bunk (muzzle in feed) \u2014 normal eating posture, not abnormal head carriage."
+   },
+   "ears_droop": {
+    "status": "not_assessable",
+    "evidence": [
+     "I0058"
+    ],
+    "note": "Overhead side-on views foreshorten the ears while the cow is at the bunk; no clear head-on crop to judge ear carriage."
+   },
+   "nasal_discharge": {
+    "status": "not_assessable",
+    "evidence": [
+     "I0058"
+    ],
+    "note": "Muzzle buried in feed; no clean daylight head-on view >=450px to assess nasal discharge."
+   },
+   "ocular_discharge": {
+    "status": "not_assessable",
+    "evidence": [
+     "I0058"
+    ],
+    "note": "No clear eye-region view at >=450px daylight; head-on crop not available."
+   },
+   "labored_breathing": {
+    "status": "absent",
+    "evidence": [
+     "I0057"
+    ],
+    "note": "Resting rate 23/min (herd median 21), below the typical 26-50 range; no open-mouth or extended-neck effort seen."
+   },
+   "cough": {
+    "status": "not_assessable",
+    "evidence": [
+     "F-COW_03-jerk_rate"
+    ],
+    "note": "Jerk rate 28.1/h is below herd median (30.2); no coughing posture captured in a sequence."
+   },
+   "gaunt": {
+    "status": "absent",
+    "evidence": [
+     "I0051",
+     "I0055",
+     "I0058"
+    ],
+    "note": "Overhead body/rump crops show full, well-filled topline and flank; no hollow/empty look."
+   }
+  },
+  "artifacts": [],
+  "behavior_assessment": "The headline deviations point the wrong way for illness. feeding_share is HIGH (13% vs 9%*, F-COW_03-feeding_share), with long bunk visits (16.4 vs 9.5 min, F-COW_03-bunk_visit_min) and long meals (12.6 vs 8.7, F-COW_03-meal_min) \u2014 this cow eats longer, not less. feed_call_latency is normal (F-COW_03-feed_call_latency). The longest_meal_gap of 532 min (+2.4, F-COW_03-longest_meal_gap_min) is a single long overnight gap on 39 h of coverage and is contradicted by otherwise strong/above-median feeding; I believe it is real but benign (an overnight non-feeding interval), not an appetite-loss signal. Breathing (F-COW_03-breathing_bpm) is confirmed normal on images. Lying, rumination, isolation and social metrics are all near herd median.",
+  "summary": "COW_03 is a low-concern animal (rank 6/10) that actually feeds more and longer than the herd, breathes normally (23/min), and shows no visible gaunt, head-low or labored breathing. The one 'sick-direction' number \u2014 a long overnight meal gap \u2014 is contradicted by its strong overall appetite, so no respiratory-disease action is warranted. Head signs (ears, nose, eyes) could not be judged because only overhead at-bunk views were available; recheck with a head-on crop if clinical suspicion rises.",
+  "key_evidence": [
+   "F-COW_03-feeding_share",
+   "F-COW_03-bunk_visit_min",
+   "F-COW_03-longest_meal_gap_min",
+   "I0057",
+   "I0058",
+   "I0051"
+  ],
+  "confidence": 0.78
+ },
+ "models": [
+  "protected.Claude Opus 4.8"
+ ]
+}

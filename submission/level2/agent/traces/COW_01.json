@@ -1,0 +1,272 @@
+{
+ "cow_id": "COW_01",
+ "seconds": 56.5,
+ "tool_calls": 8,
+ "steps": [
+  {
+   "thought": "Main deviations: reduced feeding (feeding_share, shorter meals/bunk visits), more lying, and a social trend (fewer cows within 3m, drifting). Breathing effort is slightly up but bpm normal. Let me check feeding trend first to see if it's sustained and when it started.",
+   "tool": "trend",
+   "args": {
+    "cow_id": "COW_01",
+    "indicator": "feeding_share",
+    "block_h": 6
+   },
+   "result": "[I0021] sustained deviation starts in block 11-07 12h\n11-07 00h: COW_01 0 vs herd 0.0265 (dev +0.7)\n11-07 06h: COW_01 0.00995 vs herd 0.0734 (dev +1.1)\n11-07 12h: COW_01 0.0542 vs herd 0.265 (dev +3.8)\n11-07 18h: COW_01 0.0244 vs herd 0.0331 (dev +0.3)\n11-08 00h: COW_01 0.0152 vs herd 0.0456 (dev +0.6)\n11-08 06h: COW_01 0.0597 vs herd 0.0723 (dev +0.3)\n11-08 12h: COW_01 0.123 vs herd 0.139 (dev +0.5)\n11-08 18h: COW_01 0.0051 vs herd 0.0213 (dev +0.5)\n11-09 00h: COW_01 nan vs herd 0 (dev +nan)",
+   "facts": [
+    "I0021"
+   ],
+   "model": "protected.Claude Opus 4.8"
+  },
+  {
+   "thought": "The big feeding gap is in the 11-07 12h block (herd rushed to feed, cow lagged). Otherwise mostly tracks the herd band. The feeding deficit is driven by the midday feed rush. Let me check feed_response to see if the cow is slow to the bunk or short at it.",
+   "tool": "feed_response",
+   "args": {
+    "cow_id": "COW_01"
+   },
+   "result": "trough change cam2 at 11-07 00:09:42: COW_01 reached bunk after never (30 min), stayed 0 min; herd median nan min / 0 min\ntrough change cam1 at 11-07 00:37:17: COW_01 reached bunk after never (30 min), stayed 0 min; herd median nan min / 0 min\ntrough change cam2 at 11-07 00:53:27: COW_01 reached bunk after never (30 min), stayed 0 min; herd median 22 min / 0 min\ntrough change cam3 at 11-07 00:57:36: COW_01 reached bunk after never (30 min), stayed 0 min; herd median 22 min / 0 min\nherd rush at 11-07 01:28:00: COW_01 reached bunk after never (30 min), stayed 0 min; herd median 2 min / 3 min\ntrough change cam1 at 11-07 01:28:02: COW_01 reached bunk after never (30 min), stayed 0 min; herd median 2 min / 3 min\ntrough change cam3 at 11-07 01:28:51: COW_01 reached bunk after never (30 min), stayed 0 min; herd median 1 min / 3 min\ntrough change cam2 at 11-07 01:46:42: COW_01 reached bunk after never (30 min), stayed 0 min; herd median -1 min / 0 min\ntrough change cam1 at 11-07 02:33:02: COW_01 reached bunk after never (30 min), stayed 0 min; herd median nan min / 0 min\ntrough change cam2 at 11-07 03:27:42: COW_01 reached bunk after never (30 min), stayed 0 min; herd median 28 min / 0 min\nherd rush at 11-07 06:24:00: COW_01 reached bunk after never (30 min), stayed 0 min; herd median 0 min / 0 min\ntrough change cam3 at 11-07 06:24:00: COW_01 reached bunk after never (30 min), stayed 0 min; herd median 0 min / 0 min\ntrough change cam1 at 11-07 06:31:15: COW_01 reached bunk after neve",
+   "facts": [],
+   "model": "protected.Claude Opus 4.8"
+  },
+  {
+   "thought": "Feed response is actually quite normal on many rushes \u2014 on big rushes (11-08 09:39 stayed 27 min, 11-08 16:16 stayed 23 min, 11-08 06:32 stayed 16 min) she responds well, matching the herd. The feed deficit is largely from skipping some rushes but she eats well on major ones. Appetite is not severely impaired. Now let me look at the cow visually \u2014 gallery for daylight head crops to assess clinical signs.",
+   "tool": "gallery",
+   "args": {
+    "cow_id": "COW_01",
+    "n": 8
+   },
+   "result": "8 gallery crops: [I0022] 11-07 16:26:19 cam1 1380 px, [I0023] 11-08 10:12:37 cam1 1172 px, [I0024] 11-08 16:36:51 cam2 1170 px, [I0025] 11-08 14:47:39 cam2 1140 px, [I0026] 11-08 17:14:38 cam1 1024 px, [I0027] 11-07 07:18:45 cam1 965 px, [I0028] 11-07 08:13:38 cam3 852 px, [I0029] 11-08 07:09:45 cam3 838 px",
+   "facts": [],
+   "model": "protected.Claude Opus 4.8"
+  },
+  {
+   "thought": "Several daylight crops. I0027 (11-07 07:18, cam1, 965px) shows a cow facing side-on/toward with head up \u2014 good candidate for a head crop. Let me get a head crop there to assess ears/eyes/nose.",
+   "tool": "get_crop",
+   "args": {
+    "cow_id": "COW_01",
+    "time": "11-07 07:18:45",
+    "camera": "cam1",
+    "region": "head",
+    "enhance": true
+   },
+   "result": "[I0030] COW_01 cam1 11-07 07:18:45 head, box 965 px, facing side-on, daylight",
+   "facts": [
+    "I0030"
+   ],
+   "model": "protected.Claude Opus 4.8"
+  },
+  {
+   "thought": "That crop shows a body/leg through fence rails, not a clear head. Not usable for head signs. I0024 (11-08 16:36, cam2, 1170px) in gallery appeared to show heads down at the bunk. Let me try I0023 (11-08 10:12 cam1) \u2014 the second gallery image appeared to show a cow bent over the bunk. Actually I need a head facing toward/side-on. Let me try the crop at 11-08 16:36:51 cam2 head.",
+   "tool": "get_crop",
+   "args": {
+    "cow_id": "COW_01",
+    "time": "11-08 16:36:51",
+    "camera": "cam2",
+    "region": "head",
+    "enhance": true
+   },
+   "result": "[I0031] COW_01 cam2 11-08 16:36:51 head, box 1171 px, facing toward, daylight",
+   "facts": [
+    "I0031"
+   ],
+   "model": "protected.Claude Opus 4.8"
+  },
+  {
+   "thought": "This shows a head down at the bunk feeding (facing toward/down into feed). Head is down because eating \u2014 normal, not head_low sign. I can see the muzzle/nose area reasonably: no obvious nasal discharge, but she is eating with head buried so not a clean standing assessment. Ears not clearly resolvable. Eyes not clearly visible. This is a feeding posture so I shouldn't call head_low. Let me check breathing since effort was 120% (though bpm normal) \u2014 look at the breathing window.",
+   "tool": "breathing",
+   "args": {
+    "cow_id": "COW_01"
+   },
+   "result": "[I0032] COW_01: 3 windows, 3 valid; median 21/min; herd median of cows 21/min (n=10). Typical resting adult cattle: about 26-50/min.\n11-07 04:36:52 cam3 21/min quality 14.0 valid box 636 px\n11-08 06:30:11 cam2 21/min quality 6.6 valid box 941 px\n11-08 10:08:01 cam1 18/min quality 5.2 valid box 973 px",
+   "facts": [
+    "I0032"
+   ],
+   "model": "protected.Claude Opus 4.8"
+  },
+  {
+   "thought": "Breathing is 21/min, right at herd median, below the typical resting range \u2014 no tachypnea. The breathing_effort 120% at z+0.7 with bpm normal is not clinically significant. Now let me verify the head crop for discharge/ears \u2014 I0031 showed head buried eating. Let me get a head crop from a standing moment. Let me check compare_herdmates at a daylight moment to assess posture, and get a cleaner head view. Let me try get_crop at 11-08 14:47 cam2 (I0025, 1140px).",
+   "tool": "get_crop",
+   "args": {
+    "cow_id": "COW_01",
+    "time": "11-08 14:47:39",
+    "camera": "cam2",
+    "region": "head",
+    "enhance": true
+   },
+   "result": "[I0033] COW_01 cam2 11-08 14:47:39 head, box 1141 px, facing unknown, daylight",
+   "facts": [
+    "I0033"
+   ],
+   "model": "protected.Claude Opus 4.8"
+  },
+  {
+   "thought": "This is facing unknown \u2014 mostly a rump/back on the left and a head-down eating cow on right. Not a valid toward/side-on head view for signs. I've used my clean head crops. The only toward-facing head crop (I0031) showed her eating head-down with no obvious discharge but I can't properly assess ears/eyes/nose standing. Given constraints: head signs are mostly not_assessable. No nasal/ocular discharge seen (but need >450px daylight clear muzzle \u2014 I0031 showed muzzle reasonably, no discharge visible). Let me record my findings. I have 1 call left \u2014 I'll record a key fact then finalize. Actually I'll just finalize now to be safe.",
+   "tool": "record_fact",
+   "args": {
+    "cow_id": "COW_01",
+    "claim": "Head crops at bunk (I0031, I0033) show cow feeding head-down into feed; no nasal discharge visible on the resolvable muzzle in I0031, but ears/eyes not cleanly resolvable and no standing head-up daylight view obtained. Head posture signs not assessable.",
+    "images": [
+     "I0031",
+     "I0033",
+     "I0030"
+    ],
+    "sign": "nasal_discharge",
+    "status": "absent",
+    "confidence": 0.5
+   },
+   "result": "saved V0004",
+   "facts": [
+    "V0004"
+   ],
+   "model": "protected.Claude Opus 4.8"
+  },
+  {
+   "thought": "Finalizing. Breathing normal (21/min). Feed response normal on major rushes; feeding deficit is noisy/partial and driven by skipped minor troughs. Social trend deviations are small day-to-day changes. No clinical signs seen; head signs not assessable. The cow is a mild behavioral outlier but visually unremarkable.",
+   "final": {
+    "signs": {
+     "head_low": {
+      "status": "not_assessable",
+      "evidence": [
+       "I0031",
+       "I0033"
+      ],
+      "note": "Only head views are head-down eating at the bunk (normal feeding posture); no standing head-up daylight view obtained."
+     },
+     "ears_droop": {
+      "status": "not_assessable",
+      "evidence": [
+       "I0031",
+       "I0033"
+      ],
+      "note": "Ears not cleanly resolvable in the available crops; no clean toward/side-on standing head view."
+     },
+     "nasal_discharge": {
+      "status": "absent",
+      "evidence": [
+       "I0031",
+       "V0004"
+      ],
+      "note": "Muzzle reasonably resolved in daylight toward-facing crop I0031 (>450px); no discharge seen. Low confidence, single frame."
+     },
+     "ocular_discharge": {
+      "status": "not_assessable",
+      "evidence": [
+       "I0031",
+       "I0033"
+      ],
+      "note": "Eyes not clearly visible in available crops."
+     },
+     "labored_breathing": {
+      "status": "absent",
+      "evidence": [
+       "I0032"
+      ],
+      "note": "Resting breathing 21/min across 3 valid windows, at herd median, no open-mouth or flank effort evident."
+     },
+     "cough": {
+      "status": "not_assessable",
+      "evidence": [
+       "F-COW_01-jerk_rate"
+      ],
+      "note": "Jerk rate 29.5/h below herd median (30.2); no coughing posture confirmed on video."
+     },
+     "gaunt": {
+      "status": "not_assessable",
+      "evidence": [
+       "I0024",
+       "I0033"
+      ],
+      "note": "Flank/body condition not assessed from a clear side-on standing view."
+     }
+    },
+    "artifacts": [],
+    "behavior_assessment": "The feeding deficit (F-COW_01-feeding_share, F-COW_01-meal_min, F-COW_01-bunk_visit_min) is real but mild and partly noisy: feed_response shows she responds normally and stays a full 16-27 min at the bunk on the major herd rushes (11-08 06:32, 09:39, 16:16), with slow/skipped visits mostly at minor troughs. The trend (I0021) shows a single-block spike on 11-07 12h, otherwise she tracks the herd band. Increased lying (F-COW_01-lying_share) is modest. The social 'drift' facts (cows_within_3m__trend, nn_distance_m__trend) are day-to-day change metrics on short coverage and are small; her absolute isolation/edge shares are actually BELOW herd (negative z). Breathing is normal (21/min). Overall a borderline behavioral outlier, not a convincing sick picture.",
+    "summary": "COW_01 is a mild feeding/lying outlier but eats well and for a full duration during the main daily feed rushes, and her resting breathing is normal at 21 breaths/min. No clinical BRD signs were visible in the available footage; head, ear and eye views were all head-down at the bunk so those signs are not assessable. Recommend a routine hands-on look at the next feeding to confirm appetite and check the head/muzzle, but no urgent pull is indicated.",
+    "key_evidence": [
+     "F-COW_01-feeding_share",
+     "F-COW_01-meal_min",
+     "I0021",
+     "I0032",
+     "I0031",
+     "V0004"
+    ],
+    "confidence": 0.55
+   },
+   "model": "protected.Claude Opus 4.8"
+  }
+ ],
+ "self_check_first": [],
+ "self_check_after_revision": [],
+ "final": {
+  "signs": {
+   "head_low": {
+    "status": "not_assessable",
+    "evidence": [
+     "I0031",
+     "I0033"
+    ],
+    "note": "Only head views are head-down eating at the bunk (normal feeding posture); no standing head-up daylight view obtained."
+   },
+   "ears_droop": {
+    "status": "not_assessable",
+    "evidence": [
+     "I0031",
+     "I0033"
+    ],
+    "note": "Ears not cleanly resolvable in the available crops; no clean toward/side-on standing head view."
+   },
+   "nasal_discharge": {
+    "status": "absent",
+    "evidence": [
+     "I0031",
+     "V0004"
+    ],
+    "note": "Muzzle reasonably resolved in daylight toward-facing crop I0031 (>450px); no discharge seen. Low confidence, single frame."
+   },
+   "ocular_discharge": {
+    "status": "not_assessable",
+    "evidence": [
+     "I0031",
+     "I0033"
+    ],
+    "note": "Eyes not clearly visible in available crops."
+   },
+   "labored_breathing": {
+    "status": "absent",
+    "evidence": [
+     "I0032"
+    ],
+    "note": "Resting breathing 21/min across 3 valid windows, at herd median, no open-mouth or flank effort evident."
+   },
+   "cough": {
+    "status": "not_assessable",
+    "evidence": [
+     "F-COW_01-jerk_rate"
+    ],
+    "note": "Jerk rate 29.5/h below herd median (30.2); no coughing posture confirmed on video."
+   },
+   "gaunt": {
+    "status": "not_assessable",
+    "evidence": [
+     "I0024",
+     "I0033"
+    ],
+    "note": "Flank/body condition not assessed from a clear side-on standing view."
+   }
+  },
+  "artifacts": [],
+  "behavior_assessment": "The feeding deficit (F-COW_01-feeding_share, F-COW_01-meal_min, F-COW_01-bunk_visit_min) is real but mild and partly noisy: feed_response shows she responds normally and stays a full 16-27 min at the bunk on the major herd rushes (11-08 06:32, 09:39, 16:16), with slow/skipped visits mostly at minor troughs. The trend (I0021) shows a single-block spike on 11-07 12h, otherwise she tracks the herd band. Increased lying (F-COW_01-lying_share) is modest. The social 'drift' facts (cows_within_3m__trend, nn_distance_m__trend) are day-to-day change metrics on short coverage and are small; her absolute isolation/edge shares are actually BELOW herd (negative z). Breathing is normal (21/min). Overall a borderline behavioral outlier, not a convincing sick picture.",
+  "summary": "COW_01 is a mild feeding/lying outlier but eats well and for a full duration during the main daily feed rushes, and her resting breathing is normal at 21 breaths/min. No clinical BRD signs were visible in the available footage; head, ear and eye views were all head-down at the bunk so those signs are not assessable. Recommend a routine hands-on look at the next feeding to confirm appetite and check the head/muzzle, but no urgent pull is indicated.",
+  "key_evidence": [
+   "F-COW_01-feeding_share",
+   "F-COW_01-meal_min",
+   "I0021",
+   "I0032",
+   "I0031",
+   "V0004"
+  ],
+  "confidence": 0.55
+ },
+ "models": [
+  "protected.Claude Opus 4.8"
+ ]
+}

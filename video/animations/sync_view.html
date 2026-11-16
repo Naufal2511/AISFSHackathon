@@ -1,0 +1,134 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Three cameras and world state</title>
+<style>
+  :root { --ink:#18212b; --soft:#3a4652; --mute:#7a8591; --rule:#dfe4ea; --acc:#0f5a6b; --warm:#a85a24; --bg:#fbfcfd;
+          --vis:#2e8b6e; --part:#d69a2d; --none:#c9d0d7; }
+  html,body { margin:0; width:1920px; height:1080px; overflow:hidden; background:var(--bg); font-family:"Avenir Next",Avenir,sans-serif; color:var(--ink); }
+  #top { position:absolute; left:24px; right:24px; top:14px; height:52px; display:flex; align-items:center; justify-content:space-between; }
+  .eyebrow { font-size:15px; font-weight:600; letter-spacing:2.5px; text-transform:uppercase; color:var(--acc); }
+  .title { font-size:30px; font-weight:700; letter-spacing:-.3px; line-height:1.1; }
+  .clock { text-align:right; }
+  .clock .t { font-size:32px; font-weight:600; font-variant-numeric:tabular-nums; line-height:1; }
+  .clock .sp { display:inline-block; margin-top:4px; font-size:13px; font-weight:600; color:#fff; background:var(--acc); padding:2px 8px; border-radius:3px; }
+  .cam { position:absolute; top:78px; width:624px; height:468px; border-radius:6px; overflow:hidden; background:#000; }
+  .cam img { width:624px; height:468px; display:block; }
+  .cam svg { position:absolute; left:0; top:0; }
+  .cam .tag { position:absolute; left:10px; bottom:10px; background:rgba(24,33,43,.82); color:#fff; font-size:14px; font-weight:700; letter-spacing:1.5px; padding:4px 10px; border-radius:4px; }
+  #bottom { position:absolute; left:24px; top:566px; right:24px; height:490px; }
+  #map { position:absolute; left:0; top:0; }
+  #panel { position:absolute; left:1000px; top:6px; width:872px; }
+  .hd { font-size:13px; font-weight:600; color:var(--mute); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:6px; }
+  #rows { display:grid; grid-template-columns:1fr 1fr; gap:0 26px; }
+  .row { display:grid; grid-template-columns:118px 1fr 136px; align-items:center; height:42px; border-bottom:1px solid var(--rule); font-size:16px; }
+  .row .id { font-weight:700; display:flex; align-items:center; gap:8px; }
+  .row .dot { width:12px; height:12px; border-radius:50%; }
+  .row .beh { color:var(--soft); font-size:14.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .chips { display:flex; gap:4px; }
+  .chip { width:42px; height:22px; border-radius:3px; font-size:11px; font-weight:700; color:#fff; display:flex; align-items:center; justify-content:center; }
+  .note { position:absolute; left:1000px; top:268px; width:872px; font-size:16px; color:var(--soft); line-height:1.5; }
+  .note b { color:var(--ink); }
+  .legend { position:absolute; left:1000px; top:400px; display:flex; gap:24px; font-size:15px; color:var(--soft); align-items:center; }
+  .legend > div { display:flex; align-items:center; gap:8px; }
+</style></head>
+<body>
+<div id="top">
+  <div><div class="eyebrow">Level 1 · same seconds, two views</div><div class="title">What the cameras see, and what the system knows</div></div>
+  <div class="clock"><div class="t" id="time"></div><div class="sp">4× real time · real footage · real detections</div></div>
+</div>
+<div class="cam" style="left:24px"><img id="img_cam1"><svg id="svg_cam1" width="624" height="468"></svg><div class="tag">FRONT · CAM 1</div></div>
+<div class="cam" style="left:648px"><img id="img_cam2"><svg id="svg_cam2" width="624" height="468"></svg><div class="tag">BUNK (TOP) · CAM 2</div></div>
+<div class="cam" style="left:1272px"><img id="img_cam3"><svg id="svg_cam3" width="624" height="468"></svg><div class="tag">BACK · CAM 3</div></div>
+<div id="bottom">
+  <svg id="map" width="980" height="490"></svg>
+  <div id="panel"><div class="hd">World state · each cow · front · bunk · back</div><div id="rows"></div></div>
+  <div class="note">Boxes come from <b>observations.csv</b> (one per cow, camera and second). The map comes from <b>cow_state.csv</b>: the cameras fused into one position per cow in metres, with heading. When no camera sees a cow, her position is <b>predicted</b> and drawn dashed.</div>
+  <div class="legend">
+    <div><span class="chip" style="background:var(--vis)">VIS</span>visible</div>
+    <div><span class="chip" style="background:var(--part)">PART</span>partly hidden (dashed box)</div>
+    <div><span class="chip" style="background:var(--none)">—</span>not seen</div>
+    <div><span class="chip" style="background:#c9d0d7;color:#18212b;width:auto;padding:0 6px">unassigned</span>detected, ID not forced</div>
+  </div>
+</div>
+<script>
+const WORLD = __WORLD__, BOXES = __BOXES__;
+const SPEED = 4, FPS = 30, N = WORLD.n;
+const COLORS = {COW_01:"#1f77b4",COW_02:"#d62728",COW_03:"#2ca02c",COW_04:"#9467bd",COW_05:"#8c564b",COW_06:"#e377c2",COW_07:"#17becf",COW_08:"#bcbd22",COW_09:"#ff7f0e",COW_10:"#7f7f7f"};
+const IDS = Object.keys(COLORS), CAMS = ["cam1","cam2","cam3"];
+const ns = "http://www.w3.org/2000/svg";
+function el(tag, attrs, parent) { const e = document.createElementNS(ns, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent.appendChild(e); return e; }
+const BEH = {"ruminating (lying)":"rumin. lying","ruminating (standing)":"rumin. standing","other / not visible":"not visible","social interaction":"social"};
+// ---------- map ----------
+const map = document.getElementById("map");
+const S = 30, MX = 46, MY = 70;
+const P = (x, y) => [MX + y * S, MY + x * S];
+function rect(x0,y0,x1,y1,a){ const [p,q]=P(x0,y0),[r,s]=P(x1,y1); return el("rect",Object.assign({x:Math.min(p,r),y:Math.min(q,s),width:Math.abs(r-p),height:Math.abs(s-q)},a),map); }
+el("text",{x:0,y:24,"font-size":13,"font-weight":600,fill:"#7a8591","letter-spacing":1.5},map).textContent = "TOP-DOWN PEN · 30 m × 12 m";
+rect(0,0,12,30,{fill:"#fff",stroke:"#18212b","stroke-width":2.5,rx:3});
+rect(1.5,10,10.5,22,{fill:"#eef3ee"}); rect(0,0,12,4,{fill:"#f3efe6"});
+rect(8.5,14,11.5,18,{fill:"#e6f0f7",stroke:"#9fbfd6","stroke-width":1.2,rx:2});
+rect(0,-0.8,12,0,{fill:"#a85a24",opacity:.85});
+function lab(x,y,t,a){ const [px,py]=P(x,y); el("text",Object.assign({x:px,y:py,"font-size":13,"font-weight":600,fill:"#7a8591","letter-spacing":1.2,"text-anchor":"middle"},a||{}),map).textContent=t; }
+lab(1.0,2,"BUNK APRON"); lab(1.0,16,"RESTING AREA"); lab(10.2,16,"WATER");
+const CAMXY = {cam1:[3,0], cam2:[7.5,0], cam3:[0.7,29.4]}, CAMNAME = {cam1:"FRONT",cam2:"BUNK",cam3:"BACK"};
+for (const c of CAMS) { const [px,py]=P(...CAMXY[c]); el("rect",{x:px-8,y:py-8,width:16,height:16,rx:3,fill:"#18212b"},map);
+  el("text",{x:px+(c==="cam3"?-14:14),y:py+5,"font-size":12,"font-weight":700,fill:"#18212b","text-anchor":c==="cam3"?"end":"start"},map).textContent = CAMNAME[c]; }
+const clip = el("clipPath",{id:"pen"},map); { const [a,b]=P(0,0),[c,d]=P(12,30); el("rect",{x:a,y:b,width:c-a,height:d-b},clip); }
+const gTrail = el("g",{"clip-path":"url(#pen)"},map), gHalo = el("g",{"clip-path":"url(#pen)"},map), gCow = el("g",{},map);
+// ---------- panel ----------
+const present = IDS.filter(id => WORLD.state.some(s => s[id]));
+const rows = document.getElementById("rows"), rowEls = {};
+for (const id of present) { const r = document.createElement("div"); r.className = "row";
+  r.innerHTML = `<div class="id"><span class="dot" style="background:${COLORS[id]}"></span>${id}</div><div class="beh"></div><div class="chips">${CAMS.map(()=>'<div class="chip"></div>').join("")}</div>`;
+  rows.appendChild(r); rowEls[id] = r; }
+// ---------- helpers ----------
+const lerp = (a,b,f) => a + (b-a)*f;
+function stateAt(sec, id) { const i = Math.max(0, Math.min(N-1, Math.floor(sec))), j = Math.min(N-1, i+1), f = sec - i;
+  const a = WORLD.state[i][id], b = WORLD.state[j][id] || a; if (!a || a.x == null) return null;
+  return {x:lerp(a.x,b.x,f), y:lerp(a.y,b.y,f), h:a.h, p:a.p, sd:lerp(a.sd||0,b.sd||0,f), b:a.b, z:a.z}; }
+function boxesAt(sec) { const i = Math.floor(sec), f = sec - i, A = BOXES[i] || [], B = BOXES[i+1] || [];
+  return A.map(a => { const b = B.find(q => q[0]===a[0] && (a[1] ? q[1]===a[1] : (!q[1] && q[2]===a[2])));
+    return b ? [a[0],a[1],a[2],lerp(a[3],b[3],f),lerp(a[4],b[4],f),lerp(a[5],b[5],f),lerp(a[6],b[6],f),a[7]] : a; }); }
+function fmt(sec){ const d = new Date(WORLD.start.replace(" ","T")); d.setSeconds(d.getSeconds()+Math.floor(sec)); return d.toTimeString().slice(0,8); }
+// ---------- render ----------
+async function render(t) {
+  const sec = Math.min(119.99, t * SPEED), iv = Math.floor(sec);
+  const fi = String(Math.min(900, Math.floor(t * FPS) + 1)).padStart(4, "0");
+  document.body.style.opacity = Math.min(1, t / 0.5);
+  document.getElementById("time").textContent = new Date(WORLD.start.replace(" ","T")).toLocaleDateString("en-GB",{day:"numeric",month:"short"}) + " · " + fmt(sec);
+  const loads = CAMS.map(c => { const im = document.getElementById("img_" + c); im.src = `frames/${c}/${fi}.jpg`; return im.decode().catch(()=>{}); });
+  // boxes
+  const bx = boxesAt(sec);
+  for (const c of CAMS) { const g = document.getElementById("svg_" + c); g.innerHTML = "";
+    for (const b of bx.filter(q => q[0] === c)) { const [_, id, tr, x1, y1, x2, y2, vis] = b;
+      const X1 = x1*624, Y1 = y1*468, X2 = x2*624, Y2 = y2*468, col = id ? (COLORS[id] || "#fff") : "#c9d0d7";
+      el("rect",{x:X1,y:Y1,width:X2-X1,height:Y2-Y1,fill:"none",stroke:col,"stroke-width":3,"stroke-dasharray":vis==="partial"?"7 5":"none",rx:2},g);
+      const s = id ? stateAt(sec, id) : null;
+      const label = !id ? "unassigned" : id.replace("COW_","") + (s && s.b && X2 - X1 >= 100 ? " · " + (BEH[s.b] || s.b) : "");
+      const w = 9 + label.length * 7.4, ly = Math.max(0, Y1 - 22);
+      el("rect",{x:X1,y:ly,width:w,height:20,fill:col,rx:3},g);
+      el("text",{x:X1+5,y:ly+14.5,"font-size":13,"font-weight":700,fill:id?"#fff":"#18212b"},g).textContent = label; } }
+  // map + panel
+  gTrail.innerHTML = gHalo.innerHTML = gCow.innerHTML = "";
+  for (const id of present) { const s = stateAt(sec, id); if (!s) continue;
+    let seg = [], prev = null; const segs = [seg];
+    for (let k = Math.max(0, iv-40); k <= iv; k++) { const q = WORLD.state[k][id];
+      if (!q || q.x == null || q.p) { prev = null; if (seg.length) { seg = []; segs.push(seg); } continue; }
+      if (prev && Math.hypot(q.x-prev.x, q.y-prev.y) > 1.5) { seg = []; segs.push(seg); }
+      seg.push(P(q.x,q.y).join(",")); prev = q; }
+    for (const sg of segs) if (sg.length > 1) el("polyline",{points:sg.join(" "),fill:"none",stroke:COLORS[id],"stroke-width":2.5,"stroke-opacity":.35,"stroke-linecap":"round"},gTrail);
+    const [px,py] = P(s.x,s.y);
+    if (s.p) el("circle",{cx:px,cy:py,r:Math.min(3, Math.max(0.45, s.sd||0.5))*S,fill:COLORS[id],"fill-opacity":.12,stroke:COLORS[id],"stroke-opacity":.35,"stroke-dasharray":"3 4"},gHalo);
+    el("circle",{cx:px,cy:py,r:11,fill:COLORS[id],"fill-opacity":s.p?.35:.95,stroke:"#18212b","stroke-width":2,"stroke-dasharray":s.p?"4 3":"none"},gCow);
+    if (s.h != null) { const r = s.h*Math.PI/180, hx = Math.sin(r), hy = Math.cos(r);
+      el("line",{x1:px+hx*12,y1:py+hy*12,x2:px+hx*26,y2:py+hy*26,stroke:"#18212b","stroke-width":3,"stroke-linecap":"round"},gCow); }
+    el("text",{x:px,y:py-16,"text-anchor":"middle","font-size":12,"font-weight":700,fill:"#18212b"},gCow).textContent = id.replace("COW_","");
+    const row = rowEls[id]; row.querySelector(".beh").textContent = (BEH[s.b]||s.b||"—") + " · " + (s.z==="other"?"alley":s.z);
+    const v = WORLD.vis[iv][id] || {};
+    row.querySelectorAll(".chip").forEach((c, k) => { const o = v[CAMS[k]];
+      if (!o) { c.style.background = "var(--none)"; c.textContent = "—"; }
+      else { c.style.background = o.v === "visible" ? "var(--vis)" : "var(--part)"; c.textContent = o.v === "visible" ? "VIS" : "PART"; } }); }
+  await Promise.all(loads);
+}
+window.render = render;
+</script>
+</body></html>

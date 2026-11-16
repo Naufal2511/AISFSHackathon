@@ -1,0 +1,281 @@
+{
+ "chunks": [
+  {
+   "name": "naufal_training_c01",
+   "who": "naufal_training",
+   "dir": "outputs/shares/naufal_training/naufal_training_c01",
+   "run_start": "2026-11-07 00:04:00",
+   "start": "2026-11-07 00:04:00",
+   "end": "2026-11-07 04:04:00"
+  },
+  {
+   "name": "naufal_training_c02",
+   "who": "naufal_training",
+   "dir": "outputs/shares/naufal_training/naufal_training_c02",
+   "run_start": "2026-11-07 04:02:00",
+   "start": "2026-11-07 04:04:00",
+   "end": "2026-11-07 08:03:00"
+  },
+  {
+   "name": "afeef_training_c01",
+   "who": "afeef_training",
+   "dir": "outputs/shares/afeef_training/afeef_training_c01",
+   "run_start": "2026-11-07 08:01:00",
+   "start": "2026-11-07 08:03:00",
+   "end": "2026-11-07 10:03:00"
+  },
+  {
+   "name": "afeef_training_c02",
+   "who": "afeef_training",
+   "dir": "outputs/shares/afeef_training/afeef_training_c02",
+   "run_start": "2026-11-07 10:01:00",
+   "start": "2026-11-07 10:03:00",
+   "end": "2026-11-07 12:03:00"
+  },
+  {
+   "name": "afeef_training_c03",
+   "who": "afeef_training",
+   "dir": "outputs/shares/afeef_training/afeef_training_c03",
+   "run_start": "2026-11-07 12:01:00",
+   "start": "2026-11-07 12:03:00",
+   "end": "2026-11-07 14:02:00"
+  },
+  {
+   "name": "afeef_training_c04",
+   "who": "afeef_training",
+   "dir": "outputs/shares/afeef_training/afeef_training_c04",
+   "run_start": "2026-11-07 14:00:00",
+   "start": "2026-11-07 14:02:00",
+   "end": "2026-11-07 16:02:00"
+  },
+  {
+   "name": "nooh_training_c01",
+   "who": "nooh_training",
+   "dir": "outputs/shares/nooh_training/nooh_training_c01",
+   "run_start": "2026-11-07 16:00:00",
+   "start": "2026-11-07 16:02:00",
+   "end": "2026-11-07 20:01:00"
+  },
+  {
+   "name": "nooh_training_c02",
+   "who": "nooh_training",
+   "dir": "outputs/shares/nooh_training/nooh_training_c02",
+   "run_start": "2026-11-07 19:59:00",
+   "start": "2026-11-07 20:01:00",
+   "end": "2026-11-08 00:00:00"
+  },
+  {
+   "name": "hprc_day2_c01",
+   "who": "hprc_day2",
+   "dir": "outputs/shares/hprc_day2/hprc_day2_c01",
+   "run_start": "2026-11-07 23:58:00",
+   "start": "2026-11-08 00:00:00",
+   "end": "2026-11-08 00:58:00"
+  },
+  {
+   "name": "hprc_day2_c02",
+   "who": "hprc_day2",
+   "dir": "outputs/shares/hprc_day2/hprc_day2_c02",
+   "run_start": "2026-11-08 00:56:00",
+   "start": "2026-11-08 00:58:00",
+   "end": "2026-11-08 01:55:00"
+  },
+  {
+   "name": "hprc_day2_c03",
+   "who": "hprc_day2",
+   "dir": "outputs/shares/hprc_day2/hprc_day2_c03",
+   "run_start": "2026-11-08 01:53:00",
+   "start": "2026-11-08 01:55:00",
+   "end": "2026-11-08 02:53:00"
+  },
+  {
+   "name": "hprc_day2_c04",
+   "who": "hprc_day2",
+   "dir": "outputs/shares/hprc_day2/hprc_day2_c04",
+   "run_start": "2026-11-08 02:51:00",
+   "start": "2026-11-08 02:53:00",
+   "end": "2026-11-08 03:51:00"
+  },
+  {
+   "name": "hprc_day2_c05",
+   "who": "hprc_day2",
+   "dir": "outputs/shares/hprc_day2/hprc_day2_c05",
+   "run_start": "2026-11-08 03:49:00",
+   "start": "2026-11-08 03:51:00",
+   "end": "2026-11-08 04:48:00"
+  },
+  {
+   "name": "hprc_day2_c06",
+   "who": "hprc_day2",
+   "dir": "outputs/shares/hprc_day2/hprc_day2_c06",
+   "run_start": "2026-11-08 04:46:00",
+   "start": "2026-11-08 04:48:00",
+   "end": "2026-11-08 05:46:00"
+  },
+  {
+   "name": "hprc_day2_c07",
+   "who": "hprc_day2",
+   "dir": "outputs/shares/hprc_day2/hprc_day2_c07",
+   "run_start": "2026-11-08 05:44:00",
+   "start": "2026-11-08 05:46:00",
+   "end": "2026-11-08 06:44:00"
+  },
+  {
+   "name": "hprc_day2_c08",
+   "who": "hprc_day2",
+   "dir": "outputs/shares/hprc_day2/hprc_day2_c08",
+   "run_start": "2026-11-08 06:42:00",
+   "start": "2026-11-08 06:44:00",
+   "end": "2026-11-08 07:41:00"
+  },
+  {
+   "name": "hprc_day2_c09",
+   "who": "hprc_day2",
+   "dir": "outputs/shares/hprc_day2/hprc_day2_c09",
+   "run_start": "2026-11-08 07:39:00",
+   "start": "2026-11-08 07:41:00",
+   "end": "2026-11-08 08:39:00"
+  },
+  {
+   "name": "hprc_day2_c10",
+   "who": "hprc_day2",
+   "dir": "outputs/shares/hprc_day2/hprc_day2_c10",
+   "run_start": "2026-11-08 08:37:00",
+   "start": "2026-11-08 08:39:00",
+   "end": "2026-11-08 09:37:00"
+  },
+  {
+   "name": "hprc_day2_c11",
+   "who": "hprc_day2",
+   "dir": "outputs/shares/hprc_day2/hprc_day2_c11",
+   "run_start": "2026-11-08 09:35:00",
+   "start": "2026-11-08 09:37:00",
+   "end": "2026-11-08 10:34:00"
+  },
+  {
+   "name": "hprc_day2_c12",
+   "who": "hprc_day2",
+   "dir": "outputs/shares/hprc_day2/hprc_day2_c12",
+   "run_start": "2026-11-08 10:32:00",
+   "start": "2026-11-08 10:34:00",
+   "end": "2026-11-08 11:32:00"
+  },
+  {
+   "name": "hprc_day2_c13",
+   "who": "hprc_day2",
+   "dir": "outputs/shares/hprc_day2/hprc_day2_c13",
+   "run_start": "2026-11-08 11:30:00",
+   "start": "2026-11-08 11:32:00",
+   "end": "2026-11-08 12:30:00"
+  },
+  {
+   "name": "hprc_day2_c14",
+   "who": "hprc_day2",
+   "dir": "outputs/shares/hprc_day2/hprc_day2_c14",
+   "run_start": "2026-11-08 12:28:00",
+   "start": "2026-11-08 12:30:00",
+   "end": "2026-11-08 13:28:00"
+  },
+  {
+   "name": "hprc_day2_c15",
+   "who": "hprc_day2",
+   "dir": "outputs/shares/hprc_day2/hprc_day2_c15",
+   "run_start": "2026-11-08 13:26:00",
+   "start": "2026-11-08 13:28:00",
+   "end": "2026-11-08 14:25:00"
+  },
+  {
+   "name": "hprc_day2_c16",
+   "who": "hprc_day2",
+   "dir": "outputs/shares/hprc_day2/hprc_day2_c16",
+   "run_start": "2026-11-08 14:23:00",
+   "start": "2026-11-08 14:25:00",
+   "end": "2026-11-08 15:23:00"
+  },
+  {
+   "name": "hprc_day2_c17",
+   "who": "hprc_day2",
+   "dir": "outputs/shares/hprc_day2/hprc_day2_c17",
+   "run_start": "2026-11-08 15:21:00",
+   "start": "2026-11-08 15:23:00",
+   "end": "2026-11-08 16:21:00"
+  },
+  {
+   "name": "hprc_day2_c18",
+   "who": "hprc_day2",
+   "dir": "outputs/shares/hprc_day2/hprc_day2_c18",
+   "run_start": "2026-11-08 16:19:00",
+   "start": "2026-11-08 16:21:00",
+   "end": "2026-11-08 17:18:00"
+  },
+  {
+   "name": "hprc_day2_c19",
+   "who": "hprc_day2",
+   "dir": "outputs/shares/hprc_day2/hprc_day2_c19",
+   "run_start": "2026-11-08 17:16:00",
+   "start": "2026-11-08 17:18:00",
+   "end": "2026-11-08 18:16:00"
+  },
+  {
+   "name": "hprc_day2_c20",
+   "who": "hprc_day2",
+   "dir": "outputs/shares/hprc_day2/hprc_day2_c20",
+   "run_start": "2026-11-08 18:14:00",
+   "start": "2026-11-08 18:16:00",
+   "end": "2026-11-08 19:14:00"
+  },
+  {
+   "name": "hprc_day2_c21",
+   "who": "hprc_day2",
+   "dir": "outputs/shares/hprc_day2/hprc_day2_c21",
+   "run_start": "2026-11-08 19:12:00",
+   "start": "2026-11-08 19:14:00",
+   "end": "2026-11-08 20:11:00"
+  },
+  {
+   "name": "hprc_day2_c22",
+   "who": "hprc_day2",
+   "dir": "outputs/shares/hprc_day2/hprc_day2_c22",
+   "run_start": "2026-11-08 20:09:00",
+   "start": "2026-11-08 20:11:00",
+   "end": "2026-11-08 21:09:00"
+  },
+  {
+   "name": "hprc_day2_c23",
+   "who": "hprc_day2",
+   "dir": "outputs/shares/hprc_day2/hprc_day2_c23",
+   "run_start": "2026-11-08 21:07:00",
+   "start": "2026-11-08 21:09:00",
+   "end": "2026-11-08 22:07:00"
+  },
+  {
+   "name": "hprc_day2_c24",
+   "who": "hprc_day2",
+   "dir": "outputs/shares/hprc_day2/hprc_day2_c24",
+   "run_start": "2026-11-08 22:05:00",
+   "start": "2026-11-08 22:07:00",
+   "end": "2026-11-08 23:04:00"
+  },
+  {
+   "name": "hprc_day2_c25",
+   "who": "hprc_day2",
+   "dir": "outputs/shares/hprc_day2/hprc_day2_c25",
+   "run_start": "2026-11-08 23:02:00",
+   "start": "2026-11-08 23:04:00",
+   "end": "2026-11-09 00:02:00"
+  }
+ ],
+ "day1": "2026-11-07",
+ "cows": [
+  "COW_01",
+  "COW_02",
+  "COW_03",
+  "COW_04",
+  "COW_05",
+  "COW_06",
+  "COW_07",
+  "COW_08",
+  "COW_09",
+  "COW_10"
+ ]
+}

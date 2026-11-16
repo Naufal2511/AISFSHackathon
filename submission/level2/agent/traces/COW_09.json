@@ -1,0 +1,301 @@
+{
+ "cow_id": "COW_09",
+ "seconds": 44.7,
+ "tool_calls": 3,
+ "steps": [
+  {
+   "thought": "The top sick-direction deviations are feeding_share_trend (-24% vs -12%, z+3.0), desync_share_trend (z+3.0), meals_per_h_trend (z+2.9). But note: feeding_share itself is -2.3 (eating MORE than herd), feed_call_latency fast (6.7 min), bunk_visit_min long. This cow is actually eating well. The trend deviations may be noise. Let me check the feeding trend first.",
+   "tool": "trend",
+   "args": {
+    "cow_id": "COW_09",
+    "indicator": "feeding_share",
+    "block_h": 6
+   },
+   "result": "[I0043] no sustained deviation (CUSUM never crossed)\n11-07 00h: COW_09 0.122 vs herd 0.0265 (dev -2.4)\n11-07 06h: COW_09 0.113 vs herd 0.0734 (dev -0.7)\n11-07 12h: COW_09 0.371 vs herd 0.265 (dev -1.9)\n11-07 18h: COW_09 0.242 vs herd 0.0331 (dev -7.0)\n11-08 00h: COW_09 0.0807 vs herd 0.0456 (dev -0.7)\n11-08 06h: COW_09 0.208 vs herd 0.0723 (dev -2.9)\n11-08 12h: COW_09 0.155 vs herd 0.139 (dev -0.5)\n11-08 18h: COW_09 0.0473 vs herd 0.0213 (dev -0.9)\n11-09 00h: COW_09 0 vs herd 0 (dev -0.0)",
+   "facts": [
+    "I0043"
+   ],
+   "model": "protected.Claude Opus 4.8"
+  },
+  {
+   "thought": "Feeding trend shows no sustained deviation (CUSUM never crossed). COW_09 consistently eats at or ABOVE herd feeding \u2014 this is NOT a sick-direction signal despite the trend z. The 'feeding_share_trend +3.0' is noise from the day-to-day change metric; this cow eats well. The desync_share_trend is also high. But overall this is a well-eating cow (rank 5, low score). Let me look at the cow visually for clinical signs \u2014 check gallery for head/discharge/ears.",
+   "tool": "gallery",
+   "args": {
+    "cow_id": "COW_09",
+    "n": 6
+   },
+   "result": "6 gallery crops: [I0044] 11-08 14:23:12 cam1 1258 px, [I0045] 11-08 08:37:00 cam2 1212 px, [I0046] 11-07 16:02:33 cam1 1211 px, [I0047] 11-07 13:11:48 cam1 1197 px, [I0048] 11-08 15:34:59 cam2 1178 px, [I0049] 11-08 17:27:11 cam1 1149 px",
+   "facts": [],
+   "model": "protected.Claude Opus 4.8"
+  },
+  {
+   "thought": "Gallery crops are all large (>1000px) but show mostly backs/tops at the bunk, heads down eating. None give a clear toward/side-on head view for discharge/ear assessment. I0048 shows a head lowered into the bunk feeding (normal eating posture, not head_low). I need a proper head crop facing toward/side-on. Let me get a head crop from I0048 (cam2 close view) where the cow is at the bunk with head visible.",
+   "tool": "get_crop",
+   "args": {
+    "cow_id": "COW_09",
+    "time": "11-08 15:34:59",
+    "camera": "cam2",
+    "region": "head",
+    "enhance": true
+   },
+   "result": "[I0050] COW_09 cam2 11-08 15:34:59 head, box 1178 px, facing side-on, daylight",
+   "facts": [
+    "I0050"
+   ],
+   "model": "protected.Claude Opus 4.8"
+  },
+  {
+   "thought": "The right panel shows COW_09 side-on head, large box, daylight, head down into the feed bunk actively eating. Face and muzzle visible: no obvious nasal/ocular discharge, ears appear normal (one ear up). Head is down because she is eating \u2014 normal posture, not head_low. I can assess head signs from this side-on daylight crop. No discharge visible on muzzle/eye, but she is eating with muzzle in feed so discharge is hard to fully rule in/out; muzzle region is clean. Behaviorally: feeding trend never crossed CUSUM, she eats at/above herd, fast feed latency \u2014 the high feeding/meal trend z-scores are noise, not sick signals. Done.",
+   "final": {
+    "signs": {
+     "head_low": {
+      "status": "absent",
+      "evidence": [
+       "I0050",
+       "I0048"
+      ],
+      "note": "Head carried normally; when low it is because she is actively eating with muzzle in the bunk, not head_low standing."
+     },
+     "ears_droop": {
+      "status": "absent",
+      "evidence": [
+       "I0050"
+      ],
+      "note": "Side-on daylight head crop (1178px); ear carriage normal, upright, no droop."
+     },
+     "nasal_discharge": {
+      "status": "not_assessable",
+      "evidence": [
+       "I0050"
+      ],
+      "note": "Muzzle buried in feed while eating; no discharge visible but cannot reliably clear it at this angle."
+     },
+     "ocular_discharge": {
+      "status": "absent",
+      "evidence": [
+       "I0050"
+      ],
+      "note": "Side-on daylight head crop >=450px; eye region clean, no ocular discharge."
+     },
+     "labored_breathing": {
+      "status": "not_assessable",
+      "evidence": [
+       "F-COW_09-breathing_bpm",
+       "F-COW_09-breathing_effort"
+      ],
+      "note": "Resting bpm 20.8 equals herd, flank effort near herd; no still open-mouth/flank sequence reviewed to confirm or deny."
+     },
+     "cough": {
+      "status": "not_assessable",
+      "evidence": [
+       "F-COW_09-jerk_rate"
+      ],
+      "note": "Jerk rate 27.6/h is BELOW herd median; no cough posture sequence reviewed."
+     },
+     "gaunt": {
+      "status": "absent",
+      "evidence": [
+       "I0044",
+       "I0046"
+      ],
+      "note": "Body crops show full, well-conditioned frame; no hollow flank."
+     }
+    },
+    "artifacts": [
+     {
+      "indicator": "feeding_share__trend",
+      "evidence": [
+       "I0043"
+      ],
+      "why": "CUSUM never crossed; COW_09 feeds at or above the herd in every 6h block. The +3.0 day-to-day-change z is noise, not a sick-direction feeding decline."
+     },
+     {
+      "indicator": "meals_per_h__trend",
+      "evidence": [
+       "I0043",
+       "F-COW_09-feed_call_latency"
+      ],
+      "why": "Paired with fast feed-rush latency (6.7 vs 19.1 min) and above-herd feeding share; the trend swing reflects normal day-to-day variation, not reduced appetite."
+     }
+    ],
+    "behavior_assessment": "I do not believe the headline feeding/meal trend deviations: the feeding CUSUM never crossed and COW_09 actually eats AT or ABOVE herd in every block, reaches the bunk fast (6.7 min) and takes long bunk visits. The remaining real signals (desync_share +1.5, slightly lower rumination and lying) are mild and this cow is a well-eating, well-conditioned animal ranked 5 of 10.",
+    "summary": "COW_09 is eating well \u2014 fast to the bunk, feeding at or above herd level, good body condition, normal breathing (20.8/min) and low jerk rate. Visible head crop shows no ocular discharge, no ear droop and no head-low; nasal discharge and cough could not be fully assessed. No action needed beyond routine observation; the flagged feeding-decline trend is a noise artifact.",
+    "key_evidence": [
+     "I0043",
+     "I0050",
+     "F-COW_09-feeding_share",
+     "F-COW_09-feed_call_latency",
+     "F-COW_09-breathing_bpm"
+    ],
+    "confidence": 0.72
+   },
+   "model": "protected.Claude Opus 4.8"
+  },
+  {
+   "thought": "The artifact indicator names must match the fact indicator labels exactly. Use 'time feeding (day-to-day change)' and 'meals per hour (day-to-day change)'.",
+   "final": {
+    "signs": {
+     "head_low": {
+      "status": "absent",
+      "evidence": [
+       "I0050",
+       "I0048"
+      ],
+      "note": "Head carried normally; when low it is because she is actively eating with muzzle in the bunk, not head_low standing."
+     },
+     "ears_droop": {
+      "status": "absent",
+      "evidence": [
+       "I0050"
+      ],
+      "note": "Side-on daylight head crop (1178px); ear carriage normal, upright, no droop."
+     },
+     "nasal_discharge": {
+      "status": "not_assessable",
+      "evidence": [
+       "I0050"
+      ],
+      "note": "Muzzle buried in feed while eating; no discharge visible but cannot reliably clear it at this angle."
+     },
+     "ocular_discharge": {
+      "status": "absent",
+      "evidence": [
+       "I0050"
+      ],
+      "note": "Side-on daylight head crop >=450px; eye region clean, no ocular discharge."
+     },
+     "labored_breathing": {
+      "status": "not_assessable",
+      "evidence": [
+       "F-COW_09-breathing_bpm",
+       "F-COW_09-breathing_effort"
+      ],
+      "note": "Resting bpm 20.8 equals herd, flank effort near herd; no still open-mouth/flank sequence reviewed to confirm or deny."
+     },
+     "cough": {
+      "status": "not_assessable",
+      "evidence": [
+       "F-COW_09-jerk_rate"
+      ],
+      "note": "Jerk rate 27.6/h is BELOW herd median; no cough posture sequence reviewed."
+     },
+     "gaunt": {
+      "status": "absent",
+      "evidence": [
+       "I0044",
+       "I0046"
+      ],
+      "note": "Body crops show full, well-conditioned frame; no hollow flank."
+     }
+    },
+    "artifacts": [
+     {
+      "indicator": "time feeding (day-to-day change)",
+      "evidence": [
+       "I0043"
+      ],
+      "why": "CUSUM never crossed; COW_09 feeds at or above the herd in every 6h block. The +3.0 day-to-day-change z is noise, not a sick-direction feeding decline."
+     },
+     {
+      "indicator": "meals per hour (day-to-day change)",
+      "evidence": [
+       "I0043",
+       "F-COW_09-feed_call_latency"
+      ],
+      "why": "Paired with fast feed-rush latency (6.7 vs 19.1 min) and above-herd feeding share; the trend swing reflects normal day-to-day variation, not reduced appetite."
+     }
+    ],
+    "behavior_assessment": "I do not believe the headline feeding/meal trend deviations: the feeding CUSUM never crossed and COW_09 actually eats AT or ABOVE herd in every block, reaches the bunk fast (6.7 min) and takes long bunk visits. The remaining real signals (desync_share +1.5, slightly lower rumination and lying) are mild and this cow is a well-eating, well-conditioned animal ranked 5 of 10.",
+    "summary": "COW_09 is eating well \u2014 fast to the bunk, feeding at or above herd level, good body condition, normal breathing (20.8/min) and low jerk rate. Visible head crop shows no ocular discharge, no ear droop and no head-low; nasal discharge and cough could not be fully assessed. No action needed beyond routine observation; the flagged feeding-decline trend is a noise artifact.",
+    "key_evidence": [
+     "I0043",
+     "I0050",
+     "F-COW_09-feeding_share",
+     "F-COW_09-feed_call_latency",
+     "F-COW_09-breathing_bpm"
+    ],
+    "confidence": 0.72
+   },
+   "model": "protected.Claude Opus 4.8",
+   "revision": true
+  }
+ ],
+ "self_check_first": [
+  "artifact indicator 'feeding_share__trend' unknown",
+  "artifact indicator 'meals_per_h__trend' unknown"
+ ],
+ "self_check_after_revision": [
+  "artifact indicator 'time feeding (day-to-day change)' unknown",
+  "artifact indicator 'meals per hour (day-to-day change)' unknown"
+ ],
+ "final": {
+  "signs": {
+   "head_low": {
+    "status": "absent",
+    "evidence": [
+     "I0050",
+     "I0048"
+    ],
+    "note": "Head carried normally; when low it is because she is actively eating with muzzle in the bunk, not head_low standing."
+   },
+   "ears_droop": {
+    "status": "absent",
+    "evidence": [
+     "I0050"
+    ],
+    "note": "Side-on daylight head crop (1178px); ear carriage normal, upright, no droop."
+   },
+   "nasal_discharge": {
+    "status": "not_assessable",
+    "evidence": [
+     "I0050"
+    ],
+    "note": "Muzzle buried in feed while eating; no discharge visible but cannot reliably clear it at this angle."
+   },
+   "ocular_discharge": {
+    "status": "absent",
+    "evidence": [
+     "I0050"
+    ],
+    "note": "Side-on daylight head crop >=450px; eye region clean, no ocular discharge."
+   },
+   "labored_breathing": {
+    "status": "not_assessable",
+    "evidence": [
+     "F-COW_09-breathing_bpm",
+     "F-COW_09-breathing_effort"
+    ],
+    "note": "Resting bpm 20.8 equals herd, flank effort near herd; no still open-mouth/flank sequence reviewed to confirm or deny."
+   },
+   "cough": {
+    "status": "not_assessable",
+    "evidence": [
+     "F-COW_09-jerk_rate"
+    ],
+    "note": "Jerk rate 27.6/h is BELOW herd median; no cough posture sequence reviewed."
+   },
+   "gaunt": {
+    "status": "absent",
+    "evidence": [
+     "I0044",
+     "I0046"
+    ],
+    "note": "Body crops show full, well-conditioned frame; no hollow flank."
+   }
+  },
+  "artifacts": [],
+  "behavior_assessment": "I do not believe the headline feeding/meal trend deviations: the feeding CUSUM never crossed and COW_09 actually eats AT or ABOVE herd in every block, reaches the bunk fast (6.7 min) and takes long bunk visits. The remaining real signals (desync_share +1.5, slightly lower rumination and lying) are mild and this cow is a well-eating, well-conditioned animal ranked 5 of 10.",
+  "summary": "COW_09 is eating well \u2014 fast to the bunk, feeding at or above herd level, good body condition, normal breathing (20.8/min) and low jerk rate. Visible head crop shows no ocular discharge, no ear droop and no head-low; nasal discharge and cough could not be fully assessed. No action needed beyond routine observation; the flagged feeding-decline trend is a noise artifact.",
+  "key_evidence": [
+   "I0043",
+   "I0050",
+   "F-COW_09-feeding_share",
+   "F-COW_09-feed_call_latency",
+   "F-COW_09-breathing_bpm"
+  ],
+  "confidence": 0.72
+ },
+ "models": [
+  "protected.Claude Opus 4.8"
+ ]
+}

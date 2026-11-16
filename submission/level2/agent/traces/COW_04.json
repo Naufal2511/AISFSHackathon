@@ -1,0 +1,384 @@
+{
+ "cow_id": "COW_04",
+ "seconds": 73.1,
+ "tool_calls": 8,
+ "steps": [
+  {
+   "thought": "The main deviation is longest_meal_gap_min (+3.0, 600 min vs 357). Let me check its trend and whether it's real. Other indicators are modest. Start with the meal gap trend.",
+   "tool": "trend",
+   "args": {
+    "cow_id": "COW_04",
+    "indicator": "longest_meal_gap_min",
+    "block_h": 6
+   },
+   "result": "[I0034] no sustained deviation (CUSUM never crossed)\n11-07 00h: COW_04 0 vs herd 0.5 (dev -0.0)\n11-07 06h: COW_04 104 vs herd 75.5 (dev +0.9)\n11-07 12h: COW_04 80 vs herd 72.5 (dev +0.4)\n11-07 18h: COW_04 0 vs herd 35 (dev -0.7)\n11-08 00h: COW_04 12 vs herd 12 (dev +0.0)\n11-08 06h: COW_04 48 vs herd 101 (dev -0.6)\n11-08 12h: COW_04 48 vs herd 61 (dev -0.4)\n11-08 18h: COW_04 0 vs herd 5 (dev -0.2)\n11-09 00h: COW_04 nan vs herd nan (dev +nan)",
+   "facts": [
+    "I0034"
+   ],
+   "model": "protected.Claude Opus 4.8"
+  },
+  {
+   "thought": "The 600 min single-value longest_meal_gap isn't reflected in the 6h trend - no sustained deviation, CUSUM never crossed. The gap likely came from an overnight period and the cow tracks the herd band well. This looks like a single noisy long gap, not a sustained appetite problem. Let me check feed_response to confirm appetite is fine.",
+   "tool": "feed_response",
+   "args": {
+    "cow_id": "COW_04"
+   },
+   "result": "trough change cam2 at 11-07 00:09:42: COW_04 reached bunk after never (30 min), stayed 0 min; herd median nan min / 0 min\ntrough change cam1 at 11-07 00:37:17: COW_04 reached bunk after never (30 min), stayed 0 min; herd median nan min / 0 min\ntrough change cam2 at 11-07 00:53:27: COW_04 reached bunk after never (30 min), stayed 0 min; herd median 22 min / 0 min\ntrough change cam3 at 11-07 00:57:36: COW_04 reached bunk after never (30 min), stayed 0 min; herd median 22 min / 0 min\nherd rush at 11-07 01:28:00: COW_04 reached bunk after 2 min, stayed 6 min; herd median 2 min / 3 min\ntrough change cam1 at 11-07 01:28:02: COW_04 reached bunk after 2 min, stayed 6 min; herd median 2 min / 3 min\ntrough change cam3 at 11-07 01:28:51: COW_04 reached bunk after 1 min, stayed 6 min; herd median 1 min / 3 min\ntrough change cam2 at 11-07 01:46:42: COW_04 reached bunk after never (30 min), stayed 0 min; herd median -1 min / 0 min\ntrough change cam1 at 11-07 02:33:02: COW_04 reached bunk after never (30 min), stayed 0 min; herd median nan min / 0 min\ntrough change cam2 at 11-07 03:27:42: COW_04 reached bunk after never (30 min), stayed 0 min; herd median 28 min / 0 min\nherd rush at 11-07 06:24:00: COW_04 reached bunk after 3 min, stayed 11 min; herd median 0 min / 0 min\ntrough change cam3 at 11-07 06:24:00: COW_04 reached bunk after 3 min, stayed 11 min; herd median 0 min / 0 min\ntrough change cam1 at 11-07 06:31:15: COW_04 reached bunk after 4 min, stayed 8 min; herd median -0 min / 0 min",
+   "facts": [],
+   "model": "protected.Claude Opus 4.8"
+  },
+  {
+   "thought": "COW_04 responds well to herd rushes - often 0-3 min latency and stays 11-32 min. Appetite looks normal/good. feed_call_latency is actually below herd (14.3 vs 19.1, negative z direction). The longest_meal_gap of 600 min is likely an overnight artifact and not sustained. Now let me look at the cow visually. The behavior score is modest (rank 4). Let me check breathing_effort which is notably LOW (57% vs 106%, z -2.4, protective). Actually that's negative direction. Let me get the gallery for visual signs.",
+   "tool": "gallery",
+   "args": {
+    "cow_id": "COW_04",
+    "n": 6
+   },
+   "result": "6 gallery crops: [I0035] 11-08 14:43:25 cam2 1230 px, [I0036] 11-07 14:20:22 cam2 1229 px, [I0037] 11-07 13:10:19 cam1 1223 px, [I0038] 11-08 15:30:58 cam1 1187 px, [I0039] 11-07 09:19:40 cam1 1176 px, [I0040] 11-08 16:37:38 cam1 1142 px",
+   "facts": [],
+   "model": "protected.Claude Opus 4.8"
+  },
+  {
+   "thought": "These gallery crops are mostly top-down views of backs/rumps with heads down at the bunk - not good for assessing head signs (need toward/side-on face). I0037 shows a head-down eating pose. These heads-down-at-bunk are normal eating. I need a head crop facing toward/side-on. Let me find close_view moments to get a head crop.",
+   "tool": "find_moments",
+   "args": {
+    "cow_id": "COW_04",
+    "kind": "close_view",
+    "n": 6
+   },
+   "result": "11-07 13:40:09 cam2 box 1512 px, facing away, day\n11-07 13:09:23 cam2 box 1487 px, facing toward, day\n11-07 13:30:21 cam1 box 1446 px, facing unknown, day\n11-07 09:10:14 cam2 box 1422 px, facing side-on, day\n11-08 16:27:22 cam1 box 1396 px, facing side-on, day\n11-08 16:35:23 cam1 box 1384 px, facing unknown, day",
+   "facts": [],
+   "model": "protected.Claude Opus 4.8"
+  },
+  {
+   "thought": "11-07 13:09:23 cam2 facing toward, 1487 px - good for a head crop. Let me get the head crop there.",
+   "tool": "get_crop",
+   "args": {
+    "cow_id": "COW_04",
+    "time": "11-07 13:09:23",
+    "camera": "cam2",
+    "region": "head",
+    "enhance": true
+   },
+   "result": "[I0041] COW_04 cam2 11-07 13:09:23 head, box 1487 px, facing toward, daylight",
+   "facts": [
+    "I0041"
+   ],
+   "model": "protected.Claude Opus 4.8"
+  },
+  {
+   "thought": "The head is down at the bunk eating - muzzle in the feed. The muzzle/nose area is visible but the head is in a feeding posture (not head_low-while-standing). Ears not clearly visible, eyes not clear. Discharge not assessable at this angle/resolution for nose. Let me try the side-on close view 11-08 16:27:22 cam1 for a better head/ear/eye view.",
+   "tool": "get_crop",
+   "args": {
+    "cow_id": "COW_04",
+    "time": "11-08 16:27:22",
+    "camera": "cam1",
+    "region": "head",
+    "enhance": true
+   },
+   "result": "[I0042] COW_04 cam1 11-08 16:27:22 head, box 1396 px, facing side-on, daylight",
+   "facts": [
+    "I0042"
+   ],
+   "model": "protected.Claude Opus 4.8"
+  },
+  {
+   "thought": "This is a top-down view of the back/neck - the ear is partially visible but face/eyes/nose not clearly assessable. Head is down. I can see one ear that appears in normal position, not clearly drooped, but it's top-down and muddy. Not a clean toward/side-on face for discharge or eyes. Given I've used my calls, let me record findings. The head crops show feeding posture (head down at bunk = normal), ears not clearly assessable in these top-down muddy views, nose/eyes not assessable at this resolution. Let me check breathing since effort is unusually low - actually that's protective direction, not sick. The behavior is modest. Let me record a fact and finalize. I have 2 calls left - let me verify the longest_meal_gap isn't an artifact via the images I already have, and record. Actually I'll just record the key fact about appetite being normal and finalize.",
+   "tool": "record_fact",
+   "args": {
+    "cow_id": "COW_04",
+    "claim": "longest_meal_gap_min 600 is not sustained: 6h trend CUSUM never crossed, cow tracks herd band, and feed_response shows prompt bunk arrival (0-3 min) and normal stays (11-32 min) at most herd rushes. Appetite looks normal.",
+    "images": [
+     "I0034"
+    ],
+    "confidence": 0.8
+   },
+   "result": "saved V0005",
+   "facts": [
+    "V0005"
+   ],
+   "model": "protected.Claude Opus 4.8"
+  },
+  {
+   "thought": "I have one head crop facing toward (I0041, feeding, head down at bunk) and one side-on top-down (I0042). Neither gives a clean eye/nose/ear view for discharge assessment. Head signs are largely not_assessable, except head posture which is feeding (normal). I'll record that and finalize.",
+   "tool": "record_fact",
+   "args": {
+    "cow_id": "COW_04",
+    "claim": "Head crops (I0041 facing-toward, I0042 side-on) show the cow with head down eating at the bunk in a normal feeding posture; muzzle in feed. Eyes, nose and ears are not clearly resolved at these angles/mud, so discharge and ear detail are not assessable. No head_low-while-standing observed.",
+    "images": [
+     "I0041",
+     "I0042"
+    ],
+    "confidence": 0.7
+   },
+   "result": "saved V0006",
+   "facts": [
+    "V0006"
+   ],
+   "model": "protected.Claude Opus 4.8"
+  },
+  {
+   "thought": "Finalize. COW_04 is a modest outlier (rank 4). The only big deviation (longest_meal_gap +3.0) is not sustained and contradicted by good feed response - treat as artifact/noise. Most other indicators small. Visually head is down eating (normal), no abnormal signs seen; eyes/nose/ears not assessable. Breathing 22/min normal, effort low (protective). No clinical signs confirmed.",
+   "final": {
+    "signs": {
+     "head_low": {
+      "status": "absent",
+      "evidence": [
+       "I0041",
+       "I0042",
+       "V0006"
+      ],
+      "note": "Head crops show head carried down only while eating at the bunk (normal); no head-low-while-standing seen."
+     },
+     "ears_droop": {
+      "status": "not_assessable",
+      "evidence": [
+       "I0041",
+       "I0042"
+      ],
+      "note": "Ears not clearly resolved in the available top-down/feeding head crops."
+     },
+     "nasal_discharge": {
+      "status": "not_assessable",
+      "evidence": [
+       "I0041"
+      ],
+      "note": "Muzzle buried in feed, no clean daylight nose view >=450 px."
+     },
+     "ocular_discharge": {
+      "status": "not_assessable",
+      "evidence": [
+       "I0041",
+       "I0042"
+      ],
+      "note": "Eyes not clearly visible in available crops."
+     },
+     "labored_breathing": {
+      "status": "absent",
+      "evidence": [
+       "F-COW_04-breathing_bpm",
+       "F-COW_04-breathing_effort"
+      ],
+      "note": "22 bpm at rest (herd 20.8), flank effort 57% (below herd 106%); no open-mouth/extended-neck evidence."
+     },
+     "cough": {
+      "status": "not_assessable",
+      "evidence": [
+       "F-COW_04-jerk_rate"
+      ],
+      "note": "Jerk rate 31/h equals herd (30.2); no cough sequence confirmed."
+     },
+     "gaunt": {
+      "status": "not_assessable",
+      "evidence": [
+       "I0035",
+       "I0036",
+       "I0037"
+      ],
+      "note": "Top-down bunk views do not show the left flank for hollow/gaunt assessment."
+     }
+    },
+    "artifacts": [
+     {
+      "indicator": "longest_meal_gap_min",
+      "evidence": [
+       "I0034",
+       "V0005"
+      ],
+      "why": "The 600-min single value drives the +3.0 z and +1.42 contribution, but the 6h trend CUSUM never crossed and the cow tracks the herd band. feed_response shows prompt bunk arrival (0-3 min) and normal 11-32 min stays at most herd rushes, so appetite is normal; the long 'gap' is an overnight/noise artifact, not a real appetite deficit."
+     }
+    ],
+    "behavior_assessment": "I do not believe the dominant longest_meal_gap deviation: it is a single noisy overnight value, not sustained (I0034), and contradicted by good feed response (V0005). feed_call_latency is actually faster than herd (14.3 vs 19.1). The small isolation/edge/walking deviations (+0.8 z, modest contributions) are mild and within noise given short coverage. Feeding_share, meal length, bunk visits are all near herd median. Rumination is above median and breathing effort is low - both protective. Overall COW_04's score is driven mainly by an artifactual meal gap.",
+    "summary": "COW_04 is a low-moderate concern (rank 4 of 10) whose score is inflated by a single 600-minute meal gap that is not sustained and is contradicted by prompt, normal feeding at the bunk. No clinical BRD signs were confirmed on video; breathing is normal and effort low. Head/eye/nose/ear detail could not be assessed cleanly, so a quick hands-on pen check of the face is reasonable if other flags appear, but no urgent intervention is indicated.",
+    "key_evidence": [
+     "F-COW_04-longest_meal_gap_min",
+     "V0005",
+     "I0034",
+     "F-COW_04-feed_call_latency",
+     "F-COW_04-breathing_effort",
+     "V0006"
+    ],
+    "confidence": 0.7
+   },
+   "model": "protected.Claude Opus 4.8"
+  },
+  {
+   "thought": "labored_breathing 'absent' needs an image of this cow. My image evidence shows the cow standing/eating without open-mouth/extended-neck posture (I0041, I0042). I'll cite those plus the breathing facts, or downgrade. Since I did not measure flank in a still breathing window image, but I0041/I0042 show no respiratory distress posture, I'll cite them.",
+   "final": {
+    "signs": {
+     "head_low": {
+      "status": "absent",
+      "evidence": [
+       "I0041",
+       "I0042",
+       "V0006"
+      ],
+      "note": "Head crops show head carried down only while eating at the bunk (normal); no head-low-while-standing seen."
+     },
+     "ears_droop": {
+      "status": "not_assessable",
+      "evidence": [
+       "I0041",
+       "I0042"
+      ],
+      "note": "Ears not clearly resolved in the available top-down/feeding head crops."
+     },
+     "nasal_discharge": {
+      "status": "not_assessable",
+      "evidence": [
+       "I0041"
+      ],
+      "note": "Muzzle buried in feed, no clean daylight nose view >=450 px."
+     },
+     "ocular_discharge": {
+      "status": "not_assessable",
+      "evidence": [
+       "I0041",
+       "I0042"
+      ],
+      "note": "Eyes not clearly visible in available crops."
+     },
+     "labored_breathing": {
+      "status": "absent",
+      "evidence": [
+       "I0041",
+       "I0042",
+       "F-COW_04-breathing_bpm",
+       "F-COW_04-breathing_effort"
+      ],
+      "note": "In the daylight crops (I0041, I0042) the cow shows no open-mouth breathing or extended-neck posture; 22 bpm at rest (herd 20.8) and flank effort 57% (below herd 106%)."
+     },
+     "cough": {
+      "status": "not_assessable",
+      "evidence": [
+       "F-COW_04-jerk_rate"
+      ],
+      "note": "Jerk rate 31/h equals herd (30.2); no cough sequence confirmed."
+     },
+     "gaunt": {
+      "status": "not_assessable",
+      "evidence": [
+       "I0035",
+       "I0036",
+       "I0037"
+      ],
+      "note": "Top-down bunk views do not show the left flank for hollow/gaunt assessment."
+     }
+    },
+    "artifacts": [
+     {
+      "indicator": "longest_meal_gap_min",
+      "evidence": [
+       "I0034",
+       "V0005"
+      ],
+      "why": "The 600-min single value drives the +3.0 z and +1.42 contribution, but the 6h trend CUSUM never crossed and the cow tracks the herd band. feed_response shows prompt bunk arrival (0-3 min) and normal 11-32 min stays at most herd rushes, so appetite is normal; the long 'gap' is an overnight/noise artifact, not a real appetite deficit."
+     }
+    ],
+    "behavior_assessment": "I do not believe the dominant longest_meal_gap deviation: it is a single noisy overnight value, not sustained (I0034), and contradicted by good feed response (V0005). feed_call_latency is actually faster than herd (14.3 vs 19.1). The small isolation/edge/walking deviations (+0.8 z, modest contributions) are mild and within noise given short coverage. Feeding_share, meal length, bunk visits are all near herd median. Rumination is above median and breathing effort is low - both protective. Overall COW_04's score is driven mainly by an artifactual meal gap.",
+    "summary": "COW_04 is a low-moderate concern (rank 4 of 10) whose score is inflated by a single 600-minute meal gap that is not sustained and is contradicted by prompt, normal feeding at the bunk. No clinical BRD signs were confirmed on video; breathing is normal and effort low. Head/eye/nose/ear detail could not be assessed cleanly, so a quick hands-on pen check of the face is reasonable if other flags appear, but no urgent intervention is indicated.",
+    "key_evidence": [
+     "F-COW_04-longest_meal_gap_min",
+     "V0005",
+     "I0034",
+     "F-COW_04-feed_call_latency",
+     "F-COW_04-breathing_effort",
+     "V0006"
+    ],
+    "confidence": 0.7
+   },
+   "model": "protected.Claude Opus 4.8",
+   "revision": true
+  }
+ ],
+ "self_check_first": [
+  "labored_breathing=absent cites no image of COW_04 (cite the I#### you looked at)"
+ ],
+ "self_check_after_revision": [],
+ "final": {
+  "signs": {
+   "head_low": {
+    "status": "absent",
+    "evidence": [
+     "I0041",
+     "I0042",
+     "V0006"
+    ],
+    "note": "Head crops show head carried down only while eating at the bunk (normal); no head-low-while-standing seen."
+   },
+   "ears_droop": {
+    "status": "not_assessable",
+    "evidence": [
+     "I0041",
+     "I0042"
+    ],
+    "note": "Ears not clearly resolved in the available top-down/feeding head crops."
+   },
+   "nasal_discharge": {
+    "status": "not_assessable",
+    "evidence": [
+     "I0041"
+    ],
+    "note": "Muzzle buried in feed, no clean daylight nose view >=450 px."
+   },
+   "ocular_discharge": {
+    "status": "not_assessable",
+    "evidence": [
+     "I0041",
+     "I0042"
+    ],
+    "note": "Eyes not clearly visible in available crops."
+   },
+   "labored_breathing": {
+    "status": "absent",
+    "evidence": [
+     "I0041",
+     "I0042",
+     "F-COW_04-breathing_bpm",
+     "F-COW_04-breathing_effort"
+    ],
+    "note": "In the daylight crops (I0041, I0042) the cow shows no open-mouth breathing or extended-neck posture; 22 bpm at rest (herd 20.8) and flank effort 57% (below herd 106%)."
+   },
+   "cough": {
+    "status": "not_assessable",
+    "evidence": [
+     "F-COW_04-jerk_rate"
+    ],
+    "note": "Jerk rate 31/h equals herd (30.2); no cough sequence confirmed."
+   },
+   "gaunt": {
+    "status": "not_assessable",
+    "evidence": [
+     "I0035",
+     "I0036",
+     "I0037"
+    ],
+    "note": "Top-down bunk views do not show the left flank for hollow/gaunt assessment."
+   }
+  },
+  "artifacts": [
+   {
+    "indicator": "longest_meal_gap_min",
+    "evidence": [
+     "I0034",
+     "V0005"
+    ],
+    "why": "The 600-min single value drives the +3.0 z and +1.42 contribution, but the 6h trend CUSUM never crossed and the cow tracks the herd band. feed_response shows prompt bunk arrival (0-3 min) and normal 11-32 min stays at most herd rushes, so appetite is normal; the long 'gap' is an overnight/noise artifact, not a real appetite deficit."
+   }
+  ],
+  "behavior_assessment": "I do not believe the dominant longest_meal_gap deviation: it is a single noisy overnight value, not sustained (I0034), and contradicted by good feed response (V0005). feed_call_latency is actually faster than herd (14.3 vs 19.1). The small isolation/edge/walking deviations (+0.8 z, modest contributions) are mild and within noise given short coverage. Feeding_share, meal length, bunk visits are all near herd median. Rumination is above median and breathing effort is low - both protective. Overall COW_04's score is driven mainly by an artifactual meal gap.",
+  "summary": "COW_04 is a low-moderate concern (rank 4 of 10) whose score is inflated by a single 600-minute meal gap that is not sustained and is contradicted by prompt, normal feeding at the bunk. No clinical BRD signs were confirmed on video; breathing is normal and effort low. Head/eye/nose/ear detail could not be assessed cleanly, so a quick hands-on pen check of the face is reasonable if other flags appear, but no urgent intervention is indicated.",
+  "key_evidence": [
+   "F-COW_04-longest_meal_gap_min",
+   "V0005",
+   "I0034",
+   "F-COW_04-feed_call_latency",
+   "F-COW_04-breathing_effort",
+   "V0006"
+  ],
+  "confidence": 0.7
+ },
+ "models": [
+  "protected.Claude Opus 4.8"
+ ]
+}

@@ -43,3 +43,8 @@ brd_agent/.pytest_cache/
 
 # --- local caches (VLM responses, may hold event data) ---
 brd_agent/cache/
+
+# --- Submission results (event data, pushed with the team's OK: keep this repo private) ---
+!submission/
+!submission/**
+submission/**/.DS_Store

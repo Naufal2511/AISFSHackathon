@@ -1,0 +1,159 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>World state</title>
+<style>
+  :root { --ink:#18212b; --soft:#3a4652; --mute:#7a8591; --rule:#dfe4ea; --acc:#0f5a6b; --warm:#a85a24; --panel:#f5f7f9; --bg:#fbfcfd;
+          --vis:#2e8b6e; --part:#d69a2d; --none:#c9d0d7; }
+  html,body { margin:0; width:1920px; height:1080px; overflow:hidden; background:var(--bg); font-family:"Avenir Next",Avenir,sans-serif; color:var(--ink); }
+  #title { position:absolute; left:80px; top:56px; }
+  .eyebrow { font-size:20px; font-weight:600; letter-spacing:3px; text-transform:uppercase; color:var(--acc); }
+  h1 { font-size:52px; margin:8px 0 0; font-weight:700; letter-spacing:-0.5px; }
+  .subt { font-size:24px; color:var(--mute); margin-top:6px; }
+  #clock { position:absolute; right:80px; top:66px; text-align:right; }
+  #clock .t { font-size:46px; font-weight:600; font-variant-numeric:tabular-nums; }
+  #clock .d { font-size:20px; color:var(--mute); }
+  #clock .sp { display:inline-block; margin-top:6px; font-size:18px; font-weight:600; color:#fff; background:var(--acc); padding:3px 10px; border-radius:4px; }
+  #map { position:absolute; left:0; top:0; }
+  #panel { position:absolute; left:1366px; top:250px; width:500px; }
+  #panel .hd { display:grid; grid-template-columns:138px 1fr 152px; font-size:14px; font-weight:600; color:var(--mute); letter-spacing:1px; text-transform:uppercase; padding:0 0 8px; border-bottom:2px solid var(--ink); }
+  .row { display:grid; grid-template-columns:138px 1fr 152px; align-items:center; height:48px; border-bottom:1px solid var(--rule); font-size:19px; }
+  .row .id { font-weight:700; display:flex; align-items:center; gap:10px; }
+  .row .dot { width:14px; height:14px; border-radius:50%; }
+  .row .beh { color:var(--soft); font-size:16px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .chips { display:flex; gap:5px; }
+  .chip { width:44px; height:24px; border-radius:4px; font-size:12px; font-weight:700; color:#fff; display:flex; align-items:center; justify-content:center; letter-spacing:.5px; }
+  .row.focus { background:#fdf3ea; }
+  #legend { position:absolute; left:1366px; top:810px; width:500px; display:grid; grid-template-columns:1fr 1fr; gap:14px 20px; font-size:18px; color:var(--soft); }
+  #legend > div { display:flex; align-items:center; gap:10px; height:30px; }
+  #callout { position:absolute; width:560px; background:#fff; border:2px solid var(--warm); border-radius:8px; padding:14px 18px; box-shadow:0 6px 24px rgba(24,33,43,.12); font-size:18px; line-height:1.45; }
+  #callout .h { font-weight:700; color:var(--warm); font-size:16px; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:4px; }
+  #callout .ln { display:flex; justify-content:space-between; gap:12px; }
+  #callout .ln b { font-weight:600; }
+  #callout .cam { font-weight:700; width:70px; }
+  .fade { transition:none; }
+</style></head>
+<body>
+<div id="title"><div class="eyebrow">World state · Level 1</div><h1>Every cow, every second</h1><div class="subt">position · heading · which cameras see her · how well</div></div>
+<div id="clock"><div class="d" id="date"></div><div class="t" id="time"></div><div class="sp">20× real time · real data</div></div>
+<svg id="map" width="1920" height="1080"></svg>
+<div id="panel"><div class="hd"><div>Cow</div><div>Doing · zone</div><div>Front Bunk Back</div></div><div id="rows"></div></div>
+<div id="callout"></div>
+<div id="legend">
+  <div><svg width="30" height="30"><circle cx="15" cy="15" r="11" fill="#7a8591" stroke="#18212b" stroke-width="3"/></svg>seen by a camera</div>
+  <div><span class="chip" style="background:var(--vis)">VIS</span>visible</div>
+  <div><svg width="30" height="30"><circle cx="15" cy="15" r="13" fill="#7a8591" fill-opacity=".15" stroke="#7a8591" stroke-dasharray="3 3"/><circle cx="15" cy="15" r="8" fill="#7a8591" fill-opacity=".35" stroke="#18212b" stroke-width="2.5" stroke-dasharray="4 3"/></svg>predicted · halo = ± metres</div>
+  <div><span class="chip" style="background:var(--part)">PART</span>partly hidden</div>
+  <div><svg width="30" height="30"><line x1="6" y1="15" x2="26" y2="15" stroke="#18212b" stroke-width="3.5" stroke-linecap="round"/><circle cx="26" cy="15" r="3.5" fill="#18212b"/></svg>heading</div>
+  <div><span class="chip" style="background:var(--none)">—</span>not seen</div>
+</div>
+<script>
+const DATA = __DATA__;
+const SPEED = 20, N = DATA.n;
+const COLORS = {COW_01:"#1f77b4",COW_02:"#d62728",COW_03:"#2ca02c",COW_04:"#9467bd",COW_05:"#8c564b",COW_06:"#e377c2",COW_07:"#17becf",COW_08:"#bcbd22",COW_09:"#ff7f0e",COW_10:"#7f7f7f"};
+const IDS = Object.keys(COLORS);
+// map: pen 12 m (x) by 30 m (y). Drawn sideways: bunk (y=0) on the left, back fence (y=30) on the right.
+const S = 40, MX = 120, MY = 300;               // px per metre, origin of pen corner (x=0,y=0)
+const P = (x, y) => [MX + y * S, MY + x * S];
+const CAMS = {cam1:{name:"front",xy:[3,0]}, cam2:{name:"bunk",xy:[7.5,0]}, cam3:{name:"back",xy:[0.7,29.4]}};
+const CAMORDER = ["cam1","cam2","cam3"];
+const ns = "http://www.w3.org/2000/svg";
+const svg = document.getElementById("map");
+function el(tag, attrs, parent) { const e = document.createElementNS(ns, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); (parent||svg).appendChild(e); return e; }
+function rect(x0,y0,x1,y1,attrs){ const [a,b]=P(x0,y0),[c,d]=P(x1,y1); return el("rect",Object.assign({x:Math.min(a,c),y:Math.min(b,d),width:Math.abs(c-a),height:Math.abs(d-b)},attrs)); }
+// static pen
+rect(0,0,12,30,{fill:"#fff",stroke:"#18212b","stroke-width":3,rx:4});
+rect(1.5,10,10.5,22,{fill:"#eef3ee",stroke:"none"});
+rect(0,0,12,4,{fill:"#f3efe6",stroke:"none"});
+rect(8.5,14,11.5,18,{fill:"#e6f0f7",stroke:"#9fbfd6","stroke-width":1.5,rx:3});
+rect(0,-1,12,0,{fill:"#a85a24",opacity:.85});
+function lab(x,y,t,a){ const [px,py]=P(x,y); const e=el("text",Object.assign({x:px,y:py,"font-size":17,"font-weight":600,fill:"#7a8591","letter-spacing":1.5},a||{})); e.textContent=t; return e; }
+lab(6,-1.6,"FEED BUNK",{transform:`rotate(-90 ${P(6,-1.6)[0]} ${P(6,-1.6)[1]})`,"text-anchor":"middle"});
+lab(10.0,16,"WATER",{"text-anchor":"middle"});
+lab(1.0,16,"RESTING AREA",{"text-anchor":"middle"});
+lab(1.0,2,"BUNK APRON",{"text-anchor":"middle"});
+lab(12.9,0,"0 m",{"font-size":15}); lab(12.9,29.2,"30 m",{"font-size":15});
+// cameras
+for (const c of CAMORDER) { const [px,py]=P(...CAMS[c].xy); el("rect",{x:px-11,y:py-11,width:22,height:22,rx:4,fill:"#18212b"}); const t=el("text",{x:px,y:py+(CAMS[c].xy[0]<1?-20:36),"text-anchor":"middle","font-size":16,"font-weight":700,fill:"#18212b"}); t.textContent=CAMS[c].name.toUpperCase(); }
+const clip = el("clipPath",{id:"pen"}); { const [a,b]=P(0,0),[c,d]=P(12,30); el("rect",{x:a,y:b,width:c-a,height:d-b},clip); }
+const gTrail = el("g",{"clip-path":"url(#pen)"}), gHalo = el("g",{"clip-path":"url(#pen)"}), gCow = el("g",{}), gLink = el("g",{});
+// focus cow: most seconds partly hidden by a named cow, and at least once predicted
+const score = {};
+DATA.vis.forEach(v => { for (const c in v) for (const k in v[c]) if (v[c][k].v === "partial" && v[c][k].o) score[c] = (score[c]||0) + 1; });
+DATA.state.forEach(s => { for (const c in s) if (s[c].p) score[c] = (score[c]||0) + 0.5; });
+const FOCUS = Object.keys(score).sort((a,b)=>score[b]-score[a])[0];
+const present = IDS.filter(id => DATA.state.some(s => s[id]));
+const rows = document.getElementById("rows");
+const rowEls = {};
+for (const id of present) {
+  const r = document.createElement("div"); r.className = "row" + (id===FOCUS?" focus":"");
+  r.innerHTML = `<div class="id"><span class="dot" style="background:${COLORS[id]}"></span>${id}</div><div class="beh"></div><div class="chips">${CAMORDER.map(()=>'<div class="chip"></div>').join("")}</div>`;
+  rows.appendChild(r); rowEls[id] = r;
+}
+function lerp(a,b,f){ return a+(b-a)*f; }
+function stateAt(sec, id) {
+  const i = Math.max(0, Math.min(N-1, Math.floor(sec))), j = Math.min(N-1, i+1), f = sec - i;
+  const a = DATA.state[i][id], b = DATA.state[j][id] || a;
+  if (!a || a.x == null) return null;
+  return {x:lerp(a.x,b.x,f), y:lerp(a.y,b.y,f), h:a.h, p:a.p, sd:lerp(a.sd||0,b.sd||0,f), b:a.b, z:a.z};
+}
+function fmt(sec){ const d = new Date(DATA.start.replace(" ","T")); d.setSeconds(d.getSeconds()+Math.floor(sec)); return d.toTimeString().slice(0,8); }
+document.getElementById("date").textContent = "Pen 6 · " + DATA.start.slice(0,10);
+const BEH = {"ruminating (lying)":"rumin. lying","ruminating (standing)":"rumin. standing","other / not visible":"not visible","social interaction":"social"};
+function render(t) {
+  const sec = Math.min(N - 1.001, t * SPEED);
+  const fadeIn = Math.min(1, t / 0.8);
+  document.body.style.opacity = fadeIn;
+  document.getElementById("time").textContent = fmt(sec);
+  gTrail.innerHTML = ""; gHalo.innerHTML = ""; gCow.innerHTML = ""; gLink.innerHTML = "";
+  const iv = Math.floor(sec);
+  for (const id of present) {
+    const s = stateAt(sec, id); if (!s) continue;
+    // trail: last 30 s
+    let seg = [], prev = null; const segs = [seg];
+    for (let k = Math.max(0, iv-30); k <= iv; k++) { const q = DATA.state[k][id];
+      if (!q || q.x == null || q.p) { prev = null; if (seg.length) { seg = []; segs.push(seg); } continue; }
+      if (prev && Math.hypot(q.x-prev.x, q.y-prev.y) > 1.5) { seg = []; segs.push(seg); }
+      seg.push(P(q.x,q.y).join(",")); prev = q; }
+    for (const sg of segs) if (sg.length > 1) el("polyline",{points:sg.join(" "),fill:"none",stroke:COLORS[id],"stroke-width":3,"stroke-opacity":.3,"stroke-linecap":"round","stroke-linejoin":"round"},gTrail);
+    const [px,py] = P(s.x,s.y);
+    if (s.p) el("circle",{cx:px,cy:py,r:Math.min(3, Math.max(0.45, s.sd||0.5))*S,fill:COLORS[id],"fill-opacity":.12,stroke:COLORS[id],"stroke-opacity":.35,"stroke-dasharray":"3 4"},gHalo);
+    const g = el("g",{},gCow);
+    el("circle",{cx:px,cy:py,r:14,fill:COLORS[id],"fill-opacity":s.p?.35:.95,stroke:"#18212b","stroke-width":id===FOCUS?4:2.5,"stroke-dasharray":s.p?"5 4":"none"},g);
+    if (s.h != null) { const r = s.h*Math.PI/180, dx = Math.sin(r), dy = Math.cos(r);  // map (x,y) -> screen (y right, x down)
+      const ux = Math.sin(r)*0+Math.sin(r), uy = Math.cos(r);
+      const sx = px + Math.sin(r)*0, sy = py;
+      const vx = Math.sin(r), vy = Math.cos(r);
+      // heading vector in metres is (cos h, sin h) for (x,y); on screen x->down, y->right
+      const hx = Math.sin(r), hy = Math.cos(r);   // screen dx = sin(h) (y-comp), screen dy = cos(h) (x-comp)
+      el("line",{x1:px+hx*16,y1:py+hy*16,x2:px+hx*34,y2:py+hy*34,stroke:"#18212b","stroke-width":3.5,"stroke-linecap":"round"},g);
+      el("circle",{cx:px+hx*34,cy:py+hy*34,r:3.5,fill:"#18212b"},g); }
+    const tx = el("text",{x:px,y:py-22,"text-anchor":"middle","font-size":15,"font-weight":700,fill:"#18212b"},g); tx.textContent = id.replace("COW_","");
+    // panel row
+    const row = rowEls[id];
+    row.querySelector(".beh").textContent = (BEH[s.b]||s.b||"—") + " · " + (s.z==="other"?"alley":s.z);
+    const v = DATA.vis[iv][id] || {};
+    row.querySelectorAll(".chip").forEach((c, k) => { const o = v[CAMORDER[k]];
+      if (!o) { c.style.background = "var(--none)"; c.textContent = "—"; }
+      else { c.style.background = o.v === "visible" ? "var(--vis)" : "var(--part)"; c.textContent = o.v === "visible" ? "VIS" : "PART"; } });
+  }
+  // focus callout, positioned near the focus cow
+  const fs = stateAt(sec, FOCUS), co = document.getElementById("callout");
+  if (fs) {
+    const [px,py] = P(fs.x,fs.y);
+    const v = DATA.vis[iv][FOCUS] || {};
+    const lines = CAMORDER.map(c => { const o = v[c];
+      if (!o) return `<div class="ln"><span class="cam">${CAMS[c].name}</span><span style="color:var(--mute)">not seen</span></div>`;
+      const st = o.v === "partial" ? (o.o ? `partly hidden by <b>${o.o}</b>` : "partly hidden") : "<b>visible</b>";
+      const fc = o.f && o.f !== "unknown" ? ` · facing ${o.f}` : "";
+      return `<div class="ln"><span class="cam">${CAMS[c].name}</span><span>${st}${fc} · box ${o.a}%</span></div>`; }).join("");
+    co.innerHTML = `<div class="h">${FOCUS} · ${fs.p ? "position predicted" : "position observed"}</div>${lines}` +
+      (fs.p ? `<div style="margin-top:4px;color:var(--warm)">uncertainty ± ${fs.sd.toFixed(1)} m</div>` : "");
+    const cx = Math.min(1320 - 560, Math.max(120, px - 280)), cy = 820;
+    co.style.left = cx + "px"; co.style.top = cy + "px";
+    el("line",{x1:px,y1:py+16,x2:cx+280,y2:cy,stroke:"#a85a24","stroke-width":2,"stroke-dasharray":"5 5"},gLink);
+    el("circle",{cx:px,cy:py,r:24,fill:"none",stroke:"#a85a24","stroke-width":3},gLink);
+  }
+}
+window.render = render;
+render(0.8);
+</script>
+</body></html>

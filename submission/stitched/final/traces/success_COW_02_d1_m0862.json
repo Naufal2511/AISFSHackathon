@@ -1,0 +1,633 @@
+{
+ "trace_id": "COW_02_d1_m0862",
+ "brief": {
+  "cow_id": "COW_02",
+  "day": 1,
+  "minute": 862,
+  "tier1_top": [
+   [
+    "drinking",
+    0.6933
+   ],
+   [
+    "walking",
+    0.3054
+   ]
+  ],
+  "tier1_entropy": 0.6248345633178763,
+  "zone_fractions": {
+   "feed_bunk": 0.016666666666666666,
+   "resting": 0.7333333333333333,
+   "open": 0.13333333333333333
+  },
+  "speed_px_s": 0.262,
+  "posture": null,
+  "visible_frac": {
+   "back": 0.96,
+   "front": 0.307,
+   "top": 0.0
+  },
+  "id_conf": 0.925,
+  "is_night": false,
+  "prev_label": "drinking",
+  "next_label_tier1": "feeding",
+  "camera_disagreement": true,
+  "task": "verify",
+  "src_file": "Event20261108142134003.Avi",
+  "src_camera": "back",
+  "src_offset_s": 56.0,
+  "abs_time": "2026-11-08T14:22:30",
+  "yolo_flags": [
+   "camera_conflict",
+   "label_unstable",
+   "rule_contradiction:zone_drinking",
+   "yolo_flag:camera_conflict",
+   "yolo_flag:label_unstable"
+  ]
+ },
+ "events": [
+  {
+   "t": 0.0,
+   "type": "gate",
+   "action": "agent",
+   "reasons": [
+    "camera_disagreement",
+    "rare_class_modest_conf"
+   ]
+  },
+  {
+   "t": 1.289,
+   "type": "night_check",
+   "camera": "back",
+   "brightness": 116.8,
+   "saturation": 0.189,
+   "ir_like": false,
+   "is_night": false
+  },
+  {
+   "t": 4.927,
+   "type": "vlm",
+   "task": "plan",
+   "prompt_tokens": 2925,
+   "completion_tokens": 508,
+   "latency_s": 3.63,
+   "cached": false,
+   "repaired": false
+  },
+  {
+   "t": 4.927,
+   "type": "plan",
+   "source": "llm",
+   "rationale": "The main uncertainty is drinking versus walking, while camera disagreement and a contradictory drinking-zone flag require independent checks. I will first verify visibility and spatial location, then assess displacement, bout context, and visual head position over time.",
+   "steps": [
+    {
+     "tool": "best_camera",
+     "args": {},
+     "reason": "This identifies which camera provides the most reliable view because the cameras currently disagree.",
+     "source": "planner"
+    },
+    {
+     "tool": "zone_query",
+     "args": {},
+     "reason": "This tests whether the cow's head and body were actually at the waterer rather than merely near another zone.",
+     "source": "planner"
+    },
+    {
+     "tool": "track_history",
+     "args": {
+      "window_s": 90
+     },
+     "reason": "This measures sustained displacement and speed needed to distinguish walking from a stationary drinking event.",
+     "source": "planner"
+    },
+    {
+     "tool": "cow_history",
+     "args": {
+      "lookback_min": 30
+     },
+     "reason": "This provides context about the cow's current drinking or walking bout without treating prior labels as proof.",
+     "source": "planner"
+    },
+    {
+     "tool": "temporal_window",
+     "args": {
+      "camera": "auto",
+      "before_s": 20,
+      "after_s": 20,
+      "n_frames": 6
+     },
+     "reason": "This shows whether the cow remains at the waterer or travels across the pen during the minute.",
+     "source": "planner"
+    },
+    {
+     "tool": "zoom",
+     "args": {
+      "camera": "auto",
+      "region": "head",
+      "t_offset_s": 0,
+      "scale": 3.0
+     },
+     "reason": "This checks the muzzle's relation to the waterer and whether the head is lowered for drinking.",
+     "source": "planner"
+    },
+    {
+     "tool": "get_frames",
+     "args": {
+      "camera": "auto",
+      "t_offset_s": -20
+     },
+     "reason": "This supplies an earlier whole-body view to verify identity, position, and whether movement toward or away from the waterer occurred.",
+     "source": "planner"
+    },
+    {
+     "tool": "get_frames",
+     "args": {
+      "camera": "auto",
+      "t_offset_s": 20
+     },
+     "reason": "This supplies a later whole-body view to compare displacement and persistence of the candidate behavior.",
+     "source": "planner"
+    }
+   ],
+   "mandatory_added": []
+  },
+  {
+   "t": 4.928,
+   "type": "tool",
+   "tool": "best_camera",
+   "args": {},
+   "ok": true,
+   "facts": {
+    "visible_frac": {
+     "back": 0.96,
+     "front": 0.307,
+     "top": 0.0
+    },
+    "best_camera": "back"
+   },
+   "error": null,
+   "images": [],
+   "captions": [],
+   "reason": "This identifies which camera provides the most reliable view because the cameras currently disagree.",
+   "source": "planner"
+  },
+  {
+   "t": 4.928,
+   "type": "tool",
+   "tool": "zone_query",
+   "args": {},
+   "ok": true,
+   "facts": {
+    "available": true,
+    "zone_fractions": {
+     "feed_bunk": 0.016666666666666666,
+     "waterer": 0.0,
+     "resting": 0.7333333333333333,
+     "open": 0.13333333333333333
+    },
+    "head_in_bunk_frac": 0.016666666666666666,
+    "source": "fused_state",
+    "note": "zones come from the tracking state (body position, no separate waterer zone); head position not measured"
+   },
+   "error": null,
+   "images": [],
+   "captions": [],
+   "reason": "This tests whether the cow's head and body were actually at the waterer rather than merely near another zone.",
+   "source": "planner"
+  },
+  {
+   "t": 4.928,
+   "type": "tool",
+   "tool": "track_history",
+   "args": {
+    "window_s": 90.0
+   },
+   "ok": true,
+   "facts": {
+    "speed_mean": 0.262,
+    "speed_max": 1.09,
+    "displacement_m": 9.81,
+    "unit": "m/s",
+    "posture_mode": "unknown",
+    "posture_changes": 0,
+    "n_records": 60,
+    "camera": "back",
+    "prev_label": "drinking",
+    "next_label_tier1": "feeding"
+   },
+   "error": null,
+   "images": [],
+   "captions": [],
+   "reason": "This measures sustained displacement and speed needed to distinguish walking from a stationary drinking event.",
+   "source": "planner"
+  },
+  {
+   "t": 4.929,
+   "type": "tool",
+   "tool": "cow_history",
+   "args": {
+    "lookback_min": 30
+   },
+   "ok": true,
+   "facts": {
+    "available": true,
+    "recent_runs": "ruminating_lying x6 > lying x1 > ruminating_lying x6 > lying x1 > ruminating_lying x5 > drinking x4 > standing x1 > drinking x1 > standing x1 > drinking x1 > other_not_visible x2 > drinking x1",
+    "current_bout": {
+     "label": "drinking",
+     "minutes": 1,
+     "ends_minutes_ago": 1,
+     "final": true
+    },
+    "minutes_since": {
+     "feeding": null,
+     "drinking": 1,
+     "lying": 17,
+     "walking": null,
+     "ruminating_lying": 12,
+     "ruminating_standing": null
+    },
+    "counts_last_60": {
+     "other_not_visible": 8,
+     "ruminating_lying": 40,
+     "standing": 3,
+     "lying": 2,
+     "drinking": 7
+    },
+    "n_provisional_in_window": 0,
+    "note": "context only (same cow, recent minutes); the current minute's images and measurements decide. '?' = provisional tier-1 label",
+    "next_tier1": [
+     "feeding",
+     "feeding"
+    ]
+   },
+   "error": null,
+   "images": [],
+   "captions": [],
+   "reason": "This provides context about the cow's current drinking or walking bout without treating prior labels as proof.",
+   "source": "planner"
+  },
+  {
+   "t": 8.804,
+   "type": "tool",
+   "tool": "temporal_window",
+   "args": {
+    "camera": "auto",
+    "before_s": 20.0,
+    "after_s": 20.0,
+    "n_frames": 6
+   },
+   "ok": true,
+   "facts": {
+    "camera": "back",
+    "n_frames": 6,
+    "span_s": [
+     -20.0,
+     20.0
+    ]
+   },
+   "error": null,
+   "images": [
+    "img/2c5d9711_crop_6aa31a71.png",
+    "img/bba5dc4a_crop_f7b4ac4d.png",
+    "img/d33ac708_crop_88d6832c.png",
+    "img/26b4b75b_crop_ce7c418c.png",
+    "img/a70739af_crop_2124a567.png",
+    "img/709cf558_crop_bc33135b.png"
+   ],
+   "captions": [
+    "back filmstrip frame 1/6",
+    "back filmstrip frame 2/6",
+    "back filmstrip frame 3/6",
+    "back filmstrip frame 4/6",
+    "back filmstrip frame 5/6",
+    "back filmstrip frame 6/6"
+   ],
+   "reason": "This shows whether the cow remains at the waterer or travels across the pen during the minute.",
+   "source": "planner"
+  },
+  {
+   "t": 9.411,
+   "type": "tool",
+   "tool": "zoom",
+   "args": {
+    "camera": "auto",
+    "region": "head",
+    "t_offset_s": 0.0,
+    "scale": 3.0
+   },
+   "ok": true,
+   "facts": {
+    "camera": "back",
+    "region": "head",
+    "available": true
+   },
+   "error": null,
+   "images": [
+    "img/2d91eb26_crop_ab6b4982.png"
+   ],
+   "captions": [
+    "back head zoom x3 t=+0s"
+   ],
+   "reason": "This checks the muzzle's relation to the waterer and whether the head is lowered for drinking.",
+   "source": "planner"
+  },
+  {
+   "t": 9.881,
+   "type": "tool",
+   "tool": "get_frames",
+   "args": {
+    "camera": "auto",
+    "t_offset_s": -20.0
+   },
+   "ok": true,
+   "facts": {
+    "camera": "back",
+    "t_offset_s": -20.0,
+    "available": true
+   },
+   "error": null,
+   "images": [
+    "img/2c5d9711_crop_6aa31a71.png"
+   ],
+   "captions": [
+    "back body t=-20s"
+   ],
+   "reason": "This supplies an earlier whole-body view to verify identity, position, and whether movement toward or away from the waterer occurred.",
+   "source": "planner"
+  },
+  {
+   "t": 10.344,
+   "type": "tool",
+   "tool": "get_frames",
+   "args": {
+    "camera": "auto",
+    "t_offset_s": 20.0
+   },
+   "ok": true,
+   "facts": {
+    "camera": "back",
+    "t_offset_s": 20.0,
+    "available": true
+   },
+   "error": null,
+   "images": [
+    "img/709cf558_crop_bc33135b.png"
+   ],
+   "captions": [
+    "back body t=+20s"
+   ],
+   "reason": "This supplies a later whole-body view to compare displacement and persistence of the candidate behavior.",
+   "source": "planner"
+  },
+  {
+   "t": 15.708,
+   "type": "vlm",
+   "task": "hypothesis",
+   "prompt_tokens": 2968,
+   "completion_tokens": 433,
+   "latency_s": 5.31,
+   "cached": false,
+   "repaired": false
+  },
+  {
+   "t": 15.708,
+   "type": "hypothesis",
+   "stage": "first",
+   "label": "walking",
+   "confidence": 0.96,
+   "cues": [
+    "Cow is visibly upright on four legs in the supplied frames and changes position across frames",
+    "Measured displacement is 9.81 m over the minute with mean speed 0.262 and maximum speed 1.09",
+    "Waterer zone fraction is 0.0 and head-in-bunk fraction is only 0.0167"
+   ],
+   "alternatives": [
+    [
+     "standing",
+     0.03
+    ],
+    [
+     "drinking",
+     0.01
+    ]
+   ],
+   "needs": null,
+   "rationale": "Walking is dominant because the cow is upright and visibly changes location, while tracking measured 9.81 m of displacement during the minute. Standing is weaker because the measured displacement is substantial, and drinking is unsupported by the zero waterer-zone fraction.",
+   "tags": []
+  },
+  {
+   "t": 15.708,
+   "type": "verifier",
+   "stage": "first",
+   "checks": [
+    {
+     "name": "visibility",
+     "passed": true,
+     "severity": "hard",
+     "detail": "max visible fraction 0.96 (min 0.15)"
+    },
+    {
+     "name": "posture_walking",
+     "passed": true,
+     "severity": "hard",
+     "detail": "posture=unknown, speed=0.3px/s"
+    }
+   ],
+   "n_hard": 0,
+   "n_soft": 0
+  },
+  {
+   "t": 15.708,
+   "type": "decision",
+   "behavior": "walking",
+   "confidence": 0.96,
+   "reason": "agent_accept",
+   "correction": "behavior_corrected",
+   "rationale": "YOLO said 'drinking' but the evidence supports 'walking': Walking is dominant because the cow is upright and visibly changes location, while tracking measured 9.81 m of displacement during the minute. Standing is weaker because the measured displacement is substantial, and drinking is unsupported by the zero waterer-zone fraction.; all automatic checks passed."
+  }
+ ],
+ "decision": {
+  "cow_id": "COW_02",
+  "day": 1,
+  "minute": 862,
+  "behavior": "walking",
+  "confidence": 0.96,
+  "source": "model_estimate",
+  "tier": 2,
+  "reason": "agent_accept",
+  "cameras_used": [
+   "back"
+  ],
+  "tier1_label": "drinking",
+  "n_tool_calls": 8,
+  "n_vlm_calls": 2,
+  "trace_id": "COW_02_d1_m0862",
+  "flags": [
+   "disagrees_with_tier1"
+  ],
+  "behavior_tags": [],
+  "used_history": true,
+  "tokens_in": 5893,
+  "tokens_out": 941,
+  "provider": "openai",
+  "model": "protected.gpt-5.6-luna",
+  "prompt_version": "v3",
+  "rationale": "YOLO said 'drinking' but the evidence supports 'walking': Walking is dominant because the cow is upright and visibly changes location, while tracking measured 9.81 m of displacement during the minute. Standing is weaker because the measured displacement is substantial, and drinking is unsupported by the zero waterer-zone fraction.; all automatic checks passed.",
+  "correction": "behavior_corrected",
+  "is_night": false,
+  "id_verified": null,
+  "id_suggested": null,
+  "actions": [
+   {
+    "seq": 1,
+    "actor": "gate",
+    "action": "gate:agent",
+    "args": {},
+    "reason": "escalation rules: camera_disagreement, rare_class_modest_conf",
+    "outcome": "agent",
+    "source": ""
+   },
+   {
+    "seq": 2,
+    "actor": "agent",
+    "action": "night_check",
+    "args": {
+     "camera": "back"
+    },
+    "reason": "measure brightness and colour saturation of the actual frame, so night/infrared handling does not depend on the clock or an upstream flag",
+    "outcome": "brightness=116.8, saturation=0.189, ir_like=False -> night=False",
+    "source": ""
+   },
+   {
+    "seq": 3,
+    "actor": "vlm",
+    "action": "plan",
+    "args": {},
+    "reason": "The main uncertainty is drinking versus walking, while camera disagreement and a contradictory drinking-zone flag require independent checks. I will first verify visibility and spatial location, then assess displacement, bout context, and visual head position over time.",
+    "outcome": "8 steps: ['best_camera', 'zone_query', 'track_history', 'cow_history', 'temporal_window', 'zoom', 'get_frames', 'get_frames']",
+    "source": ""
+   },
+   {
+    "seq": 4,
+    "actor": "tool",
+    "action": "tool:best_camera",
+    "args": {},
+    "reason": "This identifies which camera provides the most reliable view because the cameras currently disagree.",
+    "outcome": "ok {\"visible_frac\":{\"back\":0.96,\"front\":0.307,\"top\":0.0},\"best_camera\":\"back\"}",
+    "source": "planner"
+   },
+   {
+    "seq": 5,
+    "actor": "tool",
+    "action": "tool:zone_query",
+    "args": {},
+    "reason": "This tests whether the cow's head and body were actually at the waterer rather than merely near another zone.",
+    "outcome": "ok {\"available\":true,\"zone_fractions\":{\"feed_bunk\":0.016666666666666666,\"waterer\":0.0,\"resting\":0.7333333333333333,\"open\":0.13333333333333333},\"head_in_bunk_frac\":0.016666666666666666,\"source\":\"fused_sta...",
+    "source": "planner"
+   },
+   {
+    "seq": 6,
+    "actor": "tool",
+    "action": "tool:track_history",
+    "args": {
+     "window_s": 90.0
+    },
+    "reason": "This measures sustained displacement and speed needed to distinguish walking from a stationary drinking event.",
+    "outcome": "ok {\"speed_mean\":0.262,\"speed_max\":1.09,\"displacement_m\":9.81,\"unit\":\"m/s\",\"posture_mode\":\"unknown\",\"posture_changes\":0,\"n_records\":60,\"camera\":\"back\",\"prev_label\":\"drinking\",\"next_label_tier1\":\"feeding\"...",
+    "source": "planner"
+   },
+   {
+    "seq": 7,
+    "actor": "tool",
+    "action": "tool:cow_history",
+    "args": {
+     "lookback_min": 30
+    },
+    "reason": "This provides context about the cow's current drinking or walking bout without treating prior labels as proof.",
+    "outcome": "ok {\"available\":true,\"recent_runs\":\"ruminating_lying x6 > lying x1 > ruminating_lying x6 > lying x1 > ruminating_lying x5 > drinking x4 > standing x1 > drinking x1 > standing x1 > drinking x1 > other_not...",
+    "source": "planner"
+   },
+   {
+    "seq": 8,
+    "actor": "tool",
+    "action": "tool:temporal_window",
+    "args": {
+     "camera": "auto",
+     "before_s": 20.0,
+     "after_s": 20.0,
+     "n_frames": 6
+    },
+    "reason": "This shows whether the cow remains at the waterer or travels across the pen during the minute.",
+    "outcome": "ok {\"camera\":\"back\",\"n_frames\":6,\"span_s\":[-20.0,20.0]}",
+    "source": "planner"
+   },
+   {
+    "seq": 9,
+    "actor": "tool",
+    "action": "tool:zoom",
+    "args": {
+     "camera": "auto",
+     "region": "head",
+     "t_offset_s": 0.0,
+     "scale": 3.0
+    },
+    "reason": "This checks the muzzle's relation to the waterer and whether the head is lowered for drinking.",
+    "outcome": "ok {\"camera\":\"back\",\"region\":\"head\",\"available\":true}",
+    "source": "planner"
+   },
+   {
+    "seq": 10,
+    "actor": "tool",
+    "action": "tool:get_frames",
+    "args": {
+     "camera": "auto",
+     "t_offset_s": -20.0
+    },
+    "reason": "This supplies an earlier whole-body view to verify identity, position, and whether movement toward or away from the waterer occurred.",
+    "outcome": "ok {\"camera\":\"back\",\"t_offset_s\":-20.0,\"available\":true}",
+    "source": "planner"
+   },
+   {
+    "seq": 11,
+    "actor": "tool",
+    "action": "tool:get_frames",
+    "args": {
+     "camera": "auto",
+     "t_offset_s": 20.0
+    },
+    "reason": "This supplies a later whole-body view to compare displacement and persistence of the candidate behavior.",
+    "outcome": "ok {\"camera\":\"back\",\"t_offset_s\":20.0,\"available\":true}",
+    "source": "planner"
+   },
+   {
+    "seq": 12,
+    "actor": "vlm",
+    "action": "hypothesis:first",
+    "args": {},
+    "reason": "independent look at the evidence without YOLO's guess",
+    "outcome": "walking conf=0.96; Walking is dominant because the cow is upright and visibly changes location, while tracking measured 9.81 m of displacement during the minute. Standing is weaker because the measured displacement is substantial, and drinking is unsupported by the zero waterer-zone fraction.",
+    "source": ""
+   },
+   {
+    "seq": 13,
+    "actor": "verifier",
+    "action": "verify:first",
+    "args": {},
+    "reason": "deterministic rule check of the label against measurements, independent of the VLM",
+    "outcome": "all checks passed",
+    "source": ""
+   },
+   {
+    "seq": 14,
+    "actor": "resolver",
+    "action": "final_decision",
+    "args": {
+     "behavior": "walking",
+     "confidence": 0.96
+    },
+    "reason": "YOLO said 'drinking' but the evidence supports 'walking': Walking is dominant because the cow is upright and visibly changes location, while tracking measured 9.81 m of displacement during the minute. Standing is weaker because the measured displacement is substantial, and drinking is unsupported by the zero waterer-zone fraction.; all automatic checks passed.",
+    "outcome": "behavior_corrected: drinking -> walking",
+    "source": ""
+   }
+  ]
+ }
+}

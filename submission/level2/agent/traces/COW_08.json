@@ -1,0 +1,179 @@
+{
+ "cow_id": "COW_08",
+ "seconds": 29.6,
+ "tool_calls": 2,
+ "steps": [
+  {
+   "thought": "Behavior looks benign. Need to check clinical signs with daylight head crops. Start with gallery for closest crops.",
+   "tool": "gallery",
+   "args": {
+    "cow_id": "COW_08",
+    "n": 6
+   },
+   "result": "6 gallery crops: [I0080] 11-07 13:05:12 cam1 1262 px, [I0081] 11-07 13:32:15 cam1 1260 px, [I0082] 11-07 12:42:12 cam2 1252 px, [I0083] 11-07 12:22:01 cam2 1222 px, [I0084] 11-07 16:31:34 cam1 1187 px, [I0085] 11-07 14:00:00 cam2 1181 px",
+   "facts": [],
+   "model": "protected.Claude Opus 4.8"
+  },
+  {
+   "thought": "Gallery crops show feeding/rumps, no clean standing head-up view. Try a head crop at the largest daylight moment facing toward/side-on.",
+   "tool": "get_crop",
+   "args": {
+    "cow_id": "COW_08",
+    "time": "11-07 13:05:12",
+    "camera": "cam1",
+    "region": "head",
+    "enhance": true
+   },
+   "result": "[I0086] COW_08 cam1 11-07 13:05:12 head, box 1262 px, facing side-on, daylight",
+   "facts": [
+    "I0086"
+   ],
+   "model": "protected.Claude Opus 4.8"
+  },
+  {
+   "thought": "No clean standing head-up view available; crops are rumps and heads-down-at-bunk. Record what I can. Behavior strongly reassuring (rank 10/10, feeding+, low jerks, low isolation). Head signs not_assessable; breathing was measured normal (20.8 bpm) \u2014 but that's a behavior fact, not a visible sign per rules; body condition not gaunt from ample feeding. Finalize.",
+   "final": {
+    "signs": {
+     "head_low": {
+      "status": "not_assessable",
+      "evidence": [
+       "I0086",
+       "I0080",
+       "I0082"
+      ],
+      "note": "No standing head-up view facing toward/side-on; all crops are rumps or heads-down feeding at bunk."
+     },
+     "ears_droop": {
+      "status": "not_assessable",
+      "evidence": [
+       "I0086"
+      ],
+      "note": "Heads bunched at bunk, no clear ear detail on this cow."
+     },
+     "nasal_discharge": {
+      "status": "not_assessable",
+      "evidence": [
+       "I0086"
+      ],
+      "note": "No daylight head crop >=450px facing toward with nose visible."
+     },
+     "ocular_discharge": {
+      "status": "not_assessable",
+      "evidence": [
+       "I0086"
+      ],
+      "note": "No clear eye view in any crop."
+     },
+     "labored_breathing": {
+      "status": "not_assessable",
+      "evidence": [
+       "I0086"
+      ],
+      "note": "Measured breathing 20.8 bpm (F-COW_08-breathing_bpm) and effort 92% are normal/low, but no visual open-mouth/flank-effort sign was assessed in image."
+     },
+     "cough": {
+      "status": "not_assessable",
+      "evidence": [
+       "I0086"
+      ],
+      "note": "Jerk rate low (21.9/h vs 30.2 herd, F-COW_08-jerk_rate); no coughing posture captured."
+     },
+     "gaunt": {
+      "status": "absent",
+      "evidence": [
+       "I0080",
+       "I0081",
+       "I0084"
+      ],
+      "note": "Full, well-filled flank and good body fill in multiple daylight crops >250px; no hollow left flank."
+     }
+    },
+    "artifacts": [],
+    "behavior_assessment": "Behavior is reassuring and I believe it. COW_08 is the lowest-scoring cow (0.11, rank 10/10) and never top-3 in resamples. It feeds MORE than the herd (feeding_share 14% vs 11%, F-COW_08-feeding_share; meal_min 13.5 vs 8.7, F-COW_08-meal_min), is LESS isolated (edge_or_alone 8% vs 13%, F-COW_08-edge_or_alone_share; isolation 5% vs 9%, F-COW_08-isolation_share), and has FEWER jerks (F-COW_08-jerk_rate). The only mild sick-direction signals are a longer meal gap (+1.2, F-COW_08-longest_meal_gap_min) and slightly lower rumination/lying share, all small and well within noise given 23.6 h coverage. No indicator is an artifact.",
+    "summary": "COW_08 looks like a healthy, actively feeding, well-socialised animal \u2014 the lowest BRD-risk cow in the pen. Body condition is good with no gaunt flank, breathing rate is normal, and it eats more than its penmates. No clinical action needed; head-level signs (ears/eyes/nose/head carriage) could not be assessed because no clean standing head-up daylight view was available, so a quick pen-side look at the head would close that gap.",
+    "key_evidence": [
+     "F-COW_08-feeding_share",
+     "F-COW_08-jerk_rate",
+     "F-COW_08-edge_or_alone_share",
+     "I0086",
+     "I0080"
+    ],
+    "confidence": 0.8
+   },
+   "model": "protected.Claude Opus 4.8"
+  }
+ ],
+ "self_check_first": [],
+ "self_check_after_revision": [],
+ "final": {
+  "signs": {
+   "head_low": {
+    "status": "not_assessable",
+    "evidence": [
+     "I0086",
+     "I0080",
+     "I0082"
+    ],
+    "note": "No standing head-up view facing toward/side-on; all crops are rumps or heads-down feeding at bunk."
+   },
+   "ears_droop": {
+    "status": "not_assessable",
+    "evidence": [
+     "I0086"
+    ],
+    "note": "Heads bunched at bunk, no clear ear detail on this cow."
+   },
+   "nasal_discharge": {
+    "status": "not_assessable",
+    "evidence": [
+     "I0086"
+    ],
+    "note": "No daylight head crop >=450px facing toward with nose visible."
+   },
+   "ocular_discharge": {
+    "status": "not_assessable",
+    "evidence": [
+     "I0086"
+    ],
+    "note": "No clear eye view in any crop."
+   },
+   "labored_breathing": {
+    "status": "not_assessable",
+    "evidence": [
+     "I0086"
+    ],
+    "note": "Measured breathing 20.8 bpm (F-COW_08-breathing_bpm) and effort 92% are normal/low, but no visual open-mouth/flank-effort sign was assessed in image."
+   },
+   "cough": {
+    "status": "not_assessable",
+    "evidence": [
+     "I0086"
+    ],
+    "note": "Jerk rate low (21.9/h vs 30.2 herd, F-COW_08-jerk_rate); no coughing posture captured."
+   },
+   "gaunt": {
+    "status": "absent",
+    "evidence": [
+     "I0080",
+     "I0081",
+     "I0084"
+    ],
+    "note": "Full, well-filled flank and good body fill in multiple daylight crops >250px; no hollow left flank."
+   }
+  },
+  "artifacts": [],
+  "behavior_assessment": "Behavior is reassuring and I believe it. COW_08 is the lowest-scoring cow (0.11, rank 10/10) and never top-3 in resamples. It feeds MORE than the herd (feeding_share 14% vs 11%, F-COW_08-feeding_share; meal_min 13.5 vs 8.7, F-COW_08-meal_min), is LESS isolated (edge_or_alone 8% vs 13%, F-COW_08-edge_or_alone_share; isolation 5% vs 9%, F-COW_08-isolation_share), and has FEWER jerks (F-COW_08-jerk_rate). The only mild sick-direction signals are a longer meal gap (+1.2, F-COW_08-longest_meal_gap_min) and slightly lower rumination/lying share, all small and well within noise given 23.6 h coverage. No indicator is an artifact.",
+  "summary": "COW_08 looks like a healthy, actively feeding, well-socialised animal \u2014 the lowest BRD-risk cow in the pen. Body condition is good with no gaunt flank, breathing rate is normal, and it eats more than its penmates. No clinical action needed; head-level signs (ears/eyes/nose/head carriage) could not be assessed because no clean standing head-up daylight view was available, so a quick pen-side look at the head would close that gap.",
+  "key_evidence": [
+   "F-COW_08-feeding_share",
+   "F-COW_08-jerk_rate",
+   "F-COW_08-edge_or_alone_share",
+   "I0086",
+   "I0080"
+  ],
+  "confidence": 0.8
+ },
+ "models": [
+  "protected.Claude Opus 4.8"
+ ]
+}

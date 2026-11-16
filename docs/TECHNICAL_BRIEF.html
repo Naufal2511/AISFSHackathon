@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pen 6 Technical Brief</title>
+<style>
+  :root {
+    --ink:#18212b; --soft:#3a4652; --mute:#6b7682; --rule:#dfe4ea;
+    --acc:#0f5a6b; --acc-soft:#e7f1f3; --warm:#a85a24; --warm-soft:#fbf0e6; --panel:#f5f7f9;
+    --bg:#ffffff;
+  }
+  @page { size: Letter; margin: 0.4in 0.45in 0.38in; }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body {
+    background: var(--bg); color: var(--ink); margin: 0 auto; max-width: 7.6in;
+    font: 8.25pt/1.34 Charter, "Iowan Old Style", Georgia, serif;
+    hyphens: auto; -webkit-hyphens: auto;
+  }
+  h1, h2, h3, table, .kpi, .cap, .sub, .eyebrow, .callout b.t { font-family: "Avenir Next", Avenir, "Helvetica Neue", Arial, sans-serif; }
+
+  header { border-bottom: 2px solid var(--acc); padding-bottom: 5pt; margin-bottom: 6pt; }
+  .eyebrow { font-weight: 600; font-size: 6.8pt; line-height: 1; letter-spacing: 1.2px; text-transform: uppercase; color: var(--acc); margin-bottom: 3pt; }
+  h1 { font-size: 15.5pt; line-height: 1.12; font-weight: 700; margin: 0 0 2pt; letter-spacing: -0.3px; }
+  .sub { font-size: 7.6pt; color: var(--mute); }
+  .kpis { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4pt; margin: 6pt 0 0; }
+  .kpi { background: var(--panel); border-radius: 3px; padding: 3pt 5pt 3.5pt; }
+  .kpi .v { font-size: 11pt; font-weight: 700; color: var(--acc); line-height: 1.1; }
+  .kpi .k { font-size: 6.5pt; color: var(--mute); line-height: 1.2; }
+
+  h2 { font-size: 9.4pt; font-weight: 700; color: var(--acc); margin: 7pt 0 3pt; display: flex; align-items: baseline; gap: 5pt; }
+  h2 .num { display: inline-block; min-width: 13pt; height: 13pt; line-height: 13pt; text-align: center; border-radius: 50%; background: var(--acc); color: #fff; font-size: 7.4pt; }
+  h2::after { content: ""; flex: 1; border-bottom: 1px solid var(--rule); transform: translateY(-2pt); }
+  h3 { font-size: 8.4pt; font-weight: 650; margin: 5pt 0 1.5pt; color: var(--ink); }
+  h3:first-child { margin-top: 0; }
+  p { margin: 0 0 3.5pt; }
+  .lead { font-size: 8.9pt; line-height: 1.38; color: var(--soft); margin-bottom: 4pt; }
+  ul { margin: 0 0 3.5pt; padding-left: 10pt; }
+  li { margin: 0 0 2pt; }
+  li::marker { color: var(--acc); }
+  b { font-weight: 700; }
+  code { font-family: Menlo, Consolas, monospace; font-size: 7pt; background: var(--panel); padding: 0 2px; border-radius: 2px; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14pt; }
+  .grid2 > div { min-width: 0; }
+
+  table { hyphens: manual; -webkit-hyphens: manual; }
+  .held td:first-child { white-space: nowrap; }
+  table { border-collapse: collapse; width: 100%; font-size: 7.3pt; line-height: 1.3; margin: 2pt 0 4pt; }
+  th { text-align: left; font-weight: 600; color: var(--mute); font-size: 6.6pt; letter-spacing: .4px; text-transform: uppercase; border-bottom: 1.2px solid var(--ink); padding: 1.5pt 4pt; }
+  td { border-bottom: 1px solid var(--rule); padding: 2pt 4pt; vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  .n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  td.who b { color: var(--warm); }
+  td.who span { color: var(--mute); }
+  .agents td:nth-child(1) { width: 13%; } .agents td:nth-child(2) { width: 52%; }
+  .agents td:nth-child(2) { font-family: Menlo, Consolas, monospace; font-size: 6.3pt; color: var(--soft); }
+  .rank td:first-child { font-weight: 700; color: var(--acc); }
+  .bar { display: inline-block; height: 5pt; background: var(--acc); border-radius: 1px; vertical-align: middle; margin-right: 3pt; }
+
+  figure { margin: 2pt 0 3pt; padding: 3pt 4pt 2pt; border: 1px solid var(--rule); border-radius: 4px; }
+  figure svg { display: block; width: 88%; margin: 0 auto; }
+  .cap { font-size: 6.9pt; color: var(--mute); margin-top: 2pt; }
+  .swatch { display: inline-block; width: 7pt; height: 7pt; border-radius: 1.5px; vertical-align: -1pt; margin: 0 2pt 0 6pt; }
+
+  .callout { background: var(--acc-soft); border-left: 3px solid var(--acc); padding: 4pt 6pt; border-radius: 0 3px 3px 0; margin: 3pt 0 4pt; }
+  .callout.warm { background: var(--warm-soft); border-left-color: var(--warm); }
+  .callout b.t { color: var(--acc); font-size: 7.2pt; letter-spacing: .4px; text-transform: uppercase; margin-right: 4pt; }
+  .callout.warm b.t { color: var(--warm); }
+  .callout p:last-child { margin-bottom: 0; }
+
+  .page2 { break-before: page; }
+  footer { margin-top: 6pt; padding-top: 4pt; border-top: 1px solid var(--rule); font-size: 7pt; color: var(--soft); line-height: 1.35; }
+  footer b { color: var(--ink); }
+
+  @media screen { body { padding: 20px 16px; } .page2 { border-top: 2px dashed var(--rule); padding-top: 14px; margin-top: 18px; } }
+  @media (max-width: 640px) { .kpis { grid-template-columns: 1fr 1fr; } .grid2 { display: block; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">Merck–TAMU AISFS Hackathon 2026 · Technical brief</div>
+  <h1>Agentic Vision for Angus Behavior and BRD Risk</h1>
+  <div class="sub">Pen 6 · 7–8 Nov 2026 · code, exact commands and model versions in <code>README.md</code> and <code>docs/</code></div>
+  <div class="kpis">
+    <div class="kpi"><div class="v">48 h</div><div class="k">day + IR night, 3 cameras</div></div>
+    <div class="kpi"><div class="v">10</div><div class="k">Angus cattle, one ID each across cameras and days</div></div>
+    <div class="kpi"><div class="v">28,800</div><div class="k">cow-minutes labelled, each with its basis</div></div>
+    <div class="kpi"><div class="v">3</div><div class="k">tool-using agents with code self-checks</div></div>
+    <div class="kpi"><div class="v">33</div><div class="k">chunks on laptops + HPRC, stitched</div></div>
+    <div class="kpi"><div class="v">COW_02</div><div class="k">top BRD suspect (0.37; herd-typical ≈ 0.10)</div></div>
+  </div>
+</header>
+
+<h2><span class="num">1</span>Approach</h2>
+<p class="lead"><b>Measurement first, judgement second.</b> Deterministic code detects, tracks and places every cow on the pen floor in metres. Agents check that record with tools, and code checks the agents. Every output says whether it was observed, agent-verified, estimated or not visible.</p>
+
+<figure>
+<svg viewBox="0 0 760 262" role="img" aria-label="Pipeline architecture: measure, identity, behavior and risk">
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#8a96a3"/></marker>
+  </defs>
+  <style>
+    .b { fill:#f5f7f9; stroke:#c9d2db; stroke-width:1; }
+    .a { fill:#fbf0e6; stroke:#d39a6c; stroke-width:1.2; }
+    .o { fill:#e7f1f3; stroke:#8fb8c1; stroke-width:1; }
+    .t { font: 700 10.5px "Avenir Next", Avenir, sans-serif; fill:#18212b; }
+    .s { font: 400 9px "Avenir Next", Avenir, sans-serif; fill:#4a5663; }
+    .m { font: 500 8.4px "Avenir Next", Avenir, sans-serif; fill:#a85a24; }
+    .lane { font: 700 8px "Avenir Next", Avenir, sans-serif; fill:#0f5a6b; letter-spacing:1.2px; }
+    .l { stroke:#8a96a3; stroke-width:1.2; fill:none; marker-end:url(#ar); }
+  </style>
+
+  <text class="lane" x="2" y="10">MEASURE · per camera → pen floor</text>
+  <rect class="b" x="2"   y="16" width="128" height="50" rx="5"/><text class="t" x="11" y="33">3 cameras</text><text class="s" x="11" y="46">front · bunk (top) · back</text><text class="s" x="11" y="57">HEVC remux, 1 frame/s</text>
+  <rect class="b" x="148" y="16" width="136" height="50" rx="5"/><text class="t" x="157" y="33">Cow detector</text><text class="s" x="157" y="46">YOLO26-m @1280, tuned on</text><text class="s" x="157" y="57">216 hand-labelled frames</text>
+  <rect class="b" x="302" y="16" width="128" height="50" rx="5"/><text class="t" x="311" y="33">ByteTrack</text><text class="s" x="311" y="46">tracks within one camera,</text><text class="s" x="311" y="57">split at suspected switches</text>
+  <rect class="b" x="448" y="16" width="136" height="50" rx="5"/><text class="t" x="457" y="33">Floor plane</text><text class="s" x="457" y="46">homography → metres;</text><text class="s" x="457" y="57">bunk / water / rest zones</text>
+  <rect class="b" x="602" y="16" width="156" height="50" rx="5"/><text class="t" x="611" y="33">World state</text><text class="s" x="611" y="46">per cow-second: position, speed,</text><text class="s" x="611" y="57">zone, visibility, day / IR</text>
+  <path class="l" d="M130,41 H146"/><path class="l" d="M284,41 H300"/><path class="l" d="M430,41 H446"/><path class="l" d="M584,41 H600"/>
+  <path class="l" d="M680,66 V78 Q680,82 676,82 H70 Q66,82 66,86 V100"/>
+
+  <text class="lane" x="84" y="96">IDENTITY · agree, anchor, audit</text>
+  <rect class="b" x="2"   y="102" width="170" height="50" rx="5"/><text class="t" x="11" y="119">Agreement protocol</text><text class="s" x="11" y="132">must-link: same spot, same seconds</text><text class="s" x="11" y="143">cannot-link: seen together, far apart</text>
+  <rect class="b" x="190" y="102" width="160" height="50" rx="5"/><text class="t" x="199" y="119">Anchors + consensus</text><text class="s" x="199" y="132">all cows apart, cameras agree;</text><text class="s" x="199" y="143">Lyapunov-stable ID beliefs</text>
+  <rect class="b" x="368" y="102" width="150" height="50" rx="5"/><text class="t" x="377" y="119">Memory cards</text><text class="s" x="377" y="132">best crops per cow, day + IR,</text><text class="s" x="377" y="143">confirmed once by a person</text>
+  <rect class="a" x="536" y="102" width="222" height="50" rx="5"/><text class="t" x="545" y="119">Identity agent</text><text class="m" x="625" y="119">GPT-5.6 Luna</text><text class="s" x="545" y="132">duplicate, jump, conflict, 30-min audit</text><text class="s" x="545" y="143">→ relabel · confirm · uncertain</text>
+  <path class="l" d="M172,127 H188"/><path class="l" d="M350,127 H366"/><path class="l" d="M518,127 H534"/>
+  <path class="l" d="M647,152 V164 Q647,168 643,168 H70 Q66,168 66,172 V186"/>
+
+  <text class="lane" x="84" y="182">BEHAVIOR · LEVEL 1</text><text class="lane" x="560" y="182">RISK · LEVEL 2</text>
+  <rect class="b" x="2"   y="188" width="160" height="50" rx="5"/><text class="t" x="11" y="205">Per-box behavior</text><text class="s" x="11" y="218">DINOv2-S, own labels + CBVD-5;</text><text class="s" x="11" y="229">geometry; jaw-motion probe</text>
+  <rect class="b" x="180" y="188" width="150" height="50" rx="5"/><text class="t" x="189" y="205">Fusion + HMM</text><text class="s" x="189" y="218">cameras as experts;</text><text class="s" x="189" y="229">bout-length priors</text>
+  <rect class="a" x="348" y="188" width="190" height="50" rx="5"/><text class="t" x="357" y="205">Behavior agent</text><text class="m" x="440" y="205">brd_agent</text><text class="s" x="357" y="218">rule-check every minute; agent on</text><text class="s" x="357" y="229">flagged ones, with a second look</text>
+  <rect class="a" x="556" y="188" width="202" height="50" rx="5"/><text class="t" x="565" y="205">Risk agent</text><text class="m" x="625" y="205">Claude Opus 4.8</text><text class="s" x="565" y="218">13 herd-relative indicators; agent</text><text class="s" x="565" y="229">audits them, looks for DART signs</text>
+  <path class="l" d="M162,213 H178"/><path class="l" d="M330,213 H346"/><path class="l" d="M538,213 H554"/>
+  <rect class="o" x="348" y="244" width="190" height="16" rx="3"/><text class="s" x="357" y="255">activity.csv · time budgets · ID sheets</text>
+  <rect class="o" x="556" y="244" width="202" height="16" rx="3"/><text class="s" x="565" y="255">brd_risk.csv · risk cards + clips</text>
+</svg>
+<div class="cap"><span class="swatch" style="background:#f5f7f9;border:1px solid #c9d2db;margin-left:0"></span>deterministic code<span class="swatch" style="background:#fbf0e6;border:1px solid #d39a6c"></span>agent loop: model + tools + code self-check<span class="swatch" style="background:#e7f1f3;border:1px solid #8fb8c1"></span>deliverables. Stages hand off plain CSV/JSONL and every step resumes after a crash.</div>
+</figure>
+
+<div class="grid2">
+<div>
+<h3>Seeing the cows</h3>
+<p>COCO YOLO missed black Angus at the back fence and at night. We hand-labelled 216 frames (split by clip, day and IR) and fine-tuned YOLO26-m at 1280 px on HPRC. ByteTrack follows each cow <i>within</i> one camera only; <b>who is who is never left to the tracker</b>. Per-camera homographies from pen-map landmarks put every box on one floor map in metres.</p>
+
+<h3>Knowing who is who</h3>
+<p>Black Angus look alike to appearance models: two <i>different</i> cows score 0.75–0.94 DINOv2 similarity. Identity therefore rests on <b>geometry and time</b>, and appearance only breaks ties.</p>
+<ul>
+<li><b>Agreement.</b> Tracks in two cameras that stand on the same spot for the same seconds must be one cow. Tracks seen together but far apart cannot be.</li>
+<li><b>Consensus.</b> Each camera’s belief over the 10 cows is pulled towards its neighbours’ beliefs. A Lyapunov energy that never rises keeps IDs from flickering.</li>
+<li><b>Anchors.</b> These are seconds when every cow is ≥ 2.5 m from the rest, fully visible, held by one stable track and placed within 2 m by every camera. There the identity set is fixed.</li>
+<li><b>Memory cards.</b> Each card holds a cow's clearest crops by day and IR. A person confirms the cards once, and the agent keeps them current.</li>
+</ul>
+<h3>Choosing the models</h3>
+<p>On 8 identical identity cases GPT-5.6 Luna took 12.8 s each and always passed its self-check first time (Sonnet 5: 31.8 s; Gemini 3.5 Flash: 88 % within budget; local Qwen2.5-VL: 75 % first-time pass). Luna runs the identity loop; Opus the risk cases.</p>
+</div>
+<div>
+<h3>Reading behavior</h3>
+<p>We built ~330 Label Studio tasks (one cow, one camera, 5 s) over all cameras, both days and nights. A DINOv2-S classifier learned from 181 of them plus 9,269 public CBVD-5 crops. Its output joins geometric cues: box height against standing height, floor speed and zone dwell. <b>Rumination is called only when chewing is measured</b>: a jaw-motion spectrum must show 55–75 movements/min. Cameras are fused as experts (the bunk camera is trusted for feeding, not posture); a sticky HMM with bout-length priors removes impossible jumps.</p>
+
+<h3>Agents that check, and are checked</h3>
+<p>Every agent runs one loop: a trigger picks cases worth a look and a <b>playbook</b> suggests tool calls. The model answers in JSON that must cite evidence it gathered. <b>Code then checks the answer</b>, allows one revision, and otherwise downgrades it to <i>uncertain</i>, so nothing becomes a silent guess.</p>
+<div class="callout warm">
+<p><b class="t">Why stitching</b>48 h of 4K from three cameras did not fit one machine in time, so <b>33 chunks</b> ran in parallel: Day 1 on three laptops, Day 2 as an HPRC GPU array job. Each chunk numbers its cows on its own, so every chunk also tracks the 2 min before its window. The stitcher joins IDs where two chunks saw <b>the same boxes in the same frames</b> (IoU ≥ 0.5, Hungarian). Of 290 joins, 204 came from that overlap and 13 from a clear appearance margin. The other 73 are weak and listed in <code>id_map.csv</code> for review.</p>
+</div>
+</div>
+</div>
+
+<table class="agents">
+<tr><th>Agent</th><th>Tools it can call</th><th>What code checks before accepting</th></tr>
+<tr><td class="who"><b>Identity</b><br><span>GPT-5.6 Luna</span></td><td>cow_state · all_views · compare_to_cards · trajectory · cow_strip · who_is_near · best_view · anomalies · chew_motion</td><td>a relabel cites ≥ 2 kinds of evidence, ranks top-2 on appearance, and creates no duplicate ID</td></tr>
+<tr><td class="who"><b>Behavior</b><br><span>brd_agent</span></td><td>best_camera · zone_query · track_history · cow_history · temporal_window · zoom · get_frames · enhance_night · rumination_probe · compare_to_exemplar</td><td>rumination needs measured chewing; feeding / drinking need a visual check; night caps confidence</td></tr>
+<tr><td class="who"><b>Risk</b><br><span>Claude Opus 4.8</span></td><td>cow_profile · herd_compare · timeline · find_moments · camera_info · get_crop / get_sequence (4K) · compare_herdmates · record_fact</td><td>a sign cites an image of that cow ≥ 250 px; discharge needs ≥ 450 px in daylight; artifacts need images</td></tr>
+</table>
+
+
+
+<div class="page2"></div>
+
+<h2><span class="num">2</span>Results</h2>
+<div class="grid2">
+<div>
+<h3>Level 1 · every cow, every minute</h3>
+<table>
+<tr><th>Basis of the label (48 h, 10 cows)</th><th class="n">minutes</th><th class="n">share</th></tr>
+<tr><td>observed: stage-1 label passed rule checks</td><td class="n">16,963</td><td class="n">58.9 %</td></tr>
+<tr><td>verified: the agent looked at the frames</td><td class="n">509</td><td class="n">1.8 %</td></tr>
+<tr><td>unverified: seen, agent could not confirm</td><td class="n">2,142</td><td class="n">7.4 %</td></tr>
+<tr><td>estimated: calm bout carried or gap filled</td><td class="n">441</td><td class="n">1.5 %</td></tr>
+<tr><td>not visible: no camera saw the cow</td><td class="n">8,745</td><td class="n">30.4 %</td></tr>
+</table>
+<p><code>activity.csv</code> holds 4,858 bouts, each with its basis. Alongside it are per-minute rationales, time budgets, ID-check sheets every 30 min per camera, and success, failure and night traces. The behavior agent confirmed 1,815 minutes and corrected 335. It <b>abstained on 5,003 rather than guess</b>, and all 181,622 of its actions are logged with a reason.</p>
+<table class="held">
+<tr><th>Held-out check</th><th>result</th></tr>
+<tr><td>Detector P / R, day</td><td>0.84 / 0.88 &nbsp;<span style="color:var(--mute)">(COCO YOLO26-x: 0.98 / 0.71)</span></td></tr>
+<tr><td>Detector P / R, IR night</td><td>0.93 / 0.88 &nbsp;<span style="color:var(--mute)">(COCO: 0.95 / 0.73)</span></td></tr>
+<tr><td>Behavior, 64 tasks by clip</td><td>accuracy 0.69, macro-F1 0.37</td></tr>
+<tr><td>F1 by class</td><td>lying 0.95 · feeding 1.00 · standing 0.61 · drinking 0.57 · walking 0.20 · rumination, social 0 (≤ 4 examples)</td></tr>
+</table>
+<div class="callout warm">
+<p><b class="t">Three saved traces</b><b>Success</b>, COW_09, 8 Nov 14:22: stage 1 said drinking (0.69). The agent checked zone, track and frames and verified <i>walking</i> (0.96). <b>Failure</b>, COW_03, 7 Nov 13:33: a weak <i>standing</i> (0.23), poorly seen by every camera. The agent could not settle it and kept it marked <i>unverified</i>. <b>Night</b>, COW_10, 8 Nov 18:05: stage 1 said ruminating on IR. After night enhancement the agent judged too little of the cow visible to label and set <i>not visible</i>.</p>
+</div>
+</div>
+<div>
+<h3>Level 2 · BRD risk ranking</h3>
+<p>We score <b>13 indicators from the BRD literature</b>: bunk time and visits, how slowly a cow joins the herd's feed rush (the DART "slow to come to eat" sign), distance walked, lying time and bout length, distance from herdmates, time alone or out of step, rumination, drinking, grooming, resting breath rate and sudden movements. Each is a robust z against <b>the same pen at the same hours</b>, so weather and feeding times cancel out. Only the sick direction counts fully, short coverage shrinks the score, and the change from day 1 to day 2 counts at half weight. A typical cow scores about 0.10. A visible sign changes the score only after its evidence passes the self-check.</p>
+<table class="rank">
+<tr><th>#</th><th>Cow</th><th>risk</th><th class="n">p_top3</th><th>Why, against the herd at the same hours</th></tr>
+<tr><td>1</td><td><b>COW_02</b></td><td class="n"><span class="bar" style="width:22pt"></span>0.37</td><td class="n">0.92</td><td>27 vs 19 min to reach the bunk after 14 feed rushes; walks less; feeds 7 vs 10 %</td></tr>
+<tr><td>2</td><td><b>COW_01</b></td><td class="n"><span class="bar" style="width:19.5pt"></span>0.33</td><td class="n">0.67</td><td>feeds 4 vs 8 %; bunk visits 5.8 vs 9.5 min; lies 57 vs 51 %</td></tr>
+<tr><td>3</td><td><b>COW_10</b></td><td class="n"><span class="bar" style="width:15.5pt"></span>0.26</td><td class="n">0.88</td><td>short bunk visits; 139 vs 100 min longest lying bout; visits falling faster than the herd's</td></tr>
+<tr><td style="color:var(--mute);white-space:nowrap">4–10</td><td colspan="4" style="color:var(--mute)">0.10–0.19, each in the top 3 in ≤ 24 % of 200 resamples of 30-min blocks</td></tr>
+</table>
+<div class="callout">
+<p><b class="t">Reading</b>No cow is far from the herd, but the top three stay on top under resampling. All three show the early sickness-behavior pattern: <b>appetite and activity down, lying up</b>. The agent confirmed no visible clinical sign; signs were either absent or not assessable from overhead and IR views. We call them <b>early suspects, not sick</b>: check temperature and examine COW_02, COW_01 and COW_10 before any treatment. Each risk card links 2–3 clips and every image the agent saw.</p>
+</div>
+</div>
+</div>
+
+<div class="grid2">
+<div>
+<h2><span class="num">3</span>Observed vs estimated · limits</h2>
+<ul>
+<li><b>Observed</b> means a detection we can point to (camera, second, box). <b>Estimated</b> is carried or filled and labelled so. Risk uses observed time only.</li>
+<li><b>30 % of cow-minutes are not visible</b>, mostly occlusion in the resting area and far corners at night. Time budgets give shares of visible time too.</li>
+<li><b>Identity across chunks is the weakest link.</b> 25 % of joins are low-margin. A wrong join blurs differences between cows more than it invents them.</li>
+<li><b>Rumination is over-called.</b> Much lying is labelled ruminating, so it carries the lowest behavior weight (0.3).</li>
+<li><b>Ten cows and 48 h cannot validate a BRD model.</b> With no diagnoses, the score is a ranked suspicion index, not a probability. Clinical-sign diagnosis is itself only ~62 % sensitive and 63 % specific (White &amp; Renter 2009).</li>
+<li><b>Discharge needs close daylight colour</b>, which overhead and IR views rarely give, so most sign checks end as <i>not assessable</i>.</li>
+</ul>
+</div>
+<div>
+<h2><span class="num">4</span>With more data</h2>
+<ul>
+<li><b>Outcome labels.</b> Temperature, DART scores, lung ultrasound or treatment records would let us fit and calibrate the weights instead of taking them from the literature.</li>
+<li><b>Longer baselines.</b> One to two weeks would let each cow act as her own control (CUSUM on feeding and activity). That is where the 3–6 day lead before diagnosis appears in the literature.</li>
+<li><b>Identity without stitching.</b> One continuous run, or RFID at the bunk, would remove the weak joins. A cattle keypoint model would measure head carriage and ears directly.</li>
+<li><b>Harder classes.</b> 50+ clips each of rumination, grooming and social interaction, a video model, and a head-height bunk camera for discharge and ear droop.</li>
+<li><b>Live early warning (Level 3).</b> The pipeline already runs in 1 h resumable chunks. The risk agent's clips, evidence images and action line are what a pen rider's alert needs.</li>
+</ul>
+</div>
+</div>
+
+<footer>
+<b>External resources and AI tools.</b> Ultralytics YOLO26 (COCO weights, fine-tuned) · ByteTrack · Meta DINOv2 ViT-S/14 (timm) · CBVD-5 cattle behavior dataset (Kaggle, CC0) · OpenCV · ffmpeg · Label Studio (local) · rclone. LLMs through the TAMU AI Chat API: GPT-5.6 Luna (identity agent), Claude Opus 4.8 (risk agent), Claude Sonnet 5 and Gemini 3.5 Flash (benchmarked), with local Qwen2.5-VL 7B (Ollama) as fallback. Compute: three team laptops and TAMU HPRC Grace GPU nodes. Event data stayed on team machines and private HPRC scratch. Claude Code helped write code; the team reviewed every result and is responsible for it.
+</footer>
+
+</body>
+</html>
