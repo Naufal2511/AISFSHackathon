@@ -11,6 +11,12 @@ Deterministic computer vision measures; tool-using agents check that record; cod
 
 **Our finding:** COW_02, COW_01 and COW_10 are **early suspects, not sick**. They are slower to the bunk after feeding and eat less than the herd at the same hours, but no visible clinical sign was confirmed. Next step: take their temperatures.
 
+**Our results are already in [`submission/`](submission/README.md). Open these first:**
+- [`submission/SHOWCASE.md`](submission/SHOWCASE.md): **every result on one page, with pictures, readable right here on GitHub** (`submission/index.html` is the same page with buttons to every full page, after download)
+- `submission/level2/index.html`: the ranking
+- `submission/stitched/viewer.html`: the 48 h ethogram
+- `submission/level3/clip_1600/report.html`: one live window, end to end
+
 ## 🎬 Submission video (5 min 39 s)
 
 [![Team 404 submission video: click to watch on YouTube](docs/media/team404_submission_video_poster.jpg)](https://youtu.be/a2jZN3BnDJE)
@@ -98,6 +104,21 @@ cp .env.example .env                                                 # TAMU_API_
 
 The models run on an NVIDIA GPU (CUDA) if there is one, else the Apple GPU (MPS), else the CPU. Set `PEN6_DEVICE=cpu` to force the CPU.
 
+### See every result in your browser
+
+The image's default command serves the results showcase on this computer only:
+
+```bash
+docker run --rm -p 127.0.0.1:8000:8000 -v "$PWD/outputs:/app/outputs" pen6
+```
+
+Without Docker (needs only Python, no packages): `python serve_showcase.py`. Then open:
+
+- **http://localhost:8000/**: the showcase. It covers Levels 1, 2 and 3 with links to every page: the 48 h viewer, the BRD ranking and risk cards, the Level 3 evidence reports, alert cards and emails, and the technical brief.
+- **http://localhost:8000/live/**: your own Level 3 run, after `live_watch.py --clip …` (section 3).
+
+It serves only `submission/`, `docs/`, this README and `outputs/live/`. It never serves the code folders or `.env`.
+
 ---
 
 ## 2. Check before you run (1 minute, nothing is processed)
@@ -130,6 +151,8 @@ For that window it:
 | `alerts/<cow>_<time>.html` + clip, frame, crops | The alert a pen rider gets: what to do, the evidence, why |
 | `outbox/*.eml` | Simulated alert emails and the daily BRD report (never sent) |
 | `report.html`, `risk_history.csv`, `state.json`, `windows.jsonl`, `live.log` | Every decision with its evidence |
+
+To view them in your browser, start the showcase (`python serve_showcase.py`, or the image's default command above) and open **http://localhost:8000/live/**.
 
 Ranch mode watches the folder the cameras write to and processes each new window as it completes:
 
