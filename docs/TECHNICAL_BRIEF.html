@@ -245,6 +245,9 @@
 </div>
 </div>
 
+<h3>Level 3 · live early warning</h3>
+<p><code>live_watch.py</code> turns this ranking into alert tiers: COW_02, COW_01 and COW_10 go on the <i>Check on the next pen ride</i> tier with their clips; COW_09, COW_03 and COW_04 on the watch list. Each new 5-min clip is scored against the herd in the same window, and close crops are checked for drooping ears, low head and nasal discharge. On the 11-07 16:00 clip the VLM raised 4 flags: the tracker rejected 3 (cows walking at 0.36–0.87 m/s) and a second look the fourth, so no false alarm went out. Replaying Day 2, COW_10 drew a behavior alert (lying 76 vs 22 %, alone 80 vs 36 %). Alerts and a daily BRD report also go out as email (simulated); every decision with its evidence is in <code>submission/level3/</code>.</p>
+
 <footer>
 <b>External resources and AI tools.</b> Ultralytics YOLO26 (COCO weights, fine-tuned) · ByteTrack · Meta DINOv2 ViT-S/14 (timm) · CBVD-5 cattle behavior dataset (Kaggle, CC0) · OpenCV · ffmpeg · Label Studio (local) · rclone. LLMs through the TAMU AI Chat API: GPT-5.6 Luna (identity agent), Claude Opus 4.8 (risk agent), Claude Sonnet 5 and Gemini 3.5 Flash (benchmarked), with local Qwen2.5-VL 7B (Ollama) as fallback. Compute: three team laptops and TAMU HPRC Grace GPU nodes. Event data stayed on team machines and private HPRC scratch. Claude Code helped write code; the team reviewed every result and is responsible for it.
 </footer>
