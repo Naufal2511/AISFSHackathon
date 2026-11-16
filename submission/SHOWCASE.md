@@ -4,7 +4,9 @@
 says which ones may be getting sick before a person can see it.
 
 > **This page renders on GitHub.** The pictures are screenshots of our result pages. For the full interactive pages
-> (hover, every piece of evidence): **Code → Download ZIP**, unzip, and open **`submission/index.html`** in a browser.
+> (hover, every piece of evidence): run **`python serve_showcase.py`** (or the Docker image's default command,
+> `docker run --rm -p 127.0.0.1:8000:8000 pen6`) and open **http://localhost:8000**, or download the ZIP and open
+> **`submission/index.html`** in a browser.
 > Video clips are kept out of the repository; the commands in the [README](../README.md) regenerate them. These files
 > contain event video frames: keep this repo private.
 

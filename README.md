@@ -64,6 +64,21 @@ cp .env.example .env                                                 # TAMU_API_
 
 The models run on an NVIDIA GPU (CUDA) if there is one, else the Apple GPU (MPS), else the CPU. Set `PEN6_DEVICE=cpu` to force the CPU.
 
+### See every result in your browser
+
+The image's default command serves the results showcase on this computer only:
+
+```bash
+docker run --rm -p 127.0.0.1:8000:8000 -v "$PWD/outputs:/app/outputs" pen6
+```
+
+Without Docker (needs only Python, no packages): `python serve_showcase.py`. Then open:
+
+- **http://localhost:8000/**: the showcase. It covers Levels 1, 2 and 3 with links to every page: the 48 h viewer, the BRD ranking and risk cards, the Level 3 evidence reports, alert cards and emails, and the technical brief.
+- **http://localhost:8000/live/**: your own Level 3 run, after `live_watch.py --clip …` (section 3).
+
+It serves only `submission/`, `docs/`, this README and `outputs/live/`. It never serves the code folders or `.env`.
+
 ---
 
 ## 2. Check before you run (1 minute, nothing is processed)
@@ -96,6 +111,8 @@ For that window it:
 | `alerts/<cow>_<time>.html` + clip, frame, crops | The alert a pen rider gets: what to do, the evidence, why |
 | `outbox/*.eml` | Simulated alert emails and the daily BRD report (never sent) |
 | `report.html`, `risk_history.csv`, `state.json`, `windows.jsonl`, `live.log` | Every decision with its evidence |
+
+To view them in your browser, start the showcase (`python serve_showcase.py`, or the image's default command above) and open **http://localhost:8000/live/**.
 
 Ranch mode watches the folder the cameras write to and processes each new window as it completes:
 

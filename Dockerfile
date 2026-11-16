@@ -4,6 +4,10 @@
 #   docker build -t pen6 .             # CPU image
 #   docker build -t pen6-gpu --build-arg BASE=pytorch/pytorch:2.5.1-cuda12.4-cudnn9-runtime .   # NVIDIA GPU image
 #
+# See the results (the default command): every level in the browser at http://localhost:8000, and your own
+# Level 3 run at http://localhost:8000/live/. 127.0.0.1 keeps it on this computer only.
+#   docker run --rm -p 127.0.0.1:8000:8000 -v "$PWD/outputs:/app/outputs" pen6
+#
 # Run (see README.md): mount the footage read-only at /videos and keep results in ./outputs on the host.
 #   docker run --rm -it --env-file .env -v "/path/to/footage:/videos:ro" -v "$PWD/outputs:/app/outputs" pen6 \
 #       python live_watch.py --clip "/videos/Day 2/Cam 01/Event20261108142130006.Avi"
@@ -34,4 +38,7 @@ bad = [str(p) for p in pathlib.Path("models").rglob("*.pt") if p.stat().st_size 
 sys.exit(f"model weights are Git LFS pointers, run `git lfs pull` first: {bad}") if bad else print("weights ok")
 EOF
 
-CMD ["python", "check_setup.py", "--help"]
+# default: the results showcase on port 8000 (submission/, docs/, and outputs/live/ for a judge's own clip run).
+# Any other command replaces it, e.g. `docker run ... pen6 python check_setup.py --help`.
+EXPOSE 8000
+CMD ["python", "serve_showcase.py", "--host", "0.0.0.0", "--port", "8000"]
