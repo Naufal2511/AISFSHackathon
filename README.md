@@ -13,13 +13,13 @@ Deterministic computer vision measures; tool-using agents check that record; cod
 
 ## 🎬 Submission video (5 min 39 s)
 
-[![Team 404 submission video: click to play](docs/media/team404_submission_video_poster.jpg)](docs/media/team404_submission_video.mp4)
+[![Team 404 submission video: click to watch on YouTube](docs/media/team404_submission_video_poster.jpg)](https://youtu.be/a2jZN3BnDJE)
 
-**[▶ Watch the submission video](docs/media/team404_submission_video.mp4)** (`docs/media/team404_submission_video.mp4`, 54 MB). Click the image or the link, then *View raw* / *Download* if GitHub does not play it in the page.
+**[▶ Watch on YouTube](https://youtu.be/a2jZN3BnDJE)** · a copy is also in this repository: [`docs/media/team404_submission_video.mp4`](docs/media/team404_submission_video.mp4) (54 MB; *View raw* / *Download* to play).
 
 | | |
 |---|---|
-| 🎬 **Submission video** | [`docs/media/team404_submission_video.mp4`](docs/media/team404_submission_video.mp4) |
+| 🎬 **Submission video** | [YouTube](https://youtu.be/a2jZN3BnDJE) · [`docs/media/team404_submission_video.mp4`](docs/media/team404_submission_video.mp4) |
 | 📄 **Technical brief** (2 pages) | [`docs/TECHNICAL_BRIEF.pdf`](docs/TECHNICAL_BRIEF.pdf) |
 | 📊 **All results** | [`submission/`](submission/README.md) |
 | ▶️ **Run it** | [section 1](#1-quick-start) (Docker or Python), then [Level 3 on any clip](#3-level-3-on-a-clip-you-choose-the-judges-clip) |
@@ -48,7 +48,7 @@ Every deliverable the brief asks for, and where it is:
 | **Code** that reproduces everything from raw video | sections [1–5](#1-quick-start) below |
 | **Models, versions, outside data and models** | [section 6](#6-models-versions-and-external-resources) |
 | **AI tools used** | [section 7](#7-ai-tools-and-how-we-used-claude) |
-| **Submission video** | [`docs/media/team404_submission_video.mp4`](docs/media/team404_submission_video.mp4) |
+| **Submission video** | [YouTube](https://youtu.be/a2jZN3BnDJE) · [`docs/media/team404_submission_video.mp4`](docs/media/team404_submission_video.mp4) |
 
 **Viewing the HTML pages:** GitHub shows HTML files as source code. Clone or download the repository and open them in a browser; they are self-contained apart from the video clips.
 
