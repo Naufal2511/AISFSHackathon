@@ -29,6 +29,11 @@
   .note b { color:var(--ink); }
   .legend { position:absolute; left:1000px; top:400px; display:flex; gap:24px; font-size:15px; color:var(--soft); align-items:center; }
   .legend > div { display:flex; align-items:center; gap:8px; }
+  #focus { position:absolute; z-index:5; width:430px; background:#fff; border:2.5px solid var(--warm); border-radius:8px; padding:12px 16px; box-shadow:0 8px 28px rgba(24,33,43,.16); font-size:16px; line-height:1.45; opacity:0; }
+  #focus .h { font-weight:700; color:var(--warm); font-size:14px; letter-spacing:1.5px; text-transform:uppercase; }
+  #focus .big { font-size:22px; font-weight:700; margin:2px 0 4px; }
+  #focus .k { color:var(--mute); }
+  .row.hl { background:#fdf0e4; box-shadow:inset 3px 0 0 var(--warm); }
 </style></head>
 <body>
 <div id="top">
@@ -38,6 +43,7 @@
 <div class="cam" style="left:24px"><img id="img_cam1"><svg id="svg_cam1" width="624" height="468"></svg><div class="tag">FRONT · CAM 1</div></div>
 <div class="cam" style="left:648px"><img id="img_cam2"><svg id="svg_cam2" width="624" height="468"></svg><div class="tag">BUNK (TOP) · CAM 2</div></div>
 <div class="cam" style="left:1272px"><img id="img_cam3"><svg id="svg_cam3" width="624" height="468"></svg><div class="tag">BACK · CAM 3</div></div>
+<div id="focus"></div>
 <div id="bottom">
   <svg id="map" width="980" height="490"></svg>
   <div id="panel"><div class="hd">World state · each cow · front · bunk · back</div><div id="rows"></div></div>
@@ -50,7 +56,7 @@
   </div>
 </div>
 <script>
-const WORLD = __WORLD__, BOXES = __BOXES__;
+const WORLD = __WORLD__, BOXES = __BOXES__, FOCUS = __FOCUS__;
 const SPEED = 4, FPS = 30, N = WORLD.n;
 const COLORS = {COW_01:"#1f77b4",COW_02:"#d62728",COW_03:"#2ca02c",COW_04:"#9467bd",COW_05:"#8c564b",COW_06:"#e377c2",COW_07:"#17becf",COW_08:"#bcbd22",COW_09:"#ff7f0e",COW_10:"#7f7f7f"};
 const IDS = Object.keys(COLORS), CAMS = ["cam1","cam2","cam3"];
@@ -89,6 +95,7 @@ function boxesAt(sec) { const i = Math.floor(sec), f = sec - i, A = BOXES[i] || 
   return A.map(a => { const b = B.find(q => q[0]===a[0] && (a[1] ? q[1]===a[1] : (!q[1] && q[2]===a[2])));
     return b ? [a[0],a[1],a[2],lerp(a[3],b[3],f),lerp(a[4],b[4],f),lerp(a[5],b[5],f),lerp(a[6],b[6],f),a[7]] : a; }); }
 function fmt(sec){ const d = new Date(WORLD.start.replace(" ","T")); d.setSeconds(d.getSeconds()+Math.floor(sec)); return d.toTimeString().slice(0,8); }
+function focusAmt(t) { return FOCUS ? Math.max(0, Math.min(1, (t - FOCUS.from) / 0.6)) : 0; }
 // ---------- render ----------
 async function render(t) {
   const sec = Math.min(119.99, t * SPEED), iv = Math.floor(sec);
@@ -101,12 +108,19 @@ async function render(t) {
   for (const c of CAMS) { const g = document.getElementById("svg_" + c); g.innerHTML = "";
     for (const b of bx.filter(q => q[0] === c)) { const [_, id, tr, x1, y1, x2, y2, vis] = b;
       const X1 = x1*624, Y1 = y1*468, X2 = x2*624, Y2 = y2*468, col = id ? (COLORS[id] || "#fff") : "#c9d0d7";
-      el("rect",{x:X1,y:Y1,width:X2-X1,height:Y2-Y1,fill:"none",stroke:col,"stroke-width":3,"stroke-dasharray":vis==="partial"?"7 5":"none",rx:2},g);
+      const fa = focusAmt(t), isF = FOCUS && id === FOCUS.id;
+      const gg = el("g",{opacity: isF ? 1 : 1 - 0.5 * fa},g);
+      if (isF && fa > 0) { const pulse = 4 + 2.5 * (1 + Math.sin(t * 5)), pad = 7;
+        el("rect",{x:X1-pad,y:Y1-pad,width:X2-X1+2*pad,height:Y2-Y1+2*pad,fill:"#a85a24","fill-opacity":.12*fa,stroke:"#a85a24","stroke-width":pulse,"stroke-opacity":fa,rx:6},gg); }
+      el("rect",{x:X1,y:Y1,width:X2-X1,height:Y2-Y1,fill:"none",stroke:col,"stroke-width":3,"stroke-dasharray":vis==="partial"?"7 5":"none",rx:2},gg);
       const s = id ? stateAt(sec, id) : null;
       const label = !id ? "unassigned" : id.replace("COW_","") + (s && s.b && X2 - X1 >= 100 ? " · " + (BEH[s.b] || s.b) : "");
       const w = 9 + label.length * 7.4, ly = Math.max(0, Y1 - 22);
-      el("rect",{x:X1,y:ly,width:w,height:20,fill:col,rx:3},g);
-      el("text",{x:X1+5,y:ly+14.5,"font-size":13,"font-weight":700,fill:id?"#fff":"#18212b"},g).textContent = label; } }
+      el("rect",{x:X1,y:ly,width:w,height:20,fill:col,rx:3},gg);
+      el("text",{x:X1+5,y:ly+14.5,"font-size":13,"font-weight":700,fill:id?"#fff":"#18212b"},gg).textContent = label;
+      if (isF && fa > 0) { const ty = Math.min(468 - 26, Y2 + 10);
+        el("rect",{x:X1,y:ty,width:118,height:22,fill:"#a85a24",rx:3,opacity:fa},gg);
+        el("text",{x:X1+7,y:ty+15.5,"font-size":13,"font-weight":700,fill:"#fff","letter-spacing":1,opacity:fa},gg).textContent = "TOP BRD RISK"; } } }
   // map + panel
   gTrail.innerHTML = gHalo.innerHTML = gCow.innerHTML = "";
   for (const id of present) { const s = stateAt(sec, id); if (!s) continue;
@@ -118,15 +132,30 @@ async function render(t) {
     for (const sg of segs) if (sg.length > 1) el("polyline",{points:sg.join(" "),fill:"none",stroke:COLORS[id],"stroke-width":2.5,"stroke-opacity":.35,"stroke-linecap":"round"},gTrail);
     const [px,py] = P(s.x,s.y);
     if (s.p) el("circle",{cx:px,cy:py,r:Math.min(3, Math.max(0.45, s.sd||0.5))*S,fill:COLORS[id],"fill-opacity":.12,stroke:COLORS[id],"stroke-opacity":.35,"stroke-dasharray":"3 4"},gHalo);
-    el("circle",{cx:px,cy:py,r:11,fill:COLORS[id],"fill-opacity":s.p?.35:.95,stroke:"#18212b","stroke-width":2,"stroke-dasharray":s.p?"4 3":"none"},gCow);
+    const fa = focusAmt(t), isF = FOCUS && id === FOCUS.id;
+    if (isF && fa > 0) el("circle",{cx:px,cy:py,r:20 + 4 * Math.sin(t * 5),fill:"#a85a24","fill-opacity":.15*fa,stroke:"#a85a24","stroke-width":3,"stroke-opacity":fa},gCow);
+    el("circle",{cx:px,cy:py,r:11,fill:COLORS[id],"fill-opacity":s.p?.35:.95,stroke:"#18212b","stroke-width":2,"stroke-dasharray":s.p?"4 3":"none",opacity:isF?1:1-0.45*fa},gCow);
     if (s.h != null) { const r = s.h*Math.PI/180, hx = Math.sin(r), hy = Math.cos(r);
       el("line",{x1:px+hx*12,y1:py+hy*12,x2:px+hx*26,y2:py+hy*26,stroke:"#18212b","stroke-width":3,"stroke-linecap":"round"},gCow); }
     el("text",{x:px,y:py-16,"text-anchor":"middle","font-size":12,"font-weight":700,fill:"#18212b"},gCow).textContent = id.replace("COW_","");
-    const row = rowEls[id]; row.querySelector(".beh").textContent = (BEH[s.b]||s.b||"—") + " · " + (s.z==="other"?"alley":s.z);
+    const row = rowEls[id]; row.classList.toggle("hl", !!(FOCUS && id === FOCUS.id && focusAmt(t) > 0)); row.querySelector(".beh").textContent = (BEH[s.b]||s.b||"—") + " · " + (s.z==="other"?"alley":s.z);
     const v = WORLD.vis[iv][id] || {};
     row.querySelectorAll(".chip").forEach((c, k) => { const o = v[CAMS[k]];
       if (!o) { c.style.background = "var(--none)"; c.textContent = "—"; }
       else { c.style.background = o.v === "visible" ? "var(--vis)" : "var(--part)"; c.textContent = o.v === "visible" ? "VIS" : "PART"; } }); }
+  const fbox = document.getElementById("focus"), fa = focusAmt(t);
+  if (FOCUS && fa > 0) { const s = stateAt(sec, FOCUS.id);
+    if (s) { let near = 1e9; let feeding = 0, seen = 0;
+      for (const id of present) { const q = stateAt(sec, id); if (!q) continue; seen++; if (q.b === "feeding") feeding++;
+        if (id !== FOCUS.id) near = Math.min(near, Math.hypot(q.x - s.x, q.y - s.y)); }
+      fbox.innerHTML = `<div class="h">${FOCUS.id} · ranked #1 for BRD risk (${FOCUS.score})</div>
+        <div class="big">${BEH[s.b] || s.b} · ${near.toFixed(1)} m from the nearest herdmate</div>
+        <div><span class="k">right now:</span> ${feeding} of ${seen} cows are feeding</div>
+        <div><span class="k">over 48 h:</span> ${FOCUS.why}</div>`;
+      fbox.style.opacity = fa; fbox.style.left = FOCUS.box[0] + "px"; fbox.style.top = FOCUS.box[1] + "px";
+      const [px, py] = P(s.x, s.y), bx = 24 + px, by = 566 + py;
+      el("line",{x1:FOCUS.box[0] + 430 - 24, y1:FOCUS.box[1] + 60 - 566, x2:px - 22, y2:py, stroke:"#a85a24","stroke-width":2.5,"stroke-dasharray":"6 5",opacity:fa},gCow); }
+  } else fbox.style.opacity = 0;
   await Promise.all(loads);
 }
 window.render = render;

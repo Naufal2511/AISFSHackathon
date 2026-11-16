@@ -1,0 +1,70 @@
+<!doctype html><html><head><meta charset="utf-8"></head><body>
+<!--COMMON-->
+<style>
+  #head { left:110px; top:70px; }
+  #card { left:110px; top:250px; width:860px; padding:28px; box-sizing:border-box; }
+  #card .id { font-size:40px; font-weight:700; display:flex; align-items:center; gap:14px; }
+  #card .id .dot { width:22px; height:22px; border-radius:50%; background:#1f77b4; }
+  #strip { display:grid; grid-template-columns:repeat(6,1fr); gap:8px; margin:18px 0; }
+  #strip img { width:100%; height:120px; object-fit:cover; border-radius:6px; background:#000; }
+  .kv { display:grid; grid-template-columns:200px 1fr; gap:8px 14px; font-size:21px; }
+  .kv .k { color:var(--mute); font-weight:600; }
+  #proto { display:flex; gap:2px; margin-top:4px; }
+  #proto span { width:12px; height:22px; border-radius:2px; }
+  #facts { margin-top:18px; border-top:1px solid var(--rule); padding-top:14px; }
+  #facts .ttl { font-size:17px; font-weight:700; letter-spacing:2px; color:var(--acc); margin-bottom:8px; }
+  .fact { font-size:18px; line-height:1.4; margin-bottom:8px; padding-left:14px; border-left:3px solid var(--warm); }
+  .fact .m { color:var(--mute); font-size:15px; font-weight:600; letter-spacing:.5px; }
+  #query { left:1020px; top:250px; width:790px; padding:28px; box-sizing:border-box; }
+  #query .ttl { font-size:17px; font-weight:700; letter-spacing:2px; color:var(--warm); }
+  #query .q { font-size:26px; font-weight:700; margin:8px 0 14px; }
+  #query img { width:100%; height:250px; object-fit:cover; border-radius:8px; background:#000; }
+  .step { display:grid; grid-template-columns:44px 1fr; gap:12px; font-size:20px; line-height:1.4; margin-top:14px; }
+  .step .n { width:36px; height:36px; border-radius:50%; background:var(--acc); color:#fff; font-weight:700; display:flex; align-items:center; justify-content:center; }
+  .step code { font-family:Menlo,monospace; font-size:17px; background:var(--panel); padding:1px 6px; border-radius:4px; }
+  #out { margin-top:18px; background:var(--warm-soft); border-left:4px solid var(--warm); padding:12px 16px; font-size:21px; border-radius:0 8px 8px 0; }
+</style>
+<div class="abs" id="head"><div class="eyebrow">Memory cards</div><div class="h1">Each cow has a memory, every fact a source</div></div>
+<div class="abs card" id="card">
+  <div class="id"><span class="dot"></span><span id="cid"></span><span class="mute" style="font-size:20px;font-weight:500" id="cseen"></span></div>
+  <div id="strip"></div>
+  <div class="kv">
+    <div class="k">ear tag</div><div id="tag"></div>
+    <div class="k">traits</div><div id="traits"></div>
+    <div class="k">seen by</div><div id="cams"></div>
+    <div class="k">appearance</div><div><div id="proto"></div></div>
+  </div>
+  <div id="facts"><div class="ttl">FACTS LEARNED</div><div id="flist"></div></div>
+</div>
+<div class="abs card" id="query">
+  <div class="ttl">IDENTITY AGENT · A TRACK IN DOUBT</div>
+  <div class="q" id="qq"></div>
+  <img id="qimg">
+  <div id="qsteps"></div>
+  <div id="out"></div>
+</div>
+<script>
+const D = __DATA__, C = D.card;
+document.getElementById("cid").textContent = C.id;
+document.getElementById("cseen").textContent = `· last seen ${C.last_seen}`;
+document.getElementById("tag").textContent = C.ear_tag;
+document.getElementById("traits").textContent = C.traits;
+document.getElementById("cams").textContent = C.cams;
+document.getElementById("strip").innerHTML = C.crops.map(c => `<img src="${c}">`).join("");
+document.getElementById("proto").innerHTML = C.proto.map(v => `<span style="background:hsl(195,45%,${92 - 60 * v}%)"></span>`).join("");
+const facts = C.facts.map(f => { const d = document.createElement("div"); d.className = "fact"; d.innerHTML = `<div class="m">${f.time} · ${f.source}</div>${f.text}`; document.getElementById("flist").appendChild(d); return d; });
+const Q = D.query;
+document.getElementById("qq").textContent = Q.title; document.getElementById("qimg").src = Q.img;
+const qs = Q.steps.map((s, i) => { const d = document.createElement("div"); d.className = "step"; d.innerHTML = `<div class="n">${i + 1}</div><div>${s}</div>`; document.getElementById("qsteps").appendChild(d); return d; });
+document.getElementById("out").innerHTML = Q.outcome;
+window.render = async function (t) {
+  show(document.getElementById("head"), at(t, 0.1, 0.6));
+  show(document.getElementById("card"), at(t, 0.4, 0.7), 30);
+  facts.forEach((f, i) => show(f, at(t, DUR * (0.30 + 0.08 * i), 0.5)));
+  show(document.getElementById("query"), at(t, DUR * 0.52, 0.7), 30);
+  qs.forEach((q, i) => show(q, at(t, DUR * (0.60 + 0.08 * i), 0.5)));
+  show(document.getElementById("out"), at(t, DUR * 0.86, 0.5));
+  fader(t);
+  await imgsReady();
+};
+</script></body></html>

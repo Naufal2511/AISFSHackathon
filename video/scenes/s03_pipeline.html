@@ -1,0 +1,68 @@
+<!doctype html><html><head><meta charset="utf-8"></head><body>
+<!--COMMON-->
+<style>
+  #head { left:110px; top:80px; }
+  .lane { position:absolute; left:110px; font-size:17px; font-weight:700; letter-spacing:2.5px; color:var(--acc); }
+  .bx { position:absolute; height:150px; border-radius:14px; background:#fff; border:2px solid #c9d2db; padding:20px 22px; box-sizing:border-box; }
+  .bx .t { font-size:26px; font-weight:700; }
+  .bx .s { font-size:19px; color:var(--soft); margin-top:8px; line-height:1.35; }
+  .bx.agent { background:var(--warm-soft); border-color:#d39a6c; }
+  .bx.agent .m { color:var(--warm); font-size:17px; font-weight:600; margin-left:6px; }
+  .arrow { position:absolute; height:3px; background:#8a96a3; }
+  .arrow::after { content:""; position:absolute; right:-2px; top:-6px; border-left:12px solid #8a96a3; border-top:7.5px solid transparent; border-bottom:7.5px solid transparent; }
+  #badge { right:110px; top:92px; background:var(--ink); color:#fff; font-size:22px; font-weight:600; padding:12px 22px; border-radius:10px; }
+  #badge b { color:#f2b98a; }
+</style>
+<div class="abs" id="head"><div class="eyebrow">How it works</div><div class="h1">Measurement first, judgement second</div></div>
+<div class="abs" id="badge">agents check the record · <b>code checks the agents</b></div>
+<div id="dia"></div>
+<script>
+const ROWS = [
+  { lane: "MEASURE · per camera → pen floor", y: 290, boxes: [
+    ["3 cameras", "front · bunk (top) · back<br>1 frame per second"],
+    ["Cow detector", "YOLO26-m, fine-tuned on<br>216 hand-labelled frames"],
+    ["ByteTrack", "follows each cow<br>within one camera"],
+    ["Homography", "every box onto the pen<br>floor, in metres"],
+    ["World state", "every cow, every second"]] },
+  { lane: "IDENTITY · who is who", y: 540, boxes: [
+    ["Agreement", "same spot, same seconds<br>→ same cow"],
+    ["Consensus + anchors", "camera beliefs agree;<br>IDs locked at anchors"],
+    ["Memory cards", "best views, marks,<br>facts per cow"],
+    ["Identity agent", "audits every 30 min", "GPT-5.6 Luna", 1]] },
+  { lane: "BEHAVIOR · LEVEL 1  →  RISK · LEVEL 2", y: 790, boxes: [
+    ["Behavior model", "DINOv2 + geometry +<br>measured chewing"],
+    ["Fusion + smoothing", "cameras vote;<br>no impossible jumps"],
+    ["Behavior agent", "checks flagged minutes", "brd_agent", 1],
+    ["Risk agent", "13 indicators vs herd;<br>looks for clinical signs", "Claude Opus 4.8", 1]] },
+];
+const dia = document.getElementById("dia"), nodes = [];
+const X0 = 110, W = 1700, GAP = 46;
+ROWS.forEach((r, ri) => {
+  const lane = document.createElement("div"); lane.className = "lane"; lane.style.top = (r.y - 34) + "px"; lane.textContent = r.lane; dia.appendChild(lane);
+  const n = r.boxes.length, bw = (W - GAP * (n - 1)) / n;
+  r.boxes.forEach((b, bi) => {
+    const d = document.createElement("div"); d.className = "bx" + (b[3] ? " agent" : "");
+    d.style.left = (X0 + bi * (bw + GAP)) + "px"; d.style.top = r.y + "px"; d.style.width = bw + "px";
+    d.innerHTML = `<div class="t">${b[0]}${b[2] ? `<span class="m">${b[2]}</span>` : ""}</div><div class="s">${b[1]}</div>`;
+    dia.appendChild(d);
+    let a = null;
+    if (bi < n - 1) { a = document.createElement("div"); a.className = "arrow"; a.style.left = (X0 + bi * (bw + GAP) + bw + 6) + "px";
+      a.style.top = (r.y + 74) + "px"; a.style.width = (GAP - 16) + "px"; dia.appendChild(a); }
+    nodes.push({ d, a, lane, ri, bi, agent: !!b[3] });
+  });
+});
+// reveal times (fraction of DUR) follow the voice-over
+const T = { 0: [0.06, 0.20, 0.36, 0.50, 0.60], 1: [0.66, 0.69, 0.72, 0.75], 2: [0.70, 0.73, 0.76, 0.79] };
+window.render = async function (t) {
+  const f = t / DUR;
+  show(document.getElementById("head"), at(t, 0.1, 0.7));
+  for (const n of nodes) {
+    const a = at(f * DUR, T[n.ri][n.bi] * DUR, 0.5);
+    show(n.d, a, 24); if (n.a) n.a.style.opacity = a;
+    n.lane.style.opacity = Math.max(+n.lane.style.opacity || 0, a);
+    if (n.agent) { const p = clamp((f - 0.82) / 0.1); n.d.style.boxShadow = `0 0 0 ${6 * Math.sin(Math.PI * p)}px rgba(168,90,36,.35)`; }
+  }
+  show(document.getElementById("badge"), at(t, 0.86 * DUR, 0.6));
+  fader(t);
+};
+</script></body></html>

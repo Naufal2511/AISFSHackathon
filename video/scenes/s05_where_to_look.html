@@ -1,0 +1,80 @@
+<!doctype html><html><head><meta charset="utf-8"></head><body>
+<!--COMMON-->
+<style>
+  #head { left:110px; top:70px; }
+  #cards { position:absolute; left:110px; top:250px; width:1700px; display:grid; grid-template-columns:repeat(3,1fr); gap:40px; }
+  .cc { position:relative; padding:16px; }
+  .cc img { width:100%; height:330px; object-fit:cover; border-radius:8px; display:block; background:#000; }
+  .cc .cam { font-size:20px; font-weight:700; margin:12px 0 2px; }
+  .cc .meta { font-size:18px; color:var(--soft); }
+  .sc { display:grid; grid-template-columns:150px 1fr 70px; align-items:center; gap:10px; margin-top:12px; font-size:17px; }
+  .sc .lab { color:var(--mute); font-weight:600; }
+  .sc .track { height:16px; background:var(--panel); border-radius:8px; overflow:hidden; }
+  .sc .fill { height:100%; background:#9fb0c0; border-radius:8px; }
+  .sc .v { text-align:right; font-weight:700; }
+  .win { position:absolute; right:22px; top:22px; background:var(--warm); color:#fff; font-size:15px; font-weight:700; letter-spacing:1px; padding:5px 10px; border-radius:6px; }
+  #rule { left:110px; top:930px; font-size:22px; color:var(--soft); }
+  #rule code { font-family:Menlo,monospace; font-size:20px; background:var(--panel); padding:3px 8px; border-radius:6px; color:var(--ink); }
+  #funnel { position:absolute; left:110px; top:250px; width:1700px; }
+  .fr { display:grid; grid-template-columns:430px 1fr 190px; align-items:center; gap:24px; height:96px; border-bottom:1px solid var(--rule); }
+  .fr .lab { font-size:26px; font-weight:600; }
+  .fr .lab small { display:block; font-size:18px; color:var(--mute); font-weight:500; }
+  .fr .bar { height:44px; border-radius:8px; }
+  .fr .v { font-size:30px; font-weight:700; text-align:right; }
+  .fr .v small { font-size:18px; color:var(--mute); font-weight:600; margin-left:6px; }
+</style>
+<div class="abs" id="head"><div class="eyebrow">Deciding where to look</div><div class="h1" id="htxt">Which camera can answer the question?</div><div class="lead" id="sub"></div></div>
+<div id="cards"></div>
+<div class="abs" id="rule">score = <code>box size × visibility (1.0 visible · 0.4 partial) × facing weight</code> &nbsp; · &nbsp; from the world state's <code>best_view</code></div>
+<div id="funnel"></div>
+<script>
+const D = __DATA__;
+const W_HEAD = { toward: 2.0, "side-on": 0.8 }, W_ID = { "side-on": 1.5 };
+const NAMES = { cam1: "Front camera", cam2: "Bunk camera (top)", cam3: "Back camera" };
+const cards = document.getElementById("cards");
+const rows = D.crops.map(c => {
+  const vis = c.status === "visible" ? 1.0 : 0.4;
+  const head = c.area * vis * (W_HEAD[c.facing] ?? 0.2), ident = c.area * vis * (W_ID[c.facing] ?? 1.0);
+  const d = document.createElement("div"); d.className = "card cc";
+  d.innerHTML = `<img src="${c.img}"><div class="cam">${NAMES[c.cam]}</div>
+    <div class="meta">${c.status === "visible" ? "fully visible" : "partly hidden" + (c.occl ? " by " + c.occl : "")} · facing ${c.facing} · box ${c.area.toFixed(1)} %</div>
+    <div class="sc"><span class="lab">head check</span><div class="track"><div class="fill fh"></div></div><span class="v vh"></span></div>
+    <div class="sc"><span class="lab">identity check</span><div class="track"><div class="fill fi"></div></div><span class="v vi"></span></div>
+    <div class="win wh">HEAD CHECK HERE</div><div class="win wi" style="top:62px">IDENTITY HERE</div>`;
+  cards.appendChild(d); return { d, head, ident };
+});
+const mh = Math.max(...rows.map(r => r.head)), mi = Math.max(...rows.map(r => r.ident));
+document.getElementById("sub").textContent = `${D.cow} · ${D.time} · the same second in all three cameras`;
+// funnel
+const F = D.funnel, fn = document.getElementById("funnel"), frows = [];
+for (const [lab, sub, n, col] of F.rows) {
+  const r = document.createElement("div"); r.className = "fr";
+  r.innerHTML = `<div class="lab">${lab}<small>${sub}</small></div><div><div class="bar" style="background:${col};width:0"></div></div><div class="v num">${n.toLocaleString()}<small>${Math.round(100 * n / F.total)} %</small></div>`;
+  fn.appendChild(r); frows.push({ r, n });
+}
+const SPLIT = 0.56;
+window.render = async function (t) {
+  const f = t / DUR, phaseB = f >= SPLIT;
+  document.getElementById("htxt").textContent = phaseB ? "Most minutes need no model at all" : "Which camera can answer the question?";
+  document.getElementById("sub").style.display = phaseB ? "none" : "block";
+  show(document.getElementById("head"), phaseB ? at(t, SPLIT * DUR, 0.5) : at(t, 0.1, 0.6));
+  cards.style.display = phaseB ? "none" : "grid"; document.getElementById("rule").style.display = phaseB ? "none" : "block";
+  fn.style.display = phaseB ? "block" : "none";
+  rows.forEach((r, i) => {
+    show(r.d, at(t, 0.3 + 0.25 * i, 0.6), 30);
+    const ah = at(t, 0.22 * DUR, 1.0), ai = at(t, 0.38 * DUR, 1.0);
+    r.d.querySelector(".fh").style.width = (100 * ah * r.head / mh) + "%"; r.d.querySelector(".vh").textContent = (ah * r.head).toFixed(2);
+    r.d.querySelector(".fi").style.width = (100 * ai * r.ident / mi) + "%"; r.d.querySelector(".vi").textContent = (ai * r.ident).toFixed(2);
+    const wh = r.head === mh ? at(t, 0.22 * DUR + 1.1, 0.4) : 0, wi = r.ident === mi ? at(t, 0.38 * DUR + 1.1, 0.4) : 0;
+    r.d.querySelector(".wh").style.opacity = wh; r.d.querySelector(".wi").style.opacity = wi;
+    r.d.querySelector(".fh").style.background = r.head === mh && wh > 0 ? "var(--warm)" : "#9fb0c0";
+    r.d.querySelector(".fi").style.background = r.ident === mi && wi > 0 ? "var(--warm)" : "#9fb0c0";
+    r.d.style.borderColor = (wh > 0 || wi > 0) ? "var(--warm)" : "var(--rule)";
+  });
+  show(document.getElementById("rule"), at(t, 0.2 * DUR, 0.6));
+  frows.forEach((x, i) => { const a = at(t, (SPLIT + 0.04 + 0.05 * i) * DUR, 0.8); show(x.r, a);
+    x.r.querySelector(".bar").style.width = (100 * a * x.n / F.total) + "%"; });
+  fader(t);
+  await imgsReady();
+};
+</script></body></html>

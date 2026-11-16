@@ -1,0 +1,38 @@
+<!doctype html><html><head><meta charset="utf-8"></head><body>
+<!--COMMON-->
+<style>
+  .frame { position:absolute; inset:0; overflow:hidden; background:#000; }
+  .frame img { width:1920px; height:1080px; object-fit:cover; transform-origin:50% 55%; }
+  .shade { position:absolute; inset:0; background:linear-gradient(180deg, rgba(10,14,18,.0) 45%, rgba(10,14,18,.78) 100%); }
+  #t1 { left:110px; bottom:120px; color:#fff; }
+  #t1 .eyebrow { color:#9fd3df; }
+  #t1 .h1 { font-size:76px; margin-top:12px; }
+  #t2 { left:110px; bottom:120px; color:#fff; }
+  #t2 .h1 { font-size:68px; }
+  .tag { position:absolute; right:60px; top:50px; color:#fff; font-size:18px; font-weight:600; letter-spacing:2px; background:rgba(10,14,18,.55); padding:6px 14px; border-radius:6px; }
+</style>
+<div class="frame" id="fn"><img id="imn"></div>
+<div class="frame" id="fd"><img id="imd"></div>
+<div class="shade"></div>
+<div class="tag" id="tag"></div>
+<div class="abs" id="t1"><div class="eyebrow">Pen 6 · Texas A&amp;M · 7–8 Nov 2026</div><div class="h1">10 Angus cattle · 3 cameras · 48 hours</div></div>
+<div class="abs" id="t2"><div class="h1">Can a camera notice BRD first?</div></div>
+<script>
+const DATA = __DATA__;
+const SPLIT = DUR * 0.5;
+window.render = async function (t) {
+  const night = t < SPLIT, fps = DATA.fps;
+  const n = night ? DATA.night : DATA.day, tt = night ? t : t - SPLIT, span = night ? SPLIT : DUR - SPLIT;
+  const i = String(Math.min(n, Math.floor(tt * fps) + 1)).padStart(4, "0");
+  const img = document.getElementById(night ? "imn" : "imd");
+  img.src = `frames/s01/${night ? "night" : "day"}/${i}.jpg`;
+  img.style.transform = `scale(${1 + 0.07 * tt / span})`;
+  document.getElementById("fn").style.opacity = night ? 1 : 0;
+  document.getElementById("fd").style.opacity = night ? 0 : 1;
+  document.getElementById("tag").textContent = night ? DATA.nightTag : DATA.dayTag;
+  show(document.getElementById("t1"), night ? at(t, 0.5, 0.9) * (1 - at(t, SPLIT - 0.5, 0.4)) : 0);
+  show(document.getElementById("t2"), night ? 0 : at(t, SPLIT + 0.6, 0.8));
+  fader(t);
+  await img.decode().catch(() => {});
+};
+</script></body></html>

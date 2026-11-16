@@ -33,7 +33,7 @@
 </style></head>
 <body>
 <div id="title"><div class="eyebrow">World state · Level 1</div><h1>Every cow, every second</h1><div class="subt">position · heading · which cameras see her · how well</div></div>
-<div id="clock"><div class="d" id="date"></div><div class="t" id="time"></div><div class="sp">20× real time · real data</div></div>
+<div id="clock"><div class="d" id="date"></div><div class="t" id="time"></div><div class="sp" id="spd">real data</div></div>
 <svg id="map" width="1920" height="1080"></svg>
 <div id="panel"><div class="hd"><div>Cow</div><div>Doing · zone</div><div>Front Bunk Back</div></div><div id="rows"></div></div>
 <div id="callout"></div>
@@ -47,7 +47,7 @@
 </div>
 <script>
 const DATA = __DATA__;
-const SPEED = 20, N = DATA.n;
+const N = DATA.n, SPEED = Math.max(1, Math.round(N / (window.DUR || 12)));
 const COLORS = {COW_01:"#1f77b4",COW_02:"#d62728",COW_03:"#2ca02c",COW_04:"#9467bd",COW_05:"#8c564b",COW_06:"#e377c2",COW_07:"#17becf",COW_08:"#bcbd22",COW_09:"#ff7f0e",COW_10:"#7f7f7f"};
 const IDS = Object.keys(COLORS);
 // map: pen 12 m (x) by 30 m (y). Drawn sideways: bunk (y=0) on the left, back fence (y=30) on the right.
@@ -154,6 +154,7 @@ function render(t) {
   }
 }
 window.render = render;
+document.getElementById("spd").textContent = SPEED + "× real time · real data";
 render(0.8);
 </script>
 </body></html>
