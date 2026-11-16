@@ -49,6 +49,7 @@ Every deliverable the brief asks for, and where it is:
 | **Level 2:** `brd_risk.csv` (cow ID, risk 0–1, rank, top reasons) | [`submission/level2/brd_risk.csv`](submission/level2/brd_risk.csv) |
 | **Level 2:** visualization tool | [`submission/level2/index.html`](submission/level2/index.html) (ranking, stability, cards) and [`submission/stitched/viewer.html`](submission/stitched/viewer.html) (48 h ethogram, camera joins, time budgets) |
 | **Level 2:** one-page risk card per top-3 cow, with 2–3 clips | [`COW_02.html`](submission/level2/cards/COW_02.html) · [`COW_01.html`](submission/level2/cards/COW_01.html) · [`COW_10.html`](submission/level2/cards/COW_10.html) |
+| ↳ relevant decision evidence clips (top 3 cows) | [`submission/level2/cards/clips/`](submission/level2/cards/clips/) (COW_02: [clip 1](submission/level2/cards/clips/COW_02_1.mp4), [clip 2](submission/level2/cards/clips/COW_02_2.mp4); COW_01: [clip 1](submission/level2/cards/clips/COW_01_1.mp4), [clip 2](submission/level2/cards/clips/COW_01_2.mp4); COW_10: [clip 1](submission/level2/cards/clips/COW_10_1.mp4), [clip 2](submission/level2/cards/clips/COW_10_2.mp4)) |
 | ↳ the risk agent's reasoning and every piece of evidence it cited | [`submission/level2/agent/traces/`](submission/level2/agent/traces/) · [`evidence/`](submission/level2/evidence/) |
 | **Level 3:** live alert on one 5-min clip, end to end | [`submission/level3/clip_1600/report.html`](submission/level3/clip_1600/report.html) |
 | ↳ three Day 2 hours replayed as live | [`submission/level3/day2_replay/report.html`](submission/level3/day2_replay/report.html) |
@@ -59,7 +60,7 @@ Every deliverable the brief asks for, and where it is:
 
 **Viewing the HTML pages:** GitHub shows HTML files as source code. Clone or download the repository and open them in a browser; they are self-contained apart from the video clips.
 
-> **Event data:** the footage, frames and results stay within the event. Keep this repository private. Apart from the submission video, video clips are not in the repository; the commands below regenerate them.
+> **Event data:** the footage, frames and results stay within the event. Keep this repository private. Apart from the submission video and the 6 Level 2 decision evidence clips, video clips are not in the repository; the commands below regenerate them.
 
 ---
 
