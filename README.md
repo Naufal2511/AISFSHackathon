@@ -3,7 +3,12 @@
 
 This is our submission for the AISFS TAMU Hackathon.
 
-> Event data (videos, frames, labels, model outputs) is not in this repository: it must stay within the event.
+> **Start here: [submission/SHOWCASE.md](submission/SHOWCASE.md)**: every result (Levels 1, 2 and 3) on one page, with
+> pictures, readable right here on GitHub. For the full pages with video, download the repo as ZIP and open
+> `submission/index.html` in a browser.
+
+> Event data (videos, frames, labels, model outputs) must stay within the event. The raw videos are not in this
+> repository; the results in `submission/` contain frames and clips, so keep the repository private.
 
 ---
 
