@@ -1,0 +1,57 @@
+[
+ {
+  "cow_id":"COW_01",
+  "reasons":[
+   {
+    "indicator":"lying_share",
+    "z":3.0,
+    "text":"time lying 80% vs herd 0% in the same window (z +3.0)"
+   }
+  ]
+ },
+ {
+  "cow_id":"COW_02",
+  "reasons":[
+
+  ]
+ },
+ {
+  "cow_id":"COW_03",
+  "reasons":[
+   {
+    "indicator":"lying_share",
+    "z":3.0,
+    "text":"time lying 20% vs herd 0% in the same window (z +3.0)"
+   },
+   {
+    "indicator":"isolation_share",
+    "z":3.0,
+    "text":"time alone (> 5 m from all herdmates) 20% vs herd 0% in the same window (z +3.0)"
+   }
+  ]
+ },
+ {
+  "cow_id":"COW_04",
+  "reasons":[
+
+  ]
+ },
+ {
+  "cow_id":"COW_05",
+  "reasons":[
+
+  ]
+ },
+ {
+  "cow_id":"COW_07",
+  "reasons":[
+
+  ]
+ },
+ {
+  "cow_id":"COW_08",
+  "reasons":[
+
+  ]
+ }
+]

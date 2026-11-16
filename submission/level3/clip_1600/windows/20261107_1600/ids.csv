@@ -1,0 +1,8 @@
+local_id,ref_id,cow_id,similarity,margin,how
+COW_01,COW_01,COW_07,,,"tracked from the hprc_day2_c25 gallery, then the 48 h id map"
+COW_02,COW_02,COW_05,,,"tracked from the hprc_day2_c25 gallery, then the 48 h id map"
+COW_03,COW_03,COW_03,,,"tracked from the hprc_day2_c25 gallery, then the 48 h id map"
+COW_04,COW_04,COW_02,,,"tracked from the hprc_day2_c25 gallery, then the 48 h id map"
+COW_05,COW_05,COW_04,,,"tracked from the hprc_day2_c25 gallery, then the 48 h id map"
+COW_06,COW_06,COW_01,,,"tracked from the hprc_day2_c25 gallery, then the 48 h id map"
+COW_07,COW_07,COW_08,,,"tracked from the hprc_day2_c25 gallery, then the 48 h id map"

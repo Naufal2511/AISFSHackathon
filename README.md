@@ -284,6 +284,28 @@ cannot swamp event crops, and probe accuracy is reported on held-out **event** c
 - Grooming and social interaction are heuristic cues. They go into `behavior_review_queue.csv` for the agent (VLM) to verify visually.
 - Behavior accuracy is capped by identity accuracy. A wrong `global_cow_id` puts the right behavior on the wrong cow.
 
+## Level 3: Live Early Warning
+
+`live_watch.py` watches new video, updates every cow's BRD risk and sends an alert with video evidence that a pen
+rider can act on. Full design, speed and limits: [docs/LEVEL3_LIVE.md](docs/LEVEL3_LIVE.md).
+
+```bash
+python live_watch.py --clip "<videos>/Day 2/Cam 01/Event20261108142130006.Avi"   # the judges' clip (finds the other cameras' files)
+python live_watch.py --watch "<videos>"                                          # ranch mode: every new 5-min window
+python live_watch.py --baseline                                                  # only the alerts from the 48 h BRD risk
+```
+
+On start it turns the 48 h Level 2 ranking into alert tiers: **Pull and examine** (a confirmed visible sign), **Check
+on the next pen ride** (top 3 with a stable rank: COW_02, COW_01, COW_10), **Watch list**, and Normal. Push tiers get a
+card with Level 2's reasons and clips. Each live window then re-evaluates every tier.
+
+Per window it runs the pipeline (stage 1 tracking, identity, behavior, close crops). It then keeps the 48 h cow ids
+(tracking seeded from the last Day 2 chunk's appearance gallery), compares each cow with the herd in the same window,
+and checks close crops for **drooping ears, head carried low and nasal discharge** (VLM + a pixel check, then a
+confirming second look next to a herdmate). It updates the risk, using the 48 h Level 2 score as the prior, and writes
+an alert card with a 12 s clip, the crops and a plain action line. Dashboard: `outputs/live/index.html`. Optional
+delivery: `LIVE_WEBHOOK_URL` (Slack, Teams or ntfy). Clinical signs need `TAMU_API_KEY` in `.env`.
+
 ## Output Data Schema
 
 Structured tracking records are exported to `outputs/tracking_records.csv` and `outputs/tracking_records.parquet` following the exact schema:

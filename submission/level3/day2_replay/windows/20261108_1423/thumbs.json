@@ -1,0 +1,42 @@
+{
+ "COW_01": {
+  "file": "crops/thumb_COW_01.jpg",
+  "time": "2026-11-08 14:47:39",
+  "camera": "cam2"
+ },
+ "COW_02": {
+  "file": "crops/thumb_COW_02.jpg",
+  "time": "2026-11-08 14:43:43",
+  "camera": "cam1"
+ },
+ "COW_03": {
+  "file": "crops/thumb_COW_03.jpg",
+  "time": "2026-11-08 15:08:31",
+  "camera": "cam3"
+ },
+ "COW_04": {
+  "file": "crops/thumb_COW_04.jpg",
+  "time": "2026-11-08 14:43:25",
+  "camera": "cam2"
+ },
+ "COW_06": {
+  "file": "crops/thumb_COW_06.jpg",
+  "time": "2026-11-08 14:23:00",
+  "camera": "cam1"
+ },
+ "COW_07": {
+  "file": "crops/thumb_COW_07.jpg",
+  "time": "2026-11-08 15:03:41",
+  "camera": "cam1"
+ },
+ "COW_09": {
+  "file": "crops/thumb_COW_09.jpg",
+  "time": "2026-11-08 14:23:12",
+  "camera": "cam1"
+ },
+ "COW_10": {
+  "file": "crops/thumb_COW_10.jpg",
+  "time": "2026-11-08 14:43:25",
+  "camera": "cam2"
+ }
+}

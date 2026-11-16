@@ -1,0 +1,22 @@
+{
+ "COW_01": {
+  "file": "crops/thumb_COW_01.jpg",
+  "time": "2026-11-08 12:36:46",
+  "camera": "cam3"
+ },
+ "COW_03": {
+  "file": "crops/thumb_COW_03.jpg",
+  "time": "2026-11-08 12:40:49",
+  "camera": "cam3"
+ },
+ "COW_04": {
+  "file": "crops/thumb_COW_04.jpg",
+  "time": "2026-11-08 12:34:52",
+  "camera": "cam3"
+ },
+ "COW_10": {
+  "file": "crops/thumb_COW_10.jpg",
+  "time": "2026-11-08 13:14:48",
+  "camera": "cam3"
+ }
+}

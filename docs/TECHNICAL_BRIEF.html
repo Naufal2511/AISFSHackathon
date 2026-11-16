@@ -240,7 +240,7 @@
 <li><b>Longer baselines.</b> One to two weeks would let each cow act as her own control (CUSUM on feeding and activity). That is where the 3–6 day lead before diagnosis appears in the literature.</li>
 <li><b>Identity without stitching.</b> One continuous run, or RFID at the bunk, would remove the weak joins. A cattle keypoint model would measure head carriage and ears directly.</li>
 <li><b>Harder classes.</b> 50+ clips each of rumination, grooming and social interaction, a video model, and a head-height bunk camera for discharge and ear droop.</li>
-<li><b>Live early warning (Level 3).</b> The pipeline already runs in 1 h resumable chunks. The risk agent's clips, evidence images and action line are what a pen rider's alert needs.</li>
+<li><b>Live early warning (Level 3), built.</b> <code>live_watch.py</code> turns the 48 h ranking into alert tiers, then scores each new 5-min clip: cows vs the herd in the same window, ears, head and discharge on close crops (VLM, rejected by tracker speed or a second look). Alerts go out with a 12 s clip, plus a simulated email (<code>submission/level3/</code>). More data: sick cows to validate the signs and thresholds.</li>
 </ul>
 </div>
 </div>

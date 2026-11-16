@@ -1,0 +1,8 @@
+cow_id,decision,why
+COW_01,no alert,tier stays Check on the next pen ride; no confirmed visible sign; risk 0.34 below the alert line 0.45; 1 indicator(s) at z >= 2 (needs 2)
+COW_02,no alert,tier stays Check on the next pen ride; no confirmed visible sign; risk 0.36 below the alert line 0.45; 0 indicator(s) at z >= 2 (needs 2)
+COW_03,no alert,"tier stays Watch list; no confirmed visible sign; risk 0.23 below the alert line 0.45; 2 indicator(s) at z >= 2, rank 4"
+COW_04,no alert,"tier Watch list -> Normal (live risk 0.10, rank 8: herd-typical); no confirmed visible sign; risk 0.10 below the alert line 0.45; 0 indicator(s) at z >= 2 (needs 2)"
+COW_05,no alert,tier stays Normal; no confirmed visible sign; risk 0.16 below the alert line 0.45; 0 indicator(s) at z >= 2 (needs 2)
+COW_07,no alert,tier stays Normal; no confirmed visible sign; risk 0.09 below the alert line 0.45; 0 indicator(s) at z >= 2 (needs 2)
+COW_08,no alert,tier stays Normal; no confirmed visible sign; risk 0.07 below the alert line 0.45; 0 indicator(s) at z >= 2 (needs 2)

@@ -1,0 +1,107 @@
+From: pen6-monitor@ranch.example
+To: pen.rider@ranch.example, herd.manager@ranch.example
+Subject: BRD alert: COW_10, Watch closely (14:23)
+Date: Sun, 15 Nov 2026 20:34:23 -0600
+Message-ID: <179479646310.32092.12428634909994123222@ranch.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="===============6296509283321871354=="
+
+--===============6296509283321871354==
+Content-Type: multipart/alternative;
+ boundary="===============1346246734161368874=="
+
+--===============1346246734161368874==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+COW_10: Watch closely
+Look at COW_10 on your next pen ride: her behavior moved toward the BRD patte=
+rn (see why below). She was last seen in the open pen. Watch her at the bunk =
+and check for dullness, nasal discharge, drooping ears or fast breathing. No =
+visible sign was confirmed by the camera, so this is a watch, not a pull.
+Risk 0.27, rank 3.
+Evidence attached.
+
+--===============1346246734161368874==
+Content-Type: text/html; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+
+<h2 style=3D'margin:0'>COW_10: Watch closely</h2><p><b>What to do:</b> Look a=
+t COW_10 on your next pen ride: her behavior moved toward the BRD pattern (se=
+e why below). She was last seen in the open pen. Watch her at the bunk and ch=
+eck for dullness, nasal discharge, drooping ears or fast breathing. No visibl=
+e sign was confirmed by the camera, so this is a watch, not a pull.</p><p><b>=
+Why:</b></p><ul><li>time lying 76% vs herd 22% in the same window (z +3.0)</l=
+i><li>time alone (&gt; 5 m from all herdmates) 80% vs herd 36% in the same wi=
+ndow (z +3.0)</li><li>time at the feed bunk 4% vs herd 10% in the same window=
+ (z +1.1)</li></ul><p>Risk 0.27 (was 0.19; 48 h baseline 0.26), rank 3 of 10.=
+ Risk is a ranking index, not a diagnosis. The camera cannot take a temperatu=
+re: a pen rider confirms.</p><p>Evidence attached: the alert card, the clip a=
+nd the frame.</p>
+
+--===============1346246734161368874==--
+
+--===============6296509283321871354==
+Content-Type: text/html
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="COW_10_20261108_1423.html"
+MIME-Version: 1.0
+
+PCFkb2N0eXBlIGh0bWw+PGh0bWwgbGFuZz0iZW4iPjxoZWFkPjxtZXRhIGNoYXJzZXQ9InV0Zi04
+Ij48bWV0YSBuYW1lPSJ2aWV3cG9ydCIgY29udGVudD0id2lkdGg9ZGV2aWNlLXdpZHRoLGluaXRp
+YWwtc2NhbGU9MSI+DQo8dGl0bGU+Q09XXzEwIEFsZXJ0PC90aXRsZT4NCjxzdHlsZT4NCjpyb290
+ey0tYmc6I2Y5ZjlmNzstLWNhcmQ6I2ZmZjstLWluazojMGIwYjBiOy0taW5rMjojNTI1MTRlOy0t
+bTojODk4NzgxOy0tbGluZTojZTFlMGQ5Oy0td2FybjojZmFiMjE5Oy0tY3JpdDojZDAzYjNiOy0t
+YWNjZW50OiMwZjVhNmJ9DQpAbWVkaWEgKHByZWZlcnMtY29sb3Itc2NoZW1lOmRhcmspezpyb290
+Om5vdChbZGF0YS10aGVtZT1saWdodF0pey0tYmc6IzBkMGQwZDstLWNhcmQ6IzFhMWExOTstLWlu
+azojZjBlZmVjOy0taW5rMjojYzNjMmI3Oy0tbGluZTojMmMyYzJhOy0tYWNjZW50OiM1ZmIzYzR9
+fQ0KYm9keXttYXJnaW46MDtiYWNrZ3JvdW5kOnZhcigtLWJnKTtjb2xvcjp2YXIoLS1pbmspO2Zv
+bnQ6MTVweC8xLjUgc3lzdGVtLXVpLC1hcHBsZS1zeXN0ZW0sIlNlZ29lIFVJIixzYW5zLXNlcmlm
+fQ0KbWFpbnttYXgtd2lkdGg6OTAwcHg7bWFyZ2luOjAgYXV0bztwYWRkaW5nOjE2cHh9DQouYmFk
+Z2V7ZGlzcGxheTppbmxpbmUtYmxvY2s7cGFkZGluZzoycHggMTBweDtib3JkZXItcmFkaXVzOjk5
+OXB4O2ZvbnQtd2VpZ2h0OjY1MDtmb250LXNpemU6MTNweDtiYWNrZ3JvdW5kOnZhcigtLXdhcm4p
+O2NvbG9yOiMwYjBiMGJ9DQpoMXtmb250LXNpemU6MjRweDttYXJnaW46OHB4IDAgNHB4fSAubXtj
+b2xvcjp2YXIoLS1tKX0gc2VjdGlvbntiYWNrZ3JvdW5kOnZhcigtLWNhcmQpO2JvcmRlcjoxcHgg
+c29saWQgdmFyKC0tbGluZSk7Ym9yZGVyLXJhZGl1czoxMHB4O3BhZGRpbmc6MTRweCAxNnB4O21h
+cmdpbjoxMnB4IDB9DQpoMntmb250LXNpemU6MTVweDttYXJnaW46MCAwIDZweH0gLmFjdHtmb250
+LXNpemU6MTZweDtib3JkZXItbGVmdDo0cHggc29saWQgdmFyKC0tYWNjZW50KTtwYWRkaW5nLWxl
+ZnQ6MTJweH0NCi5ncmlke2Rpc3BsYXk6Z3JpZDtncmlkLXRlbXBsYXRlLWNvbHVtbnM6cmVwZWF0
+KGF1dG8tZml0LG1pbm1heCgyNDBweCwxZnIpKTtnYXA6MTBweH0gZmlndXJle21hcmdpbjowfSB2
+aWRlbyxpbWd7d2lkdGg6MTAwJTtib3JkZXItcmFkaXVzOjhweDtib3JkZXI6MXB4IHNvbGlkIHZh
+cigtLWxpbmUpfQ0KZmlnY2FwdGlvbntmb250LXNpemU6MTJweDtjb2xvcjp2YXIoLS1tKX0gLmt2
+e2Rpc3BsYXk6Z3JpZDtncmlkLXRlbXBsYXRlLWNvbHVtbnM6bWF4LWNvbnRlbnQgMWZyO2dhcDoy
+cHggMTJweDtmb250LXNpemU6MTRweH0gLmt2IGRpdjpudGgtY2hpbGQob2RkKXtjb2xvcjp2YXIo
+LS1tKX0NCjwvc3R5bGU+PC9oZWFkPjxib2R5PjxtYWluPg0KPHNwYW4gY2xhc3M9ImJhZGdlIj5X
+YXRjaCBjbG9zZWx5PC9zcGFuPg0KPGgxPkNPV18xMDogYmVoYXZpb3IgbW92aW5nIHRvd2FyZCBC
+UkQ8L2gxPg0KPGRpdiBjbGFzcz0ibSI+V2luZG93IDIwMjYtMTEtMDggMTQ6MjMtMTU6MjMsIGNh
+bWVyYXMgY2FtMSwgY2FtMiwgY2FtMzwvZGl2Pg0KPHNlY3Rpb24+PGgyPldoYXQgdG8gZG88L2gy
+PjxwIGNsYXNzPSJhY3QiPkxvb2sgYXQgQ09XXzEwIG9uIHlvdXIgbmV4dCBwZW4gcmlkZTogaGVy
+IGJlaGF2aW9yIG1vdmVkIHRvd2FyZCB0aGUgQlJEIHBhdHRlcm4gKHNlZSB3aHkgYmVsb3cpLiBT
+aGUgd2FzIGxhc3Qgc2VlbiBpbiB0aGUgb3BlbiBwZW4uIFdhdGNoIGhlciBhdCB0aGUgYnVuayBh
+bmQgY2hlY2sgZm9yIGR1bGxuZXNzLCBuYXNhbCBkaXNjaGFyZ2UsIGRyb29waW5nIGVhcnMgb3Ig
+ZmFzdCBicmVhdGhpbmcuIE5vIHZpc2libGUgc2lnbiB3YXMgY29uZmlybWVkIGJ5IHRoZSBjYW1l
+cmEsIHNvIHRoaXMgaXMgYSB3YXRjaCwgbm90IGEgcHVsbC48L3A+PC9zZWN0aW9uPg0KPHNlY3Rp
+b24gY2xhc3M9ImdyaWQiPjxwIGNsYXNzPSJtIj5ObyB2aWRlbyBldmlkZW5jZSBjb3VsZCBiZSBj
+dXQgZm9yIHRoaXMgd2luZG93LjwvcD48L3NlY3Rpb24+DQo8c2VjdGlvbj48aDI+VmlzaWJsZSBz
+aWducyAoY2FtZXJhKTwvaDI+PHVsPjxsaT5Ob25lIGNvbmZpcm1lZCBpbiB0aGlzIHdpbmRvdy48
+L2xpPjwvdWw+PC9zZWN0aW9uPg0KPHNlY3Rpb24+PGgyPldoeSAoYmVoYXZpb3IgaW4gdGhpcyB3
+aW5kb3csIHZzIHRoZSBoZXJkIGF0IHRoZSBzYW1lIHRpbWUpPC9oMj48dWw+PGxpPnRpbWUgbHlp
+bmcgNzYlIHZzIGhlcmQgMjIlIGluIHRoZSBzYW1lIHdpbmRvdyAoeiArMy4wKTwvbGk+PGxpPnRp
+bWUgYWxvbmUgKCZndDsgNSBtIGZyb20gYWxsIGhlcmRtYXRlcykgODAlIHZzIGhlcmQgMzYlIGlu
+IHRoZSBzYW1lIHdpbmRvdyAoeiArMy4wKTwvbGk+PGxpPnRpbWUgYXQgdGhlIGZlZWQgYnVuayA0
+JSB2cyBoZXJkIDEwJSBpbiB0aGUgc2FtZSB3aW5kb3cgKHogKzEuMSk8L2xpPjwvdWw+PC9zZWN0
+aW9uPg0KPHNlY3Rpb24+PGgyPlJpc2s8L2gyPjxkaXYgY2xhc3M9Imt2Ij4NCjxkaXY+Tm93PC9k
+aXY+PGRpdj48Yj4wLjI3PC9iPiAocmFuayAzIG9mIDEwKTwvZGl2Pg0KPGRpdj5CZWZvcmUgdGhp
+cyB3aW5kb3c8L2Rpdj48ZGl2PjAuMTkgKHJhbmsgNCk8L2Rpdj4NCjxkaXY+NDggaCBiYXNlbGlu
+ZSAoTGV2ZWwgMik8L2Rpdj48ZGl2PjAuMjY8L2Rpdj4NCjxkaXY+U2VlbiBhdDwvZGl2PjxkaXY+
+MjAyNi0xMS0wOCAxNDo0NDowNyBvbiBjYW0xIChFdmVudDIwMjYxMTA4MTQ0MzQzMDA2LkF2aSBh
+dCAyNCBzKTwvZGl2Pg0KPGRpdj5JZGVudGl0eTwvZGl2PjxkaXY+NDggaCBzdGl0Y2hlZCBpZCBt
+YXA8L2Rpdj48L2Rpdj4NCjxwIGNsYXNzPSJtIj5SaXNrIGlzIGEgcmFua2luZyBpbmRleCAoMC0x
+KSwgbm90IGEgcHJvYmFiaWxpdHkgb2YgZGlzZWFzZS4gT2JzZXJ2ZWQ6IHRoZSBjbGlwLCB0aGUg
+Y3JvcHMgYW5kIHRoZSBjb3cncw0KcG9zaXRpb25zLiBFc3RpbWF0ZWQ6IGJlaGF2aW9yIGxhYmVs
+cyBmcm9tIHRoZSB2aWRlbyBtb2RlbCwgdGhlIHJpc2sgaW5kZXguIFRoZSBjYW1lcmEgY2Fubm90
+IHRha2UgYSB0ZW1wZXJhdHVyZToNCmEgcGVuIHJpZGVyIGNvbmZpcm1zLjwvcD48L3NlY3Rpb24+
+DQo8L21haW4+PC9ib2R5PjwvaHRtbD4=
+
+--===============6296509283321871354==--

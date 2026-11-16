@@ -1,0 +1,44 @@
+[
+ {
+  "cow_id": "COW_02",
+  "tier": "orange",
+  "tier_rule": "live risk 0.36 >= 0.25 and rank 1 (top 3)",
+  "risk": 0.3626,
+  "clip": "watch/COW_02_20261107_160300_cam1.mp4",
+  "frame": "watch/COW_02_20261107_160300_cam1_frame.jpg",
+  "moment": {
+   "time": "2026-11-07 16:03:00",
+   "camera": "cam1",
+   "file": "Event20261107160019006.Avi",
+   "offset_s": 161.0,
+   "box": [
+    771.0,
+    1341.0,
+    1577.0,
+    1939.0
+   ],
+   "local_id": "COW_04"
+  }
+ },
+ {
+  "cow_id": "COW_01",
+  "tier": "orange",
+  "tier_rule": "live risk 0.34 >= 0.25 and rank 2 (top 3)",
+  "risk": 0.3436,
+  "clip": "watch/COW_01_20261107_160451_cam1.mp4",
+  "frame": "watch/COW_01_20261107_160451_cam1_frame.jpg",
+  "moment": {
+   "time": "2026-11-07 16:04:51",
+   "camera": "cam1",
+   "file": "Event20261107160019006.Avi",
+   "offset_s": 272.0,
+   "box": [
+    1839.0,
+    1720.0,
+    2414.0,
+    3000.0
+   ],
+   "local_id": "COW_06"
+  }
+ }
+]

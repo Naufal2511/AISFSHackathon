@@ -1,0 +1,9 @@
+local_id,ref_id,cow_id,similarity,margin,how
+COW_01,COW_01,COW_07,,,48 h stitched id map
+COW_02,COW_02,COW_09,,,48 h stitched id map
+COW_03,COW_03,COW_06,,,48 h stitched id map
+COW_04,COW_04,COW_10,,,48 h stitched id map
+COW_05,COW_05,COW_04,,,48 h stitched id map
+COW_06,COW_06,COW_01,,,48 h stitched id map
+COW_07,COW_07,COW_02,,,48 h stitched id map
+COW_08,COW_08,COW_03,,,48 h stitched id map

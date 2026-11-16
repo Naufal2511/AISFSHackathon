@@ -1,0 +1,26 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>COW_10 Risk Alert</title>
+<style>
+:root{--bg:#f9f9f7;--card:#fff;--ink:#0b0b0b;--m:#898781;--line:#e1e0d9;--warn:#fab219;--crit:#d03b3b;--accent:#0f5a6b}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0d0d0d;--card:#1a1a19;--ink:#f0efec;--line:#2c2c2a;--accent:#5fb3c4}}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif} main{max-width:900px;margin:0 auto;padding:16px}
+.badge{display:inline-block;padding:2px 10px;border-radius:999px;font-weight:650;font-size:13px;background:#ec835a;color:#fff}
+h1{font-size:24px;margin:8px 0 4px} .m{color:var(--m)} section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin:12px 0}
+h2{font-size:15px;margin:0 0 6px} .act{font-size:16px;border-left:4px solid var(--accent);padding-left:12px} a{color:var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px} figure{margin:0} video{width:100%;border-radius:8px;border:1px solid var(--line)} figcaption{font-size:12px;color:var(--m)}
+.kv{display:grid;grid-template-columns:max-content 1fr;gap:2px 12px;font-size:14px} .kv div:nth-child(odd){color:var(--m)}
+</style></head><body><main>
+<span class="badge">Check on the next pen ride</span>
+<h1>COW_10: BRD risk from the last 48 h</h1>
+<div class="m">From the Level 2 ranking (brd_risk.csv). Live video keeps updating this tier.</div>
+<section><h2>What to do</h2><p class="act">Check COW_10 on your next pen ride. Over the last 48 h her behavior was the most BRD-like in the pen (reasons below, with clips). Look at her at the bunk after feeding: appetite, dullness, nose and eyes, ears, breathing. No visible sign was confirmed by the camera, so this is a check, not a pull.</p></section>
+<section><h2>Why (vs the herd at the same hours, over 48 h)</h2><ul><li>minutes per bunk visit 6.5 min vs herd median 9.5 min (z -1.1, 39.0 h observed)</li><li>longest lying bout 139 min vs herd median 100 min (z +1.9, 37.1 h observed)</li><li>bunk visits per hour changed -2.3 /h day-to-day (herd -1.5 /h)</li></ul><p><a href='../../../level2/cards/COW_10.html'>Full Level 2 risk card for COW_10</a> (indicator chart, all evidence the risk agent cited)</p></section>
+<section class="grid"><figure><video src='baseline_COW_10_1.mp4' controls muted loop playsinline preload='metadata'></video><figcaption>Level 2 evidence clip 1</figcaption></figure><figure><video src='baseline_COW_10_2.mp4' controls muted loop playsinline preload='metadata'></video><figcaption>Level 2 evidence clip 2</figcaption></figure></section>
+<section><h2>Risk</h2><div class="kv">
+<div>Risk index</div><div><b>0.26</b> (rank 3 of 10)</div>
+<div>Top 3 in</div><div>88% of time-block resamples</div>
+<div>Confidence</div><div>high (39 h observed)</div>
+<div>Tier rule</div><div>rank 3 of 10, in the top 3 in 88% of time-block resamples, high confidence (rule: top 3, &gt;= 60%, confidence medium/high)</div>
+<div>Visible signs</div><div>nan</div></div>
+<p class="m">Risk is a ranking index (0-1), not a probability of disease. The camera cannot take a temperature: a pen rider confirms.</p></section>
+</main></body></html>

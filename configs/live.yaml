@@ -1,0 +1,64 @@
+# Level 3 live early warning (live_watch.py). Every value can be overridden on the command line where noted.
+
+baseline: submission/level2        # the 48 h Level 2 result: brd_risk.csv (prior risk per cow), features_hourly.csv
+
+identity:
+  # live windows keep the 48 h ids: tracking starts from this appearance gallery, then each live cow is matched to the
+  # reference chunk's memory-card prototypes (Hungarian on cosine) and mapped through the stitched id map
+  gallery: outputs/live/identity/id_gallery.npz          # copied from the last Day 2 chunk (stage1/tracking/id_gallery.npz)
+  reference_prototypes: outputs/live/identity/prototypes.npz   # that chunk's stage1/level1/agent/memory/prototypes.npz
+  id_map: submission/stitched/id_map.csv
+  map_chunk: hprc_day2_c25                               # the chunk the gallery / prototypes come from
+  min_similarity: 0.80                                   # weaker appearance matches keep the window's own id, flagged
+
+window:
+  minutes: 5                       # cameras write 5-min clips; one window = one clip per camera
+  wait_all_cameras_s: 420          # watch mode: start a window when all 3 cameras have it, or this long after the first
+  pipeline_args: ["--until", "assets"]   # stage 1 + assets (behavior, positions, close crops); add stage 2 with --verify
+
+risk:
+  # window evidence: each indicator as a robust z against the herd in the SAME window (time-matched: same weather,
+  # same feed delivery), signed so that + means "more BRD-like"
+  indicators:
+    feeding_share:    {sign: -1, weight: 1.0, label: "time feeding"}
+    bunk_zone_share:  {sign: -1, weight: 0.7, label: "time at the feed bunk"}
+    lying_share:      {sign: +1, weight: 0.6, label: "time lying"}
+    isolation_share:  {sign: +1, weight: 0.8, label: "time alone (> 5 m from all herdmates)"}
+    distance_m_per_h: {sign: -1, weight: 0.5, label: "metres walked per hour"}
+  z_floor: 0.05                    # MAD floor (shares) so a herd that all does the same thing does not explode z
+  z_cap: 3.0
+  min_seen_min: 2.0                # a cow seen less than this in the window gets no behavior evidence (not visible)
+  gain: 0.05                       # risk points per unit of weighted evidence
+  smoothing: 0.35                  # EWMA weight of the newest window (behavior part; signs act at once)
+  sign_points: {ears_droop: 0.15, head_low: 0.10, nasal_discharge: 0.25, ocular_discharge: 0.15}
+
+signs:
+  per_window: 3                    # close crops per cow per window sent to the VLM (daylight gallery crops only)
+  min_box_px: 300
+  still_speed_mps: 0.15            # head_low only counts for a cow standing still (tracker speed around the crop)
+  confirm: true                    # second, stricter look at each flagged crop next to a herdmate (self-check)
+  backends: [tamu_flash, tamu_opus]   # configs/agent.yaml profiles; needs TAMU_API_KEY in .env
+
+alert:
+  score: 0.45                      # live risk at or above this ...
+  rise: 0.05                       # ... and up by at least this since the last window -> behavior alert
+  evidence_z: 2.0                  # or: two indicators at z >= this in one window while already in the top 3
+  cooldown_min: 120                # one alert per cow per 2 h unless a NEW confirmed sign appears
+  clip_seconds: 12
+
+delivery:
+  webhook_env: LIVE_WEBHOOK_URL    # optional: Slack / Teams / ntfy-style JSON POST {"text": ...}
+  email:
+    mode: simulate                 # simulate = write real .eml files to <out>/outbox/ and show them in the report; never sends.
+                                   # smtp = also send (needs SMTP_HOST / SMTP_PORT / SMTP_USER / SMTP_PASSWORD in .env)
+    from: pen6-monitor@ranch.example
+    to: [pen.rider@ranch.example, herd.manager@ranch.example]   # placeholders: the ranch's own addresses go here
+    max_attachment_mb: 8
+
+tiers:
+  # alert tiers. At start (and with --baseline) every cow gets a tier from the 48 h Level 2 result (brd_risk.csv);
+  # each live window re-evaluates it. Moving UP a tier is an alert; moving down is logged.
+  red:    "a confirmed visible clinical sign (Level 2 signs_present, or a live confirmed sign)"
+  orange: {rank_max: 3, p_top3_min: 0.6, confidence: [medium, high], live_risk_min: 0.25}
+  yellow: {rank_max: 5, p_top3_min: 0.2, live_risk_min: 0.18}
+  push: [red, orange]            # tiers that send an alert card; yellow only shows on the dashboard

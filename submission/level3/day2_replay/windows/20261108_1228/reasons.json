@@ -1,0 +1,63 @@
+[
+ {
+  "cow_id":"COW_01",
+  "reasons":[
+
+  ]
+ },
+ {
+  "cow_id":"COW_02",
+  "reasons":[
+
+  ]
+ },
+ {
+  "cow_id":"COW_03",
+  "reasons":[
+   {
+    "indicator":"distance_m_per_h",
+    "z":1.05,
+    "text":"metres walked per hour 97 m\/h vs herd 121 m\/h in the same window (z +1.1)"
+   }
+  ]
+ },
+ {
+  "cow_id":"COW_04",
+  "reasons":[
+
+  ]
+ },
+ {
+  "cow_id":"COW_06",
+  "reasons":[
+
+  ]
+ },
+ {
+  "cow_id":"COW_07",
+  "reasons":[
+
+  ]
+ },
+ {
+  "cow_id":"COW_09",
+  "reasons":[
+
+  ]
+ },
+ {
+  "cow_id":"COW_10",
+  "reasons":[
+   {
+    "indicator":"distance_m_per_h",
+    "z":1.82,
+    "text":"metres walked per hour 80 m\/h vs herd 121 m\/h in the same window (z +1.8)"
+   },
+   {
+    "indicator":"isolation_share",
+    "z":1.09,
+    "text":"time alone (> 5 m from all herdmates) 6% vs herd 0% in the same window (z +1.1)"
+   }
+  ]
+ }
+]

@@ -1,0 +1,141 @@
+From: pen6-monitor@ranch.example
+To: pen.rider@ranch.example, herd.manager@ranch.example
+Subject: Pen 6 daily BRD report: 3 cow(s) to check
+Date: Sun, 15 Nov 2026 20:34:25 -0600
+Message-ID: <179479646523.35264.1348904239590180948@ranch.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="===============6788655077931251899=="
+
+--===============6788655077931251899==
+Content-Type: multipart/alternative;
+ boundary="===============0663460668078139795=="
+
+--===============0663460668078139795==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Pen 6 daily BRD report
+COW_02: Check on the next pen ride (0.37)
+COW_01: Check on the next pen ride (0.33)
+COW_10: Check on the next pen ride (0.26)
+COW_09: Watch list (0.18)
+COW_03: Watch list (0.16)
+COW_04: Watch list (0.15)
+COW_05: Normal (0.15)
+COW_07: Normal (0.13)
+COW_06: Normal (0.12)
+COW_08: Normal (0.10)
+
+--===============0663460668078139795==
+Content-Type: text/html; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+
+<h2 style=3D'margin:0'>Pen 6 daily BRD report</h2><p>3 cow(s) to check today:=
+ COW_02, COW_01, COW_10. Each has its own alert email with video clips.</p><t=
+able cellpadding=3D4 style=3D'border-collapse:collapse'><tr><th align=3Dleft>=
+cow</th><th align=3Dleft>tier</th><th>risk</th><th>rank</th><th align=3Dleft>=
+top reason (48 h, vs the herd at the same hours)</th></tr><tr><td><b>COW_02</=
+b></td><td><span style=3D'background:#ec835a;padding:1px 8px;border-radius:9p=
+x'>Check on the next pen ride</span></td><td align=3Dright>0.37</td><td align=
+=3Dright>1</td><td>minutes to reach bunk after the herd rush 27.0 min vs herd=
+ median 19.1 min (z +1.2, over 14 feed calls)</td></tr><tr><td><b>COW_01</b><=
+/td><td><span style=3D'background:#ec835a;padding:1px 8px;border-radius:9px'>=
+Check on the next pen ride</span></td><td align=3Dright>0.33</td><td align=3D=
+right>2</td><td>time feeding 4% vs herd 8% at the same hours (z -1.1, 30.5 h =
+observed)</td></tr><tr><td><b>COW_10</b></td><td><span style=3D'background:#e=
+c835a;padding:1px 8px;border-radius:9px'>Check on the next pen ride</span></t=
+d><td align=3Dright>0.26</td><td align=3Dright>3</td><td>minutes per bunk vis=
+it 6.5 min vs herd median 9.5 min (z -1.1, 39.0 h observed)</td></tr><tr><td>=
+<b>COW_09</b></td><td><span style=3D'background:#fab219;padding:1px 8px;borde=
+r-radius:9px'>Watch list</span></td><td align=3Dright>0.18</td><td align=3Dri=
+ght>4</td><td>time feeding changed -24% day-to-day (herd -12%)</td></tr><tr><=
+td><b>COW_03</b></td><td><span style=3D'background:#fab219;padding:1px 8px;bo=
+rder-radius:9px'>Watch list</span></td><td align=3Dright>0.16</td><td align=
+=3Dright>5</td><td>longest gap between meals 532 min vs herd median 357 min (=
+z +2.4, 39.1 h observed)</td></tr><tr><td><b>COW_04</b></td><td><span style=
+=3D'background:#fab219;padding:1px 8px;border-radius:9px'>Watch list</span></=
+td><td align=3Dright>0.15</td><td align=3Dright>6</td><td>metres walked per h=
+our 94.4 m/h vs herd 104 m/h at the same hours (z -0.8, 37.0 h observed)</td>=
+</tr><tr><td><b>COW_05</b></td><td><span style=3D'background:#cccccc;padding:=
+1px 8px;border-radius:9px'>Normal</span></td><td align=3Dright>0.15</td><td a=
+lign=3Dright>7</td><td>minutes per bunk visit 7.5 min vs herd median 9.5 min =
+(z -0.7, 29.1 h observed)</td></tr><tr><td><b>COW_07</b></td><td><span style=
+=3D'background:#cccccc;padding:1px 8px;border-radius:9px'>Normal</span></td><=
+td align=3Dright>0.13</td><td align=3Dright>8</td><td>sudden movements per ho=
+ur (cough / head-shake candidates) 33.9 /h vs herd median 30.2 /h (z +1.0, 38=
+.4 h observed)</td></tr><tr><td><b>COW_06</b></td><td><span style=3D'backgrou=
+nd:#cccccc;padding:1px 8px;border-radius:9px'>Normal</span></td><td align=3Dr=
+ight>0.12</td><td align=3Dright>9</td><td>waterer visits per hour 0.7 /h vs h=
+erd 1.1 /h at the same hours (z -2.0, 38.4 h observed)</td></tr><tr><td><b>CO=
+W_08</b></td><td><span style=3D'background:#cccccc;padding:1px 8px;border-rad=
+ius:9px'>Normal</span></td><td align=3Dright>0.10</td><td align=3Dright>10</t=
+d><td>longest gap between meals 445 min vs herd median 357 min (z +1.2, 23.6 =
+h observed)</td></tr></table><p>Risk is a ranking index (0-1), not a probabil=
+ity of disease. Live video keeps updating these tiers.</p>
+
+--===============0663460668078139795==--
+
+--===============6788655077931251899==
+Content-Type: application/vnd.ms-excel
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="brd_risk.csv"
+MIME-Version: 1.0
+
+Y293X2lkLHJpc2tfc2NvcmUscmFuayx0b3BfcmVhc29ucyxiZWhhdmlvcl9zY29yZSx2aXN1YWxf
+YWRqdXN0bWVudCxwX3RvcDMsaG91cnNfb2JzZXJ2ZWQsY29uZmlkZW5jZSxzaWduc19wcmVzZW50
+LGFydGlmYWN0cw0KQ09XXzAyLDAuMzcyLDEsIm1pbnV0ZXMgdG8gcmVhY2ggYnVuayBhZnRlciB0
+aGUgaGVyZCBydXNoIDI3LjAgbWluIHZzIGhlcmQgbWVkaWFuIDE5LjEgbWluICh6ICsxLjIsIG92
+ZXIgMTQgZmVlZCBjYWxscykgfCBtZXRyZXMgd2Fsa2VkIHBlciBob3VyIDg3LjUgbS9oIHZzIGhl
+cmQgMTAxIG0vaCBhdCB0aGUgc2FtZSBob3VycyAoeiAtMS4wLCAzOC42IGggb2JzZXJ2ZWQpIHwg
+dGltZSBmZWVkaW5nIDclIHZzIGhlcmQgMTAlIGF0IHRoZSBzYW1lIGhvdXJzICh6IC0wLjYsIDM3
+LjEgaCBvYnNlcnZlZCkiLDAuNDA4LC0wLjE1LDAuOTIsMzguNjIsaGlnaCwsDQpDT1dfMDEsMC4z
+MjUsMiwidGltZSBmZWVkaW5nIDQlIHZzIGhlcmQgOCUgYXQgdGhlIHNhbWUgaG91cnMgKHogLTEu
+MSwgMzAuNSBoIG9ic2VydmVkKSB8IG1pbnV0ZXMgcGVyIGJ1bmsgdmlzaXQgNS44IG1pbiB2cyBo
+ZXJkIG1lZGlhbiA5LjUgbWluICh6IC0xLjMsIDMyLjQgaCBvYnNlcnZlZCkgfCB0aW1lIGx5aW5n
+IDU3JSB2cyBoZXJkIDUxJSBhdCB0aGUgc2FtZSBob3VycyAoeiArMS40LCAzMC41IGggb2JzZXJ2
+ZWQpIiwwLjM4MiwtMC4yNSwwLjY3LDMyLjQ0LG1lZGl1bSwsDQpDT1dfMTAsMC4yNTksMywibWlu
+dXRlcyBwZXIgYnVuayB2aXNpdCA2LjUgbWluIHZzIGhlcmQgbWVkaWFuIDkuNSBtaW4gKHogLTEu
+MSwgMzkuMCBoIG9ic2VydmVkKSB8IGxvbmdlc3QgbHlpbmcgYm91dCAxMzkgbWluIHZzIGhlcmQg
+bWVkaWFuIDEwMCBtaW4gKHogKzEuOSwgMzcuMSBoIG9ic2VydmVkKSB8IGJ1bmsgdmlzaXRzIHBl
+ciBob3VyIGNoYW5nZWQgLTIuMyAvaCBkYXktdG8tZGF5IChoZXJkIC0xLjUgL2gpIiwwLjMxLC0w
+LjI1LDAuODgsMzguOTksaGlnaCwsZGVzeW5jX3NoYXJlO2JyZWF0aGluZ19lZmZvcnQNCkNPV18w
+OSwwLjE4NSw0LCJ0aW1lIGZlZWRpbmcgY2hhbmdlZCAtMjQlIGRheS10by1kYXkgKGhlcmQgLTEy
+JSkgfCB0aW1lIG91dCBvZiBzdGVwIHdpdGggdGhlIGhlcmQgY2hhbmdlZCA3NSUgZGF5LXRvLWRh
+eSAoaGVyZCAtMTglKSB8IHRpbWUgb3V0IG9mIHN0ZXAgd2l0aCB0aGUgaGVyZCAyNyUgdnMgaGVy
+ZCAyMCUgYXQgdGhlIHNhbWUgaG91cnMgKHogKzEuNSwgMjEuOCBoIG9ic2VydmVkKSIsMC4yNTIs
+LTAuNCwwLjAxLDMyLjMsbG93LCwNCkNPV18wMywwLjE2Myw1LCJsb25nZXN0IGdhcCBiZXR3ZWVu
+IG1lYWxzIDUzMiBtaW4gdnMgaGVyZCBtZWRpYW4gMzU3IG1pbiAoeiArMi40LCAzOS4xIGggb2Jz
+ZXJ2ZWQpIHwgdGltZSBmZWVkaW5nIGNoYW5nZWQgLTE2JSBkYXktdG8tZGF5IChoZXJkIC0xMiUp
+IHwgYnVuayB2aXNpdHMgcGVyIGhvdXIgMC44IC9oIHZzIGhlcmQgMS4xIC9oIGF0IHRoZSBzYW1l
+IGhvdXJzICh6IC0xLjEsIDQyLjEgaCBvYnNlcnZlZCkiLDAuMjA4LC0wLjMsMC4wNiw0Mi4xMSxs
+b3csLA0KQ09XXzA0LDAuMTQ5LDYsIm1ldHJlcyB3YWxrZWQgcGVyIGhvdXIgOTQuNCBtL2ggdnMg
+aGVyZCAxMDQgbS9oIGF0IHRoZSBzYW1lIGhvdXJzICh6IC0wLjgsIDM3LjAgaCBvYnNlcnZlZCkg
+fCB0aW1lIGFsb25lICg+IDUgbSBmcm9tIGFsbCkgMTMlIHZzIGhlcmQgOSUgYXQgdGhlIHNhbWUg
+aG91cnMgKHogKzAuOCwgMzcuMCBoIG9ic2VydmVkKSB8IHRpbWUgYXQgdGhlIHBlbiBlZGdlIG9y
+IGFsb25lIDE4JSB2cyBoZXJkIDE0JSBhdCB0aGUgc2FtZSBob3VycyAoeiArMC44LCAzNy4wIGgg
+b2JzZXJ2ZWQpIiwwLjE4NCwtMC4yNSwwLjI0LDM2Ljk4LGxvdywsbG9uZ2VzdF9tZWFsX2dhcF9t
+aW4NCkNPV18wNSwwLjE0OSw3LCJtaW51dGVzIHBlciBidW5rIHZpc2l0IDcuNSBtaW4gdnMgaGVy
+ZCBtZWRpYW4gOS41IG1pbiAoeiAtMC43LCAyOS4xIGggb2JzZXJ2ZWQpIHwgbWludXRlcyB0byBy
+ZWFjaCBidW5rIGFmdGVyIHRoZSBoZXJkIHJ1c2ggMjIuNCBtaW4gdnMgaGVyZCBtZWRpYW4gMTku
+MSBtaW4gKHogKzAuNSwgb3ZlciAxNCBmZWVkIGNhbGxzKSB8IGxvbmdlc3QgbHlpbmcgYm91dCBj
+aGFuZ2VkIC00OS4wIG1pbiBkYXktdG8tZGF5IChoZXJkIC04Ni4wIG1pbikiLDAuMTkxLC0wLjMs
+MC4xNSwyOS4wNyxsb3csLA0KQ09XXzA3LDAuMTMyLDgsInN1ZGRlbiBtb3ZlbWVudHMgcGVyIGhv
+dXIgKGNvdWdoIC8gaGVhZC1zaGFrZSBjYW5kaWRhdGVzKSAzMy45IC9oIHZzIGhlcmQgbWVkaWFu
+IDMwLjIgL2ggKHogKzEuMCwgMzguNCBoIG9ic2VydmVkKSB8IGxvbmdlc3QgbHlpbmcgYm91dCAx
+MTkgbWluIHZzIGhlcmQgbWVkaWFuIDEwMCBtaW4gKHogKzAuOSwgMzcuNSBoIG9ic2VydmVkKSB8
+IG1ldHJlcyB3YWxrZWQgcGVyIGhvdXIgY2hhbmdlZCAtMTM5IG0vaCBkYXktdG8tZGF5IChoZXJk
+IC05MS43IG0vaCkiLDAuMTUsLTAuMTUsMC4wNywzOC4zOCxsb3csLA0KQ09XXzA2LDAuMTIxLDks
+IndhdGVyZXIgdmlzaXRzIHBlciBob3VyIDAuNyAvaCB2cyBoZXJkIDEuMSAvaCBhdCB0aGUgc2Ft
+ZSBob3VycyAoeiAtMi4wLCAzOC40IGggb2JzZXJ2ZWQpIHwgYnJlYXRocyBwZXIgbWludXRlIGF0
+IHJlc3QgKHZpZGVvKSAyNC40IC9taW4gdnMgaGVyZCBtZWRpYW4gMjAuOCAvbWluICh6ICswLjks
+IDUuNSBoIG9ic2VydmVkKSB8IHRpbWUgb3V0IG9mIHN0ZXAgd2l0aCB0aGUgaGVyZCAyMCUgdnMg
+aGVyZCAxNyUgYXQgdGhlIHNhbWUgaG91cnMgKHogKzAuNiwgMjYuMiBoIG9ic2VydmVkKSIsMC4x
+MzMsLTAuMSwwLjAsMzguMzYsbG93LCwNCkNPV18wOCwwLjEwMSwxMCwibG9uZ2VzdCBnYXAgYmV0
+d2VlbiBtZWFscyA0NDUgbWluIHZzIGhlcmQgbWVkaWFuIDM1NyBtaW4gKHogKzEuMiwgMjMuNiBo
+IG9ic2VydmVkKSB8IHRpbWUgcnVtaW5hdGluZyA3NSUgdnMgaGVyZCA3OCUgYXQgdGhlIHNhbWUg
+aG91cnMgKHogLTAuNywgMjMuNiBoIG9ic2VydmVkKSB8IGxvbmdlc3QgbHlpbmcgYm91dCAxMTAg
+bWluIHZzIGhlcmQgbWVkaWFuIDEwMCBtaW4gKHogKzAuNSwgMjMuNiBoIG9ic2VydmVkKSIsMC4x
+MDUsLTAuMDUsMC4wMSwyNS45OCxsb3csLA0K
+
+--===============6788655077931251899==--

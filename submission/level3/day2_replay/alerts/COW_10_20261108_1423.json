@@ -1,0 +1,74 @@
+{
+ "cow_id": "COW_10",
+ "trigger": "behavior",
+ "new_signs": [],
+ "risk": 0.2748,
+ "risk_before": 0.1872,
+ "tier": "orange",
+ "tier_before": "yellow",
+ "tier_rule": "live risk 0.27 >= 0.25 and rank 3 (top 3)",
+ "prior": 0.259,
+ "rank": 3,
+ "rank_before": 4,
+ "reasons": [
+  {
+   "indicator": "lying_share",
+   "z": 3.0,
+   "text": "time lying 76% vs herd 22% in the same window (z +3.0)"
+  },
+  {
+   "indicator": "isolation_share",
+   "z": 3.0,
+   "text": "time alone (> 5 m from all herdmates) 80% vs herd 36% in the same window (z +3.0)"
+  },
+  {
+   "indicator": "bunk_zone_share",
+   "z": 1.11,
+   "text": "time at the feed bunk 4% vs herd 10% in the same window (z +1.1)"
+  }
+ ],
+ "signs": [],
+ "window_start": "2026-11-08 14:23:00",
+ "window_end": "2026-11-08 15:23:00",
+ "identity": "48 h stitched id map",
+ "action": "Look at COW_10 on your next pen ride: her behavior moved toward the BRD pattern (see why below). She was last seen in the open pen. Watch her at the bunk and check for dullness, nasal discharge, drooping ears or fast breathing. No visible sign was confirmed by the camera, so this is a watch, not a pull.",
+ "card": "alerts/COW_10_20261108_1423.html",
+ "evidence": {
+  "moment": {
+   "time": "2026-11-08 14:44:07",
+   "camera": "cam1",
+   "file": "Event20261108144343006.Avi",
+   "offset_s": 24.0,
+   "box": [
+    2283.0,
+    1868.0,
+    3416.0,
+    2988.0
+   ],
+   "local_id": "COW_04"
+  },
+  "clip": null,
+  "frame": null,
+  "crops": []
+ },
+ "sent": [
+  "alerts folder",
+  "dashboard",
+  "email (simulate)"
+ ],
+ "email": {
+  "file": "outbox/COW_10_20261108_1423.eml",
+  "to": "pen.rider@ranch.example, herd.manager@ranch.example",
+  "from": "pen6-monitor@ranch.example",
+  "subject": "BRD alert: COW_10, Watch closely (14:23)",
+  "date": "Sun, 15 Nov 2026 20:34:23 -0600",
+  "body_html": "<h2 style='margin:0'>COW_10: Watch closely</h2><p><b>What to do:</b> Look at COW_10 on your next pen ride: her behavior moved toward the BRD pattern (see why below). She was last seen in the open pen. Watch her at the bunk and check for dullness, nasal discharge, drooping ears or fast breathing. No visible sign was confirmed by the camera, so this is a watch, not a pull.</p><p><b>Why:</b></p><ul><li>time lying 76% vs herd 22% in the same window (z +3.0)</li><li>time alone (&gt; 5 m from all herdmates) 80% vs herd 36% in the same window (z +3.0)</li><li>time at the feed bunk 4% vs herd 10% in the same window (z +1.1)</li></ul><p>Risk 0.27 (was 0.19; 48 h baseline 0.26), rank 3 of 10. Risk is a ranking index, not a diagnosis. The camera cannot take a temperature: a pen rider confirms.</p><p>Evidence attached: the alert card, the clip and the frame.</p>",
+  "attachments": [
+   {
+    "name": "COW_10_20261108_1423.html",
+    "kb": 3
+   }
+  ],
+  "mode": "simulate"
+ }
+}

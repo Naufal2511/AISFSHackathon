@@ -1,0 +1,642 @@
+{
+ "cows": {
+  "COW_02": {
+   "prior": 0.372,
+   "risk": 0.3877,
+   "prior_rank": 1,
+   "history": [
+    {
+     "window": "2026-11-08 12:28:00",
+     "risk": 0.3638,
+     "evidence": -0.47,
+     "seen_min": 59.0,
+     "signs": []
+    },
+    {
+     "window": "2026-11-08 13:26:00",
+     "risk": 0.3794,
+     "evidence": 0.73,
+     "seen_min": 59.0,
+     "signs": []
+    },
+    {
+     "window": "2026-11-08 14:23:00",
+     "risk": 0.3877,
+     "evidence": 0.62,
+     "seen_min": 22.0,
+     "signs": []
+    }
+   ],
+   "last_alert": null,
+   "alerted_signs": [],
+   "prior_reasons": [
+    "minutes to reach bunk after the herd rush 27.0 min vs herd median 19.1 min (z +1.2, over 14 feed calls)",
+    "metres walked per hour 87.5 m/h vs herd 101 m/h at the same hours (z -1.0, 38.6 h observed)",
+    "time feeding 7% vs herd 10% at the same hours (z -0.6, 37.1 h observed)"
+   ],
+   "tier": "orange",
+   "tier_rule": "live risk 0.39 >= 0.25 and rank 1 (top 3)"
+  },
+  "COW_01": {
+   "prior": 0.325,
+   "risk": 0.3437,
+   "prior_rank": 2,
+   "history": [
+    {
+     "window": "2026-11-08 12:28:00",
+     "risk": 0.3194,
+     "evidence": -0.323,
+     "seen_min": 57.0,
+     "signs": []
+    },
+    {
+     "window": "2026-11-08 13:26:00",
+     "risk": 0.354,
+     "evidence": 1.864,
+     "seen_min": 57.0,
+     "signs": []
+    },
+    {
+     "window": "2026-11-08 14:23:00",
+     "risk": 0.3437,
+     "evidence": -0.008,
+     "seen_min": 31.0,
+     "signs": []
+    }
+   ],
+   "last_alert": null,
+   "alerted_signs": [],
+   "prior_reasons": [
+    "time feeding 4% vs herd 8% at the same hours (z -1.1, 30.5 h observed)",
+    "minutes per bunk visit 5.8 min vs herd median 9.5 min (z -1.3, 32.4 h observed)",
+    "time lying 57% vs herd 51% at the same hours (z +1.4, 30.5 h observed)"
+   ],
+   "tier": "orange",
+   "tier_rule": "live risk 0.34 >= 0.25 and rank 2 (top 3)"
+  },
+  "COW_10": {
+   "prior": 0.259,
+   "risk": 0.2748,
+   "prior_rank": 3,
+   "history": [
+    {
+     "window": "2026-11-08 12:28:00",
+     "risk": 0.2842,
+     "evidence": 1.44,
+     "seen_min": 59.0,
+     "signs": []
+    },
+    {
+     "window": "2026-11-08 13:26:00",
+     "risk": 0.1872,
+     "evidence": -5.039,
+     "seen_min": 59.0,
+     "signs": []
+    },
+    {
+     "window": "2026-11-08 14:23:00",
+     "risk": 0.2748,
+     "evidence": 3.571,
+     "seen_min": 17.0,
+     "signs": []
+    }
+   ],
+   "last_alert": "2026-11-08 15:23:00",
+   "alerted_signs": [],
+   "prior_reasons": [
+    "minutes per bunk visit 6.5 min vs herd median 9.5 min (z -1.1, 39.0 h observed)",
+    "longest lying bout 139 min vs herd median 100 min (z +1.9, 37.1 h observed)",
+    "bunk visits per hour changed -2.3 /h day-to-day (herd -1.5 /h)"
+   ],
+   "tier": "orange",
+   "tier_rule": "live risk 0.27 >= 0.25 and rank 3 (top 3)"
+  },
+  "COW_09": {
+   "prior": 0.185,
+   "risk": 0.1669,
+   "prior_rank": 4,
+   "history": [
+    {
+     "window": "2026-11-08 12:28:00",
+     "risk": 0.1835,
+     "evidence": -0.084,
+     "seen_min": 58.0,
+     "signs": []
+    },
+    {
+     "window": "2026-11-08 13:26:00",
+     "risk": 0.1571,
+     "evidence": -1.538,
+     "seen_min": 55.0,
+     "signs": []
+    },
+    {
+     "window": "2026-11-08 14:23:00",
+     "risk": 0.1669,
+     "evidence": 0.003,
+     "seen_min": 37.0,
+     "signs": []
+    }
+   ],
+   "last_alert": null,
+   "alerted_signs": [],
+   "prior_reasons": [
+    "time feeding changed -24% day-to-day (herd -12%)",
+    "time out of step with the herd changed 75% day-to-day (herd -18%)",
+    "time out of step with the herd 27% vs herd 20% at the same hours (z +1.5, 21.8 h observed)"
+   ],
+   "tier": "yellow",
+   "tier_rule": "live risk 0.17, rank 5"
+  },
+  "COW_03": {
+   "prior": 0.163,
+   "risk": 0.2433,
+   "prior_rank": 5,
+   "history": [
+    {
+     "window": "2026-11-08 12:28:00",
+     "risk": 0.1766,
+     "evidence": 0.778,
+     "seen_min": 60.0,
+     "signs": []
+    },
+    {
+     "window": "2026-11-08 13:26:00",
+     "risk": 0.1998,
+     "evidence": 1.596,
+     "seen_min": 59.0,
+     "signs": []
+    },
+    {
+     "window": "2026-11-08 14:23:00",
+     "risk": 0.2433,
+     "evidence": 3.22,
+     "seen_min": 28.0,
+     "signs": []
+    }
+   ],
+   "last_alert": null,
+   "alerted_signs": [],
+   "prior_reasons": [
+    "longest gap between meals 532 min vs herd median 357 min (z +2.4, 39.1 h observed)",
+    "time feeding changed -16% day-to-day (herd -12%)",
+    "bunk visits per hour 0.8 /h vs herd 1.1 /h at the same hours (z -1.1, 42.1 h observed)"
+   ],
+   "tier": "yellow",
+   "tier_rule": "live risk 0.24, rank 4"
+  },
+  "COW_04": {
+   "prior": 0.149,
+   "risk": 0.1086,
+   "prior_rank": 6,
+   "history": [
+    {
+     "window": "2026-11-08 12:28:00",
+     "risk": 0.1405,
+     "evidence": -0.483,
+     "seen_min": 32.0,
+     "signs": []
+    },
+    {
+     "window": "2026-11-08 13:26:00",
+     "risk": 0.1099,
+     "evidence": -1.916,
+     "seen_min": 43.0,
+     "signs": []
+    },
+    {
+     "window": "2026-11-08 14:23:00",
+     "risk": 0.1086,
+     "evidence": -0.856,
+     "seen_min": 26.0,
+     "signs": []
+    }
+   ],
+   "last_alert": null,
+   "alerted_signs": [],
+   "prior_reasons": [
+    "metres walked per hour 94.4 m/h vs herd 104 m/h at the same hours (z -0.8, 37.0 h observed)",
+    "time alone (> 5 m from all) 13% vs herd 9% at the same hours (z +0.8, 37.0 h observed)",
+    "time at the pen edge or alone 18% vs herd 14% at the same hours (z +0.8, 37.0 h observed)"
+   ],
+   "tier": "normal",
+   "tier_rule": "live risk 0.11, rank 7: herd-typical"
+  },
+  "COW_05": {
+   "prior": 0.149,
+   "risk": 0.149,
+   "prior_rank": 7,
+   "history": [],
+   "last_alert": null,
+   "alerted_signs": [],
+   "prior_reasons": [
+    "minutes per bunk visit 7.5 min vs herd median 9.5 min (z -0.7, 29.1 h observed)",
+    "minutes to reach bunk after the herd rush 22.4 min vs herd median 19.1 min (z +0.5, over 14 feed calls)",
+    "longest lying bout changed -49.0 min day-to-day (herd -86.0 min)"
+   ],
+   "tier": "normal",
+   "tier_rule": "rank 7, top 3 in 15% of resamples: herd-typical"
+  },
+  "COW_07": {
+   "prior": 0.132,
+   "risk": 0.0958,
+   "prior_rank": 8,
+   "history": [
+    {
+     "window": "2026-11-08 12:28:00",
+     "risk": 0.1394,
+     "evidence": 0.424,
+     "seen_min": 60.0,
+     "signs": []
+    },
+    {
+     "window": "2026-11-08 13:26:00",
+     "risk": 0.1474,
+     "evidence": 0.604,
+     "seen_min": 59.0,
+     "signs": []
+    },
+    {
+     "window": "2026-11-08 14:23:00",
+     "risk": 0.0958,
+     "evidence": -5.474,
+     "seen_min": 38.0,
+     "signs": []
+    }
+   ],
+   "last_alert": null,
+   "alerted_signs": [],
+   "prior_reasons": [
+    "sudden movements per hour (cough / head-shake candidates) 33.9 /h vs herd median 30.2 /h (z +1.0, 38.4 h observed)",
+    "longest lying bout 119 min vs herd median 100 min (z +0.9, 37.5 h observed)",
+    "metres walked per hour changed -139 m/h day-to-day (herd -91.7 m/h)"
+   ],
+   "tier": "normal",
+   "tier_rule": "live risk 0.10, rank 9: herd-typical"
+  },
+  "COW_06": {
+   "prior": 0.121,
+   "risk": 0.0593,
+   "prior_rank": 9,
+   "history": [
+    {
+     "window": "2026-11-08 12:28:00",
+     "risk": 0.1174,
+     "evidence": -0.204,
+     "seen_min": 59.0,
+     "signs": []
+    },
+    {
+     "window": "2026-11-08 13:26:00",
+     "risk": 0.0912,
+     "evidence": -1.569,
+     "seen_min": 59.0,
+     "signs": []
+    },
+    {
+     "window": "2026-11-08 14:23:00",
+     "risk": 0.0593,
+     "evidence": -4.197,
+     "seen_min": 33.0,
+     "signs": []
+    }
+   ],
+   "last_alert": null,
+   "alerted_signs": [],
+   "prior_reasons": [
+    "waterer visits per hour 0.7 /h vs herd 1.1 /h at the same hours (z -2.0, 38.4 h observed)",
+    "breaths per minute at rest (video) 24.4 /min vs herd median 20.8 /min (z +0.9, 5.5 h observed)",
+    "time out of step with the herd 20% vs herd 17% at the same hours (z +0.6, 26.2 h observed)"
+   ],
+   "tier": "normal",
+   "tier_rule": "live risk 0.06, rank 10: herd-typical"
+  },
+  "COW_08": {
+   "prior": 0.101,
+   "risk": 0.101,
+   "prior_rank": 10,
+   "history": [],
+   "last_alert": null,
+   "alerted_signs": [],
+   "prior_reasons": [
+    "longest gap between meals 445 min vs herd median 357 min (z +1.2, 23.6 h observed)",
+    "time ruminating 75% vs herd 78% at the same hours (z -0.7, 23.6 h observed)",
+    "longest lying bout 110 min vs herd median 100 min (z +0.5, 23.6 h observed)"
+   ],
+   "tier": "normal",
+   "tier_rule": "rank 10, top 3 in 1% of resamples: herd-typical"
+  }
+ },
+ "windows": [
+  "2026-11-08 12:28:00",
+  "2026-11-08 13:26:00",
+  "2026-11-08 14:23:00"
+ ],
+ "alerts": [
+  {
+   "cow_id": "COW_02",
+   "trigger": "48 h risk: Check on the next pen ride",
+   "risk": 0.372,
+   "window_start": "48 h baseline",
+   "card": "alerts/baseline_COW_02.html",
+   "action": "Check COW_02 on your next pen ride. Over the last 48 h her behavior was the most BRD-like in the pen (reasons below, with clips). Look at her at the bunk after feeding: appetite, dullness, nose and eyes, ears, breathing. No visible sign was confirmed by the camera, so this is a check, not a pull.",
+   "sent": [
+    "alerts folder",
+    "dashboard",
+    "email (simulate)"
+   ],
+   "email": {
+    "file": "outbox/baseline_COW_02.eml",
+    "to": "pen.rider@ranch.example, herd.manager@ranch.example",
+    "from": "pen6-monitor@ranch.example",
+    "subject": "BRD alert: COW_02, Check on the next pen ride (48 h risk)",
+    "date": "Sun, 15 Nov 2026 20:34:11 -0600",
+    "body_html": "<h2 style='margin:0'>COW_02: Check on the next pen ride</h2><p><b>What to do:</b> Check COW_02 on your next pen ride. Over the last 48 h her behavior was the most BRD-like in the pen (reasons below, with clips). Look at her at the bunk after feeding: appetite, dullness, nose and eyes, ears, breathing. No visible sign was confirmed by the camera, so this is a check, not a pull.</p><p><b>Why this tier:</b> rank 1 of 10, in the top 3 in 92% of time-block resamples, high confidence (rule: top 3, &gt;= 60%, confidence medium/high)</p><p><b>Over the last 48 h, vs the herd at the same hours:</b></p><ul><li>minutes to reach bunk after the herd rush 27.0 min vs herd median 19.1 min (z +1.2, over 14 feed calls)</li><li>metres walked per hour 87.5 m/h vs herd 101 m/h at the same hours (z -1.0, 38.6 h observed)</li><li>time feeding 7% vs herd 10% at the same hours (z -0.6, 37.1 h observed)</li></ul><p>Risk 0.37, rank 1 of 10. Two video clips and the alert card are attached. Risk is a ranking index, not a diagnosis.</p>",
+    "attachments": [
+     {
+      "name": "baseline_COW_02.html",
+      "kb": 3
+     },
+     {
+      "name": "baseline_COW_02_1.mp4",
+      "kb": 741
+     },
+     {
+      "name": "baseline_COW_02_2.mp4",
+      "kb": 596
+     }
+    ],
+    "mode": "simulate"
+   }
+  },
+  {
+   "cow_id": "COW_01",
+   "trigger": "48 h risk: Check on the next pen ride",
+   "risk": 0.325,
+   "window_start": "48 h baseline",
+   "card": "alerts/baseline_COW_01.html",
+   "action": "Check COW_01 on your next pen ride. Over the last 48 h her behavior was the most BRD-like in the pen (reasons below, with clips). Look at her at the bunk after feeding: appetite, dullness, nose and eyes, ears, breathing. No visible sign was confirmed by the camera, so this is a check, not a pull.",
+   "sent": [
+    "alerts folder",
+    "dashboard",
+    "email (simulate)"
+   ],
+   "email": {
+    "file": "outbox/baseline_COW_01.eml",
+    "to": "pen.rider@ranch.example, herd.manager@ranch.example",
+    "from": "pen6-monitor@ranch.example",
+    "subject": "BRD alert: COW_01, Check on the next pen ride (48 h risk)",
+    "date": "Sun, 15 Nov 2026 20:34:11 -0600",
+    "body_html": "<h2 style='margin:0'>COW_01: Check on the next pen ride</h2><p><b>What to do:</b> Check COW_01 on your next pen ride. Over the last 48 h her behavior was the most BRD-like in the pen (reasons below, with clips). Look at her at the bunk after feeding: appetite, dullness, nose and eyes, ears, breathing. No visible sign was confirmed by the camera, so this is a check, not a pull.</p><p><b>Why this tier:</b> rank 2 of 10, in the top 3 in 67% of time-block resamples, medium confidence (rule: top 3, &gt;= 60%, confidence medium/high)</p><p><b>Over the last 48 h, vs the herd at the same hours:</b></p><ul><li>time feeding 4% vs herd 8% at the same hours (z -1.1, 30.5 h observed)</li><li>minutes per bunk visit 5.8 min vs herd median 9.5 min (z -1.3, 32.4 h observed)</li><li>time lying 57% vs herd 51% at the same hours (z +1.4, 30.5 h observed)</li></ul><p>Risk 0.33, rank 2 of 10. Two video clips and the alert card are attached. Risk is a ranking index, not a diagnosis.</p>",
+    "attachments": [
+     {
+      "name": "baseline_COW_01.html",
+      "kb": 3
+     },
+     {
+      "name": "baseline_COW_01_1.mp4",
+      "kb": 2086
+     },
+     {
+      "name": "baseline_COW_01_2.mp4",
+      "kb": 3333
+     }
+    ],
+    "mode": "simulate"
+   }
+  },
+  {
+   "cow_id": "COW_10",
+   "trigger": "48 h risk: Check on the next pen ride",
+   "risk": 0.259,
+   "window_start": "48 h baseline",
+   "card": "alerts/baseline_COW_10.html",
+   "action": "Check COW_10 on your next pen ride. Over the last 48 h her behavior was the most BRD-like in the pen (reasons below, with clips). Look at her at the bunk after feeding: appetite, dullness, nose and eyes, ears, breathing. No visible sign was confirmed by the camera, so this is a check, not a pull.",
+   "sent": [
+    "alerts folder",
+    "dashboard",
+    "email (simulate)"
+   ],
+   "email": {
+    "file": "outbox/baseline_COW_10.eml",
+    "to": "pen.rider@ranch.example, herd.manager@ranch.example",
+    "from": "pen6-monitor@ranch.example",
+    "subject": "BRD alert: COW_10, Check on the next pen ride (48 h risk)",
+    "date": "Sun, 15 Nov 2026 20:34:11 -0600",
+    "body_html": "<h2 style='margin:0'>COW_10: Check on the next pen ride</h2><p><b>What to do:</b> Check COW_10 on your next pen ride. Over the last 48 h her behavior was the most BRD-like in the pen (reasons below, with clips). Look at her at the bunk after feeding: appetite, dullness, nose and eyes, ears, breathing. No visible sign was confirmed by the camera, so this is a check, not a pull.</p><p><b>Why this tier:</b> rank 3 of 10, in the top 3 in 88% of time-block resamples, high confidence (rule: top 3, &gt;= 60%, confidence medium/high)</p><p><b>Over the last 48 h, vs the herd at the same hours:</b></p><ul><li>minutes per bunk visit 6.5 min vs herd median 9.5 min (z -1.1, 39.0 h observed)</li><li>longest lying bout 139 min vs herd median 100 min (z +1.9, 37.1 h observed)</li><li>bunk visits per hour changed -2.3 /h day-to-day (herd -1.5 /h)</li></ul><p>Risk 0.26, rank 3 of 10. Two video clips and the alert card are attached. Risk is a ranking index, not a diagnosis.</p>",
+    "attachments": [
+     {
+      "name": "baseline_COW_10.html",
+      "kb": 3
+     },
+     {
+      "name": "baseline_COW_10_1.mp4",
+      "kb": 1645
+     },
+     {
+      "name": "baseline_COW_10_2.mp4",
+      "kb": 1453
+     }
+    ],
+    "mode": "simulate"
+   }
+  },
+  {
+   "cow_id": "COW_10",
+   "trigger": "behavior",
+   "risk": 0.2748,
+   "window_start": "2026-11-08 14:23:00",
+   "card": "alerts/COW_10_20261108_1423.html",
+   "action": "Look at COW_10 on your next pen ride: her behavior moved toward the BRD pattern (see why below). She was last seen in the open pen. Watch her at the bunk and check for dullness, nasal discharge, drooping ears or fast breathing. No visible sign was confirmed by the camera, so this is a watch, not a pull.",
+   "sent": [
+    "alerts folder",
+    "dashboard",
+    "email (simulate)"
+   ]
+  }
+ ],
+ "baseline": [
+  {
+   "cow_id": "COW_02",
+   "tier": "orange",
+   "tier_name": "Check on the next pen ride",
+   "rule": "rank 1 of 10, in the top 3 in 92% of time-block resamples, high confidence (rule: top 3, >= 60%, confidence medium/high)",
+   "risk": 0.372,
+   "rank": 1,
+   "p_top3": 0.92,
+   "confidence": "high",
+   "reasons": [
+    "minutes to reach bunk after the herd rush 27.0 min vs herd median 19.1 min (z +1.2, over 14 feed calls)",
+    "metres walked per hour 87.5 m/h vs herd 101 m/h at the same hours (z -1.0, 38.6 h observed)",
+    "time feeding 7% vs herd 10% at the same hours (z -0.6, 37.1 h observed)"
+   ],
+   "card": "alerts/baseline_COW_02.html",
+   "clips": [
+    "alerts/baseline_COW_02_1.mp4",
+    "alerts/baseline_COW_02_2.mp4"
+   ],
+   "action": "Check COW_02 on your next pen ride. Over the last 48 h her behavior was the most BRD-like in the pen (reasons below, with clips). Look at her at the bunk after feeding: appetite, dullness, nose and eyes, ears, breathing. No visible sign was confirmed by the camera, so this is a check, not a pull."
+  },
+  {
+   "cow_id": "COW_01",
+   "tier": "orange",
+   "tier_name": "Check on the next pen ride",
+   "rule": "rank 2 of 10, in the top 3 in 67% of time-block resamples, medium confidence (rule: top 3, >= 60%, confidence medium/high)",
+   "risk": 0.325,
+   "rank": 2,
+   "p_top3": 0.67,
+   "confidence": "medium",
+   "reasons": [
+    "time feeding 4% vs herd 8% at the same hours (z -1.1, 30.5 h observed)",
+    "minutes per bunk visit 5.8 min vs herd median 9.5 min (z -1.3, 32.4 h observed)",
+    "time lying 57% vs herd 51% at the same hours (z +1.4, 30.5 h observed)"
+   ],
+   "card": "alerts/baseline_COW_01.html",
+   "clips": [
+    "alerts/baseline_COW_01_1.mp4",
+    "alerts/baseline_COW_01_2.mp4"
+   ],
+   "action": "Check COW_01 on your next pen ride. Over the last 48 h her behavior was the most BRD-like in the pen (reasons below, with clips). Look at her at the bunk after feeding: appetite, dullness, nose and eyes, ears, breathing. No visible sign was confirmed by the camera, so this is a check, not a pull."
+  },
+  {
+   "cow_id": "COW_10",
+   "tier": "orange",
+   "tier_name": "Check on the next pen ride",
+   "rule": "rank 3 of 10, in the top 3 in 88% of time-block resamples, high confidence (rule: top 3, >= 60%, confidence medium/high)",
+   "risk": 0.259,
+   "rank": 3,
+   "p_top3": 0.88,
+   "confidence": "high",
+   "reasons": [
+    "minutes per bunk visit 6.5 min vs herd median 9.5 min (z -1.1, 39.0 h observed)",
+    "longest lying bout 139 min vs herd median 100 min (z +1.9, 37.1 h observed)",
+    "bunk visits per hour changed -2.3 /h day-to-day (herd -1.5 /h)"
+   ],
+   "card": "alerts/baseline_COW_10.html",
+   "clips": [
+    "alerts/baseline_COW_10_1.mp4",
+    "alerts/baseline_COW_10_2.mp4"
+   ],
+   "action": "Check COW_10 on your next pen ride. Over the last 48 h her behavior was the most BRD-like in the pen (reasons below, with clips). Look at her at the bunk after feeding: appetite, dullness, nose and eyes, ears, breathing. No visible sign was confirmed by the camera, so this is a check, not a pull."
+  },
+  {
+   "cow_id": "COW_09",
+   "tier": "yellow",
+   "tier_name": "Watch list",
+   "rule": "rank 4, top 3 in 1% of resamples, low confidence (rule: rank <= 5 or >= 20%)",
+   "risk": 0.185,
+   "rank": 4,
+   "p_top3": 0.01,
+   "confidence": "low",
+   "reasons": [
+    "time feeding changed -24% day-to-day (herd -12%)",
+    "time out of step with the herd changed 75% day-to-day (herd -18%)",
+    "time out of step with the herd 27% vs herd 20% at the same hours (z +1.5, 21.8 h observed)"
+   ],
+   "card": null,
+   "clips": []
+  },
+  {
+   "cow_id": "COW_03",
+   "tier": "yellow",
+   "tier_name": "Watch list",
+   "rule": "rank 5, top 3 in 6% of resamples, low confidence (rule: rank <= 5 or >= 20%)",
+   "risk": 0.163,
+   "rank": 5,
+   "p_top3": 0.06,
+   "confidence": "low",
+   "reasons": [
+    "longest gap between meals 532 min vs herd median 357 min (z +2.4, 39.1 h observed)",
+    "time feeding changed -16% day-to-day (herd -12%)",
+    "bunk visits per hour 0.8 /h vs herd 1.1 /h at the same hours (z -1.1, 42.1 h observed)"
+   ],
+   "card": null,
+   "clips": []
+  },
+  {
+   "cow_id": "COW_04",
+   "tier": "yellow",
+   "tier_name": "Watch list",
+   "rule": "rank 6, top 3 in 24% of resamples, low confidence (rule: rank <= 5 or >= 20%)",
+   "risk": 0.149,
+   "rank": 6,
+   "p_top3": 0.24,
+   "confidence": "low",
+   "reasons": [
+    "metres walked per hour 94.4 m/h vs herd 104 m/h at the same hours (z -0.8, 37.0 h observed)",
+    "time alone (> 5 m from all) 13% vs herd 9% at the same hours (z +0.8, 37.0 h observed)",
+    "time at the pen edge or alone 18% vs herd 14% at the same hours (z +0.8, 37.0 h observed)"
+   ],
+   "card": null,
+   "clips": []
+  },
+  {
+   "cow_id": "COW_05",
+   "tier": "normal",
+   "tier_name": "Normal",
+   "rule": "rank 7, top 3 in 15% of resamples: herd-typical",
+   "risk": 0.149,
+   "rank": 7,
+   "p_top3": 0.15,
+   "confidence": "low",
+   "reasons": [
+    "minutes per bunk visit 7.5 min vs herd median 9.5 min (z -0.7, 29.1 h observed)",
+    "minutes to reach bunk after the herd rush 22.4 min vs herd median 19.1 min (z +0.5, over 14 feed calls)",
+    "longest lying bout changed -49.0 min day-to-day (herd -86.0 min)"
+   ],
+   "card": null,
+   "clips": []
+  },
+  {
+   "cow_id": "COW_07",
+   "tier": "normal",
+   "tier_name": "Normal",
+   "rule": "rank 8, top 3 in 7% of resamples: herd-typical",
+   "risk": 0.132,
+   "rank": 8,
+   "p_top3": 0.07,
+   "confidence": "low",
+   "reasons": [
+    "sudden movements per hour (cough / head-shake candidates) 33.9 /h vs herd median 30.2 /h (z +1.0, 38.4 h observed)",
+    "longest lying bout 119 min vs herd median 100 min (z +0.9, 37.5 h observed)",
+    "metres walked per hour changed -139 m/h day-to-day (herd -91.7 m/h)"
+   ],
+   "card": null,
+   "clips": []
+  },
+  {
+   "cow_id": "COW_06",
+   "tier": "normal",
+   "tier_name": "Normal",
+   "rule": "rank 9, top 3 in 0% of resamples: herd-typical",
+   "risk": 0.121,
+   "rank": 9,
+   "p_top3": 0.0,
+   "confidence": "low",
+   "reasons": [
+    "waterer visits per hour 0.7 /h vs herd 1.1 /h at the same hours (z -2.0, 38.4 h observed)",
+    "breaths per minute at rest (video) 24.4 /min vs herd median 20.8 /min (z +0.9, 5.5 h observed)",
+    "time out of step with the herd 20% vs herd 17% at the same hours (z +0.6, 26.2 h observed)"
+   ],
+   "card": null,
+   "clips": []
+  },
+  {
+   "cow_id": "COW_08",
+   "tier": "normal",
+   "tier_name": "Normal",
+   "rule": "rank 10, top 3 in 1% of resamples: herd-typical",
+   "risk": 0.101,
+   "rank": 10,
+   "p_top3": 0.01,
+   "confidence": "low",
+   "reasons": [
+    "longest gap between meals 445 min vs herd median 357 min (z +1.2, 23.6 h observed)",
+    "time ruminating 75% vs herd 78% at the same hours (z -0.7, 23.6 h observed)",
+    "longest lying bout 110 min vs herd median 100 min (z +0.5, 23.6 h observed)"
+   ],
+   "card": null,
+   "clips": []
+  }
+ ]
+}

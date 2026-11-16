@@ -1,0 +1,77 @@
+[
+ {
+  "cow_id":"COW_01",
+  "reasons":[
+
+  ]
+ },
+ {
+  "cow_id":"COW_02",
+  "reasons":[
+   {
+    "indicator":"isolation_share",
+    "z":1.07,
+    "text":"time alone (> 5 m from all herdmates) 49% vs herd 36% in the same window (z +1.1)"
+   }
+  ]
+ },
+ {
+  "cow_id":"COW_03",
+  "reasons":[
+   {
+    "indicator":"feeding_share",
+    "z":2.11,
+    "text":"time feeding 0% vs herd 12% in the same window (z +2.1)"
+   },
+   {
+    "indicator":"bunk_zone_share",
+    "z":1.96,
+    "text":"time at the feed bunk 0% vs herd 10% in the same window (z +2.0)"
+   }
+  ]
+ },
+ {
+  "cow_id":"COW_04",
+  "reasons":[
+
+  ]
+ },
+ {
+  "cow_id":"COW_06",
+  "reasons":[
+
+  ]
+ },
+ {
+  "cow_id":"COW_07",
+  "reasons":[
+
+  ]
+ },
+ {
+  "cow_id":"COW_09",
+  "reasons":[
+
+  ]
+ },
+ {
+  "cow_id":"COW_10",
+  "reasons":[
+   {
+    "indicator":"lying_share",
+    "z":3.0,
+    "text":"time lying 76% vs herd 22% in the same window (z +3.0)"
+   },
+   {
+    "indicator":"isolation_share",
+    "z":3.0,
+    "text":"time alone (> 5 m from all herdmates) 80% vs herd 36% in the same window (z +3.0)"
+   },
+   {
+    "indicator":"bunk_zone_share",
+    "z":1.11,
+    "text":"time at the feed bunk 4% vs herd 10% in the same window (z +1.1)"
+   }
+  ]
+ }
+]

@@ -1,0 +1,22 @@
+[20:34:24] email (simulate): to pen.rider@ranch.example, herd.manager@ranch.example: BRD alert: COW_02, Check on the next pen ride (48 h risk) (3 attachment(s)) -> submission\level3\clip_1600\outbox\baseline_COW_02.eml
+[20:34:24] 48 h risk alert: COW_02 -> Check on the next pen ride (rank 1 of 10, in the top 3 in 92% of time-block resamples, high confidence (rule: top 3, >= 60%, confidence medium/high))
+[20:34:25] email (simulate): to pen.rider@ranch.example, herd.manager@ranch.example: BRD alert: COW_01, Check on the next pen ride (48 h risk) (3 attachment(s)) -> submission\level3\clip_1600\outbox\baseline_COW_01.eml
+[20:34:25] 48 h risk alert: COW_01 -> Check on the next pen ride (rank 2 of 10, in the top 3 in 67% of time-block resamples, medium confidence (rule: top 3, >= 60%, confidence medium/high))
+[20:34:25] email (simulate): to pen.rider@ranch.example, herd.manager@ranch.example: BRD alert: COW_10, Check on the next pen ride (48 h risk) (3 attachment(s)) -> submission\level3\clip_1600\outbox\baseline_COW_10.eml
+[20:34:25] 48 h risk alert: COW_10 -> Check on the next pen ride (rank 3 of 10, in the top 3 in 88% of time-block resamples, high confidence (rule: top 3, >= 60%, confidence medium/high))
+[20:34:25] email (simulate): to pen.rider@ranch.example, herd.manager@ranch.example: Pen 6 daily BRD report: 3 cow(s) to check (1 attachment(s)) -> submission\level3\clip_1600\outbox\daily_brd_report.eml
+[20:34:25] window 2026-11-07 16:00:00 .. 2026-11-07 16:05:00: 7 cows; ids: COW_01->COW_07, COW_02->COW_05, COW_03->COW_03, COW_04->COW_02, COW_05->COW_04, COW_06->COW_01, COW_07->COW_08
+[20:34:27] signs: COW_07 head_low at 16:01:55 dropped by measurement: moving 0.87 m/s (head low while walking is normal)
+[20:34:27] signs: COW_05 head_low at 16:02:20 dropped by measurement: moving 0.66 m/s (head low while walking is normal)
+[20:34:27] signs: COW_01 head_low at 16:01:55 dropped by measurement: moving 0.36 m/s (head low while walking is normal)
+[20:34:30] signs: COW_05 nasal_discharge at 16:02:20 -> not confirmed (The muzzle is blurry and shows no visible signs of nasal discharge.)
+[20:34:30]   #1 COW_02: risk 0.37 -> 0.36 (seen 5 min, evidence -0.53)
+[20:34:30]   #2 COW_01: risk 0.33 -> 0.34 (seen 5 min, evidence +1.06)
+[20:34:30]   #4 COW_03: risk 0.16 -> 0.23 (seen 5 min, evidence +3.77)
+[20:34:30]   #6 COW_05: risk 0.15 -> 0.16 (seen 5 min, evidence +0.59)
+[20:34:30]   #8 COW_04: risk 0.15 -> 0.10 (seen 5 min, evidence -2.68)
+[20:34:30]   #9 COW_07: risk 0.13 -> 0.09 (seen 5 min, evidence -3.00)
+[20:34:30]   #10 COW_08: risk 0.10 -> 0.07 (seen 5 min, evidence -2.96)
+[20:34:34] check-list cow COW_02 (orange): fresh clip COW_02_20261107_160300_cam1.mp4
+[20:34:38] check-list cow COW_01 (orange): fresh clip COW_01_20261107_160451_cam1.mp4
+[20:34:38] window done: 0 alert(s); dashboard submission\level3\clip_1600\index.html, evidence submission\level3\clip_1600\report.html
